@@ -26,15 +26,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="org.hwbot.bench.android.gpu.BenchActivity"
-            android:label="@string/title_activity_bench" >
-        </activity>
-        <activity
-            android:name="org.hwbot.bench.android.gpu.LoginActivity"
-            android:label="@string/title_activity_login"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
-        </activity>
     </application>
 
 </manifest>

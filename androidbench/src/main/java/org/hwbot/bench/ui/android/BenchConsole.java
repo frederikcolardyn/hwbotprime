@@ -17,7 +17,7 @@ public class BenchConsole implements BenchUI {
 
 	public void waitForCommands() {
 		this.benchService.getOutput().write("Running benchmark using " + benchService.getAvailableProcessors() + " threads.");
-		benchService.benchmark();
+		// benchService.benchmark();
 	}
 
 }

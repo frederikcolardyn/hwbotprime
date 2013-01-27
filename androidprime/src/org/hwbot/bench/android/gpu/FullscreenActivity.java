@@ -1,5 +1,11 @@
 package org.hwbot.bench.android.gpu;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+
 import org.hwbot.bench.android.gpu.util.SystemUiHider;
 import org.hwbot.bench.service.BenchService;
 
@@ -71,6 +77,34 @@ public class FullscreenActivity extends Activity {
 				bench.initialize(text, progressbar, comparebutton);
 				comparebutton.setEnabled(true);
 				// bench.benchmark();
+
+				ExecutorService exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
+					public Thread newThread(Runnable runnable) {
+						Thread thread = new Thread(runnable);
+						thread.setName("benchmark");
+						thread.setDaemon(false);
+						thread.setPriority(Thread.MAX_PRIORITY);
+						return thread;
+					}
+				});
+				Future<Long> submit = exec.submit(bench.instantiateBenchmark());
+
+				while (!submit.isDone()) {
+					try {
+						Thread.sleep(1000);
+						Log.i(this.getClass().getName(), "");
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				try {
+					Long score = submit.get();
+					text.append("Done! Score: " + bench.formatScore(score) + ".");
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
 			} catch (Exception e) {
 				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
