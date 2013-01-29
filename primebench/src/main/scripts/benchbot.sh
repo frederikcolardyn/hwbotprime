@@ -1,3 +1,3 @@
 #! /bin/bash
 
-java -jar benchbot.jar
+java -jar hwbotprime.jar
