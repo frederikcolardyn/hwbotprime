@@ -1,0 +1,11 @@
+Every single time I've implemented dynamic CPU feature dispatch that 
+relies on optional processor feature extensions or basic 
+processor-specific variables I've had to write up yet another cpuid 
+abstraction layer (meaning I've had to refer back again to the manuals). 
+The "cpuid" package provided here is meant to be a very simple feature 
+detection interface that you can easily integrate into your project. 
+Just copy in cpuid.h and cpuid.c. Please see cpuid.h for additional 
+documentation. Please see tool.c for a very simple example program. For 
+criticism, corrections, patches and other contributions please contact 
+the current maintainer at sbahra@repnop.org.
+
