@@ -6,3 +6,5 @@ This repository holds in house benchmarks which work with the HWBOT Generic API.
 More information:
 http://static.hwbot.org/api/Generic_API_1.1.pdf
 
+Latest binary of hwbotprime:
+http://downloads.hwbot.org/downloads/hwbotprime.zip
