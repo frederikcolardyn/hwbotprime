@@ -13,7 +13,6 @@ public class JProgressBarProgressBar implements ProgressBar {
 	}
 
 	public void setValue(int i) {
-		System.out.println("setting value to "+i);
 		jProgressBar.setValue(i);
 	}
 

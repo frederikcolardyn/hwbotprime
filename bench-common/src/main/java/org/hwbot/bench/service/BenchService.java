@@ -73,7 +73,7 @@ public abstract class BenchService {
 				}
 			}
 
-			JFrame frame = new JFrame("HWBOT OpenGL Bench");
+			JFrame frame = new JFrame("HWBOT Bench");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			BenchSwingUI benchUI = new BenchSwingUI(this, getTitle(), getSubtitle());
 			// Get the size of the screen
@@ -151,12 +151,10 @@ public abstract class BenchService {
 		try {
 			// Create a response handler
 			BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
-			HttpPost req = new HttpPost("http://uat.hwbot.org/submit/api?client=BenchBot&clientVersion=1.0.0");
+			HttpPost req = new HttpPost("http://hwbot.org/submit/api?client=" + getClient() + "&clientVersion=" + getClientVersion());
 			req.addHeader("Accept", "application/xml");
-			req.addHeader("Content-Type", "application/xml");
 			MultipartEntity mpEntity = new MultipartEntity();
-			String xml = createXml(version, processor, processorSpeed, score);
-			// System.out.println(xml);
+			String xml = createXml(getClient(), version, processor, processorSpeed, score);
 			// byte[] bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
 			// System.out.println("encrypted: " + new String(bytes));
 			// mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
@@ -189,12 +187,16 @@ public abstract class BenchService {
 		}
 	}
 
-	private static String createXml(String version, String processor, Float processorSpeed, long score) {
+	protected abstract String getClient();
+
+	protected abstract String getClientVersion();
+
+	protected static String createXml(String client, String version, String processor, Float processorSpeed, long score) {
 		StringBuffer xml = new StringBuffer();
 		xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
 		xml.append("<submission xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://hwbot.org/submit/api\">");
 		xml.append("<application>");
-		xml.append("<name>BenchBot</name>");
+		xml.append("<name>" + client + "</name>");
 		xml.append("<version>" + version + "</version>");
 		xml.append("</application>");
 		xml.append("<score><points>" + (score / 1000f) + "</points></score>");

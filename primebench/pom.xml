@@ -4,7 +4,7 @@
 	<groupId>org.hwbot</groupId>
 	<artifactId>hwbotprime</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0</version>
+	<version>0.1.0</version>
 	<name>HWBOT Demo Benchmark</name>
 	<url>http://hwbot.org</url>
 	<organization>

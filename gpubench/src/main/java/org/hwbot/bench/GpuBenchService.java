@@ -25,4 +25,14 @@ public class GpuBenchService extends BenchService {
 		return "HWBOT OpenGL Benchmark";
 	}
 
+	@Override
+	protected String getClient() {
+		return "hwbotopengl";
+	}
+
+	@Override
+	protected String getClientVersion() {
+		return "0.1.0";
+	}
+
 }

@@ -25,4 +25,14 @@ public class PrimeBenchService extends BenchService {
 		return "HWBOT Prime Benchmark";
 	}
 
+	@Override
+	protected String getClient() {
+		return "hwbotprime";
+	}
+
+	@Override
+	protected String getClientVersion() {
+		return "0.1.0";
+	}
+
 }

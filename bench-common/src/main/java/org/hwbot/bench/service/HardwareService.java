@@ -36,9 +36,9 @@ public class HardwareService {
 				System.out.println("Your OS is not supported!!");
 			}
 			processor = execRuntime(new String[] { getCpuIdExecutable().getAbsolutePath(), "-b" });
-		} catch (IOException e) {
+		} catch (Exception e) {
 			System.err.println("Failed to read processor info.");
-			e.printStackTrace();
+			processor = "unkown";
 		}
 
 		return StringUtils.trim(processor);
