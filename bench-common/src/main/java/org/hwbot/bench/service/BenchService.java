@@ -4,11 +4,13 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.security.Key;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -20,18 +22,21 @@ import javax.swing.JFrame;
 import javax.swing.JProgressBar;
 import javax.swing.UIManager;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.hwbot.bench.api.Benchmark;
 import org.hwbot.bench.remote.BasicResponseStatusHandler;
+import org.hwbot.bench.security.EncryptionModule;
 import org.hwbot.bench.ui.BenchUI;
 import org.hwbot.bench.ui.Output;
 import org.hwbot.bench.ui.ProgressBar;
@@ -56,6 +61,27 @@ public abstract class BenchService {
 	protected byte[] key;
 	protected byte[] iv;
 	protected Float processorSpeed;
+
+	public BenchService() {
+		try {
+			ServiceLoader<EncryptionModule> encryptionLoader = ServiceLoader.load(EncryptionModule.class);
+			for (EncryptionModule encryptionModule : encryptionLoader) {
+				try {
+					key = Hex.decodeHex(encryptionModule.getKey());
+					iv = Hex.decodeHex(encryptionModule.getIv());
+				} catch (DecoderException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (key == null) {
+				System.out.println("No encryption modules loaded.");
+			}
+		} catch (Exception e) {
+			// no encryption
+			System.err.println("No encryption module found.");
+			e.printStackTrace();
+		}
+	}
 
 	public void initialize(boolean ui) throws IOException {
 		HardwareService hardwareService = new HardwareService();
@@ -154,11 +180,9 @@ public abstract class BenchService {
 			HttpPost req = new HttpPost("http://hwbot.org/submit/api?client=" + getClient() + "&clientVersion=" + getClientVersion());
 			req.addHeader("Accept", "application/xml");
 			MultipartEntity mpEntity = new MultipartEntity();
-			String xml = createXml(getClient(), version, processor, processorSpeed, score);
-			// byte[] bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
-			// System.out.println("encrypted: " + new String(bytes));
-			// mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
-			mpEntity.addPart("data", new StringBody(xml));
+			byte[] bytes = getDataFile();
+			// mpEntity.addPart("data", new StringBody(xml));
+			mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
 			req.setEntity(mpEntity);
 
 			String response = httpclient.execute(req, responseHandler);
@@ -185,6 +209,21 @@ public abstract class BenchService {
 		} finally {
 			httpclient.getConnectionManager().shutdown();
 		}
+	}
+
+	public byte[] getDataFile() {
+		byte[] bytes = null;
+		try {
+			String xml = createXml(getClient(), version, processor, processorSpeed, score);
+			if (key != null) {
+				bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
+			} else {
+				bytes = xml.getBytes("utf8");
+			}
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+		return bytes;
 	}
 
 	protected abstract String getClient();
