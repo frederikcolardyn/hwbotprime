@@ -60,7 +60,7 @@ public abstract class BenchService {
 
 	protected byte[] key;
 	protected byte[] iv;
-        // processor speed in Mhz
+	// processor speed in Mhz
 	protected Float processorSpeed;
 
 	public BenchService() {
@@ -244,7 +244,7 @@ public abstract class BenchService {
 		xml.append("<processor>");
 		xml.append("<name><![CDATA[" + processor + "]]></name>");
 		if (processorSpeed != null) {
-			xml.append("<coreClock><![CDATA[" + processorSpeed.intValue() + "]]></coreClock>");
+			xml.append("<coreClock><![CDATA[" + ((int) (processorSpeed * 1000)) + "]]></coreClock>");
 		}
 		xml.append("</processor>");
 		xml.append("</hardware>");

@@ -38,10 +38,10 @@ public class HardwareService {
 			}
 			processor = execRuntime(new String[] { getCpuIdExecutable().getAbsolutePath(), "-b" });
 
-                        if (StringUtils.isEmpty(processor)) {
-                                processor = readProcessorStringFromProcCpuInfo();
-                        }
-                } catch (Exception e) {
+			if (StringUtils.isEmpty(processor)) {
+				processor = readProcessorStringFromProcCpuInfo();
+			}
+		} catch (Exception e) {
 			System.err.println("Failed to read processor info.");
 			processor = "unknown";
 		}
@@ -96,23 +96,24 @@ public class HardwareService {
 		}
 	}
 
-        /**
-         * 
-         * @return processor speed in Mhz
-         */
+	/**
+	 * 
+	 * @return processor speed in Ghz
+	 */
 	public Float getProcessorSpeed() {
-                // see if the scaling_cur_freq File is present (linux only)
-                File linuxFreqFile = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-                if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
-                        try {
-                                Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
-                                if (speed > 0) {
-                                        return speed / 1000f;
-                                }
-                        } catch (IOException e) { }
-                }
+		// see if the scaling_cur_freq File is present (linux only)
+		File linuxFreqFile = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
+		if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
+			try {
+				Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
+				if (speed > 0) {
+					return speed;
+				}
+			} catch (IOException e) {
+			}
+		}
 
-                // fall back on own estimation
+		// fall back on own estimation
 		return cpufreq(2, 15);
 	}
 
@@ -221,17 +222,17 @@ public class HardwareService {
 		return outputReport.toString();
 	}
 
-        public String readProcessorStringFromProcCpuInfo() throws IOException {
-                File source = new File("/proc/cpuinfo");
-                if (source.exists() && source.canRead()) {
-                     for (String line: FileUtils.readLines(source)) {
-                             if (line.startsWith("model name")) {
-                                     return line.substring(line.indexOf(':')+1).trim();
-                             } else if (line.startsWith("Processor")) {
-                                     return line.substring(line.indexOf(':')+1).trim();
-                             }
-                     }
-                }
-                return null;
-        }
+	public String readProcessorStringFromProcCpuInfo() throws IOException {
+		File source = new File("/proc/cpuinfo");
+		if (source.exists() && source.canRead()) {
+			for (String line : FileUtils.readLines(source)) {
+				if (line.startsWith("model name")) {
+					return line.substring(line.indexOf(':') + 1).trim();
+				} else if (line.startsWith("Processor")) {
+					return line.substring(line.indexOf(':') + 1).trim();
+				}
+			}
+		}
+		return null;
+	}
 }
