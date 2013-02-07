@@ -7,8 +7,8 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
-import org.apache.commons.io.FileUtils;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 public class HardwareService {
@@ -55,11 +55,9 @@ public class HardwareService {
 			// ok!
 			// System.out.println("Using CPU executable: " + getCpuIdExecutable().getAbsolutePath());
 		} else {
-			System.out.println("preparing file for " + OS);
 			String path = HardwareService.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 			String decodedPath;
 			decodedPath = URLDecoder.decode(path, "UTF-8");
-			System.out.println("jar " + decodedPath);
 			java.util.jar.JarFile jar = new java.util.jar.JarFile(decodedPath);
 			Enumeration<JarEntry> entries = jar.entries();
 			boolean installed = false;
@@ -79,14 +77,12 @@ public class HardwareService {
 					fos.close();
 					is.close();
 					// System.out.println("cpuid executable written to " + f);
-					System.out.println("Prepared: " + targetFile.getAbsolutePath());
+					// System.out.println("Prepared: " + targetFile.getAbsolutePath());
 					if (permissions) {
 						Runtime.getRuntime().exec("chmod +x " + f.getAbsolutePath());
 					}
 					installed = true;
 					break;
-				} else {
-					System.out.println("skipping " + file + " <> " + fileToExtract);
 				}
 			}
 			if (!installed) {

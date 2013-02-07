@@ -27,17 +27,39 @@ public class PrimeBenchmark extends Benchmark {
 		int workleft = workCount;
 		long before = System.currentTimeMillis();
 		int primeStart = 5;
+		int iteration = 0;
+		int blocksize = threads * 8;
 		List<Number> list = Collections.synchronizedList(new ArrayList<Number>());
 		ExecutorService exec = Executors.newFixedThreadPool(threads);
-		List<Future<Void>> workers = new ArrayList<Future<Void>>();
+		List<Future<Void>> workers = new ArrayList<Future<Void>>(100);
 		for (int i = 0; i < workCount; i++) {
 			// submit work to the svc for execution across the thread pool
 			PrimeRunnable worker = new PrimeRunnable(primeStart + i, list);
 			Future<Void> submit = exec.submit(worker);
 			workers.add(submit);
+
+			if (workers.size() == blocksize * 2) {
+				ArrayList<Future<Void>> runningWorkers = new ArrayList<Future<Void>>(workers.subList(0, blocksize));
+				workers = new ArrayList<Future<Void>>(workers.subList(blocksize, blocksize * 2));
+				for (Future<Void> future : runningWorkers) {
+					try {
+						future.get();
+						workleft--;
+						if (workleft % (workCount / iterations) == 0) {
+							iteration++;
+							this.progressBar.setValue(iteration);
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						throw new RuntimeException();
+					} catch (Exception e) {
+						e.printStackTrace();
+						throw new RuntimeException();
+					}
+				}
+			}
 		}
 
-		int iteration = 0;
 		for (Future<Void> future : workers) {
 			try {
 				future.get();

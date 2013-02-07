@@ -12,7 +12,7 @@ public class PrimeBenchService extends BenchService {
 
 	@Override
 	public String formatScore(Long score) {
-		return (score / 1000) + "s " + (score % 1000) + "ms.";
+		return (score / 1000) + "s " + (score % 1000) + "ms";
 	}
 
 	@Override
