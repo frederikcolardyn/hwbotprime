@@ -36,20 +36,7 @@ public class PrimeBenchmark extends Benchmark {
 		int brokenWorkers = 0;
 		int blocksize = threads * batchsize;
 		List<Number> list = Collections.synchronizedList(new ArrayList<Number>());
-		ThreadFactory threadFactory = new ThreadFactory() {
-			public Thread newThread(Runnable runnable) {
-				Thread thread = new Thread(runnable);
-				UncaughtExceptionHandler exceptionHandler = new UncaughtExceptionHandler() {
-					public void uncaughtException(Thread thread, Throwable arg1) {
-						System.err.println("uncaught exception!");
-						arg1.printStackTrace();
-					}
-				};
-				thread.setUncaughtExceptionHandler(exceptionHandler);
-				return thread;
-			}
-		};
-		ExecutorService exec = Executors.newCachedThreadPool(threadFactory);
+		ExecutorService exec = Executors.newFixedThreadPool(threads);
 		List<Future<Void>> workers = new ArrayList<Future<Void>>(blocksize * 2);
 		for (int i = 0; i < workCount; i++) {
 			// submit work to the svc for execution across the thread pool
