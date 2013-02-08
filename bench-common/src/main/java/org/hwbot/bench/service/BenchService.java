@@ -23,7 +23,6 @@ import javax.swing.UIManager;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpHostConnectException;
@@ -185,19 +184,18 @@ public abstract class BenchService {
 			mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
 			req.setEntity(mpEntity);
 
-			String response = httpclient.execute(req, responseHandler);
-			String status = StringUtils.substringBetween(response, "<status>", "</status>");
+			Response response = DataServiceXml.parseResponse(httpclient.execute(req, responseHandler));
 
-			if ("success".equals(status)) {
-				String url = StringUtils.substringBetween(response, "<url>", "</url>");
+			if ("success".equals(response.getStatus())) {
+				String url = response.getUrl();
 				try {
 					Desktop.getDesktop().browse(new URI(url));
 				} catch (Exception e) {
 					output.write("Failed to open your browser, please open " + url + " to view your submission.");
 				}
 			} else {
-				output.write("Failed to submit score. Status was: " + status);
-				output.write(response);
+				output.write("Failed to submit score. Status was: " + response);
+				output.write(response.getMessage());
 			}
 
 		} catch (HttpHostConnectException e) {

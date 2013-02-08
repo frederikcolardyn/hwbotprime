@@ -1,8 +1,11 @@
 package org.hwbot.bench.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -83,7 +86,6 @@ public class DataServiceXml {
 
 			doc.appendChild(root);
 
-			// Save the Created XML on Local Disc using Transformation APIs as Discussed
 			TransformerFactory tFactory = TransformerFactory.newInstance();
 			Transformer transformer = tFactory.newTransformer();
 
@@ -101,6 +103,14 @@ public class DataServiceXml {
 			throw new RuntimeException(e);
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static Response parseResponse(String xml) {
+		try {
+			return (Response) JAXBContext.newInstance(Response.class).createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes()));
+		} catch (JAXBException e) {
+			throw new RuntimeException("Failed to parse response from HWBOT!", e);
 		}
 	}
 
