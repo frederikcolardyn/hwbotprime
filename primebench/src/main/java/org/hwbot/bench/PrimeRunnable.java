@@ -23,8 +23,12 @@ public class PrimeRunnable implements Callable<Void> {
 	}
 
 	public Void call() throws Exception {
-		isPrime(from); // don't increment, just check one number
-		// System.out.println(results);
+		try {
+			isPrime(from); // don't increment, just check one number
+		} catch (Throwable e) {
+			System.err.println("Failed to calc prime number!");
+			e.printStackTrace();
+		}
 		return null;
 	}
 

@@ -9,7 +9,6 @@ import java.net.URI;
 import java.security.Key;
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -215,7 +214,7 @@ public abstract class BenchService {
 	public byte[] getDataFile() {
 		byte[] bytes = null;
 		try {
-			String xml = createXml(getClient(), version, processor, processorSpeed, score);
+			String xml = DataServiceXml.createXml(getClient(), version, processor, processorSpeed, score);
 			if (key != null) {
 				bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
 			} else {
@@ -230,42 +229,6 @@ public abstract class BenchService {
 	protected abstract String getClient();
 
 	protected abstract String getClientVersion();
-
-	protected static String createXml(String client, String version, String processor, Float processorSpeed, long score) {
-		StringBuffer xml = new StringBuffer();
-		xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-		xml.append("<submission xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://hwbot.org/submit/api\">");
-		xml.append("<application>");
-		xml.append("<name>" + client + "</name>");
-		xml.append("<version>" + version + "</version>");
-		xml.append("</application>");
-		xml.append("<score><points>" + (score / 1000f) + "</points></score>");
-		xml.append("<hardware>");
-		xml.append("<processor>");
-		xml.append("<name><![CDATA[" + processor + "]]></name>");
-		if (processorSpeed != null) {
-			xml.append("<coreClock><![CDATA[" + ((int) (processorSpeed * 1000)) + "]]></coreClock>");
-		}
-		xml.append("</processor>");
-		xml.append("</hardware>");
-
-		xml.append("<software>");
-		xml.append("<os>");
-		xml.append("<family>" + HardwareService.OS + "</family>");
-		xml.append("</os>");
-		xml.append("</software>");
-
-		xml.append("<metadata name=\"java_environment\">");
-		Map<String, String> env = System.getenv();
-		for (String envName : env.keySet()) {
-			xml.append(String.format("%s=%s%n\n", envName, env.get(envName)));
-
-		}
-		xml.append("</metadata>");
-
-		xml.append("</submission>");
-		return xml.toString();
-	}
 
 	/**
 	 * Encrypt an array of bytes. Befor encrypting, you have to set the cipher to use, key and iv (if applicable)
