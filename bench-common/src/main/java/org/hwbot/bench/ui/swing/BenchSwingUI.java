@@ -156,6 +156,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         startButtonStability.setForeground(new java.awt.Color(240, 240, 240));
         startButtonStability.setText("Stability Benchmark");
         startButtonStability.setToolTipText("");
+        startButtonStability.setEnabled(false);
         startButtonStability.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startButtonStabilityActionPerformed(evt);
