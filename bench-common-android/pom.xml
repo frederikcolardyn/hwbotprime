@@ -11,6 +11,11 @@
 		<name>COLARDYN IT GCV</name>
 		<url>http://colardyn-it.be/</url>
 	</organization>
+	
+	<scm>
+	    <developerConnection>scm:git:https://github.com/frederikcolardyn/benchbot.git</developerConnection>
+	</scm>
+	
 	<ciManagement>
 		<notifiers>
 			<notifier>
