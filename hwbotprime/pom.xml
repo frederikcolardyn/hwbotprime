@@ -12,7 +12,7 @@
 	</organization>
 	
 	<scm>
-	    <connection>scm:git:https://github.com/frederikcolardyn/benchbot.git</connection>
+	    <developerConnection>scm:git:ssh://github.com/frederikcolardyn/benchbot.git</developerConnection>
 	</scm>
 	
 	<ciManagement>
