@@ -5,13 +5,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "submission")
-@XmlType(propOrder = { "application", "score", "screenshot", "hardware" })
+@XmlType(propOrder = { "application", "score", "screenshot", "applicationChecksum", "hardware" })
 public class Request {
 
 	private Application application;
 	private Score score;
 	private Screenshot screenshot;
 	private Hardware hardware;
+	private String applicationChecksum;
 
 	public Request() {
 		super();
@@ -31,6 +32,15 @@ public class Request {
 		processor.setCoreClock(processorSpeed);
 		processor.setName(processorModel);
 		hardware.setProcessor(processor);
+	}
+
+	@XmlElement
+	public String getApplicationChecksum() {
+		return applicationChecksum;
+	}
+
+	public void setApplicationChecksum(String applicationChecksum) {
+		this.applicationChecksum = applicationChecksum;
 	}
 
 	@XmlElement
@@ -69,7 +79,7 @@ public class Request {
 		this.hardware = hardware;
 	}
 
-	static class Application {
+	public static class Application {
 		String name;
 		String version;
 
@@ -92,7 +102,7 @@ public class Request {
 		}
 	}
 
-	static class Score {
+	public static class Score {
 		float points;
 
 		@XmlElement
@@ -105,7 +115,7 @@ public class Request {
 		}
 	}
 
-	static class Screenshot {
+	public static class Screenshot {
 		String screenshot;
 
 		@XmlElement
@@ -119,7 +129,7 @@ public class Request {
 
 	}
 
-	static class Hardware {
+	public static class Hardware {
 
 		Processor processor;
 
@@ -134,7 +144,7 @@ public class Request {
 
 	}
 
-	static class Processor {
+	public static class Processor {
 		String name;
 		Float coreClock;
 

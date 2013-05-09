@@ -1,4 +1,4 @@
-package org.hwbot.bench.service;
+package org.hwbot.bench.model;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -9,6 +9,7 @@ public class Response {
 	private String message;
 	private String status;
 	private String url;
+	private String technicalMessage;
 
 	@XmlElement
 	public String getMessage() {
@@ -35,6 +36,15 @@ public class Response {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	@XmlElement
+	public String getTechnicalMessage() {
+		return technicalMessage;
+	}
+
+	public void setTechnicalMessage(String technicalMessage) {
+		this.technicalMessage = technicalMessage;
 	}
 
 	@Override

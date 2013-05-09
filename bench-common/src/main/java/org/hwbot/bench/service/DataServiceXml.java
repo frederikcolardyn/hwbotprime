@@ -1,107 +1,57 @@
 package org.hwbot.bench.service;
 
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.bind.Marshaller;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.hwbot.bench.model.Request;
+import org.hwbot.bench.model.Response;
+import org.hwbot.bench.security.EncryptionModule;
 
 public class DataServiceXml {
 
-	public static String createXml(String client, String version, String processorModel, Float processorSpeed, long scorePoints) {
+	public static String createScreenshot() {
 		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document doc = builder.newDocument();
-
-			Element root = doc.createElement("submission");
-
-			// application part
-			Element application = doc.createElement("application");
-			Element appName = doc.createElement("name");
-			appName.setTextContent(client);
-			Element appVersion = doc.createElement("version");
-			appVersion.setTextContent(version);
-			application.appendChild(appName);
-			application.appendChild(appVersion);
-
-			// score part
-			Element score = doc.createElement("score");
-			Element points = doc.createElement("points");
-			points.setTextContent(String.valueOf((scorePoints / 1000f)));
-			score.appendChild(points);
-
-			// hardware part
-			Element hardware = doc.createElement("hardware");
-			Element processor = doc.createElement("processor");
-			Element processorName = doc.createElement("name");
-			Element processorClock = doc.createElement("coreClock");
-			processorName.setTextContent(processorModel);
-			processorClock.setTextContent(String.valueOf((processorSpeed * 1000)));
-			processor.appendChild(processorName);
-			processor.appendChild(processorClock);
-			hardware.appendChild(processor);
-
-			// software part
-			Element software = doc.createElement("software");
-			Element os = doc.createElement("os");
-			Element osFamily = doc.createElement("family");
-			osFamily.setTextContent(HardwareService.OS);
-			os.appendChild(osFamily);
-			software.appendChild(os);
-
-			// metadata part
-			Element metadata = doc.createElement("metadata");
-			StringBuffer buffer = new StringBuffer();
-			Map<String, String> env = System.getenv();
-			for (String envName : env.keySet()) {
-				buffer.append(String.format("%s=%s%n\n", envName, env.get(envName)));
-
-			}
-			metadata.setAttribute("name", "java_environment");
-			metadata.setTextContent(buffer.toString());
-
-			// add to root
-			root.appendChild(application);
-			root.appendChild(score);
-			root.appendChild(hardware);
-			root.appendChild(software);
-			root.appendChild(metadata);
-
-			doc.appendChild(root);
-
-			TransformerFactory tFactory = TransformerFactory.newInstance();
-			Transformer transformer = tFactory.newTransformer();
-
-			Source s = new DOMSource(doc);
+			BufferedImage image = new Robot().createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
 			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-			Result res = new StreamResult(byteArrayOutputStream);
-			transformer.transform(s, res);
-			System.out.println("XML File Created Succesfully");
+			ImageIO.write(image, "png", byteArrayOutputStream);
+			return Base64.encodeBase64String(byteArrayOutputStream.toByteArray());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static String createXml(String client, String version, String processorModel, Float processorSpeed, long scorePoints, boolean addScreenshot,
+			EncryptionModule encryptionModule) {
+		Request request = new Request(client, version, processorModel, processorSpeed, (scorePoints / 1000f));
+
+		if (addScreenshot) {
+			request.addScreenshot(createScreenshot());
+		}
+
+		if (encryptionModule != null) {
+			encryptionModule.addChecksum(request);
+		}
+
+		JAXBContext jc;
+		try {
+			jc = JAXBContext.newInstance(Request.class);
+			Marshaller m = jc.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			m.marshal(request, byteArrayOutputStream);
 			return new String(byteArrayOutputStream.toByteArray(), "utf8");
-		} catch (ParserConfigurationException e) {
-			throw new RuntimeException(e);
-		} catch (TransformerConfigurationException e) {
-			throw new RuntimeException(e);
-		} catch (TransformerException e) {
-			throw new RuntimeException(e);
-		} catch (UnsupportedEncodingException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

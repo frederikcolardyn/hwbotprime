@@ -8,49 +8,53 @@ import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
-
-import com.jezhumble.javasysmon.JavaSysMon;
-import com.jezhumble.javasysmon.MemoryStats;
+import android.os.Build;
+import android.util.Log;
 
 public class HardwareService {
 
     public static String OS = System.getProperty("os.name").toLowerCase();
 
     public String getProcessorInfo() {
-        String processor = null;
-        try {
+        String processor;
 
-            String property = System.getProperty("sun.arch.data.model");
-            int bits;
-            if ("32".equals(property)) {
-                bits = 32;
-            } else {
-                bits = 64;
-            }
+        String meminfo = execRuntime(new String[] { "cat", "/proc/meminfo" });
+        Log.i(HardwareService.class.getName(), "meminfo: " + meminfo);
 
-            if (isWindows()) {
-                extractFile("cpuid-win" + bits + ".exe", getCpuIdExecutable(), false);
-            } else if (isMac()) {
-                extractFile("cpuid-osx" + bits, getCpuIdExecutable(), true);
-            } else if (isUnix()) {
-                extractFile("cpuid-linux" + bits, getCpuIdExecutable(), true);
-            } else {
-                System.out.println("Your OS is not supported!!");
-            }
-            processor = execRuntime(new String[] { getCpuIdExecutable().getAbsolutePath(), "-b" });
+        String version = execRuntime(new String[] { "cat", "/proc/version" });
+        Log.i(HardwareService.class.getName(), "version: " + version);
 
-            if (StringUtils.isEmpty(processor)) {
-                processor = readProcessorStringFromProcCpuInfo();
+        String execRuntime = execRuntime(new String[] { "cat", "/proc/cpuinfo" });
+        Log.i(HardwareService.class.getName(), execRuntime);
+
+        // 12-25 01:13:57.669: I/org.hwbot.bench.service.HardwareService(1600): Processor : ARMv7 Processor rev 2 (v7l)
+        int start = execRuntime.indexOf("Processor");
+        if (start >= 0) {
+            processor = execRuntime.substring(start);
+            int end = processor.indexOf("\n");
+            if (end >= 0) {
+                processor = execRuntime.substring(0, end);
             }
-        } catch (Exception e) {
-            System.err.println("Failed to read processor info.");
-            processor = "unknown";
+            if (processor.indexOf(":") >= 0) {
+                processor = processor.substring(processor.indexOf(":") + 2);
+            }
+        } else {
+            processor = "unkown";
         }
 
-        return StringUtils.trim(processor);
+        Log.i(this.getClass().getName(), "BOARD: " + Build.BOARD);
+        Log.i(this.getClass().getName(), "BRAND: " + Build.BRAND);
+        Log.i(this.getClass().getName(), "CPU_ABI: " + Build.CPU_ABI);
+        Log.i(this.getClass().getName(), "CPU_ABI2: " + Build.CPU_ABI2);
+        Log.i(this.getClass().getName(), "DEVICE: " + Build.DEVICE);
+        Log.i(this.getClass().getName(), "DISPLAY: " + Build.DISPLAY);
+        Log.i(this.getClass().getName(), "FINGERPRINT: " + Build.FINGERPRINT);
+        Log.i(this.getClass().getName(), "HARDWARE: " + Build.HARDWARE);
+        Log.i(this.getClass().getName(), "TYPE: " + Build.SERIAL);
+        Log.i(this.getClass().getName(), "TYPE: " + Build.TYPE);
+        Log.i(this.getClass().getName(), "TAGS: " + Build.TAGS);
+
+        return Build.MODEL + " - " + Build.HARDWARE + " - " + processor;
     }
 
     public static void extractFile(String fileToExtract, File targetFile, boolean permissions) throws IOException {
@@ -59,9 +63,11 @@ public class HardwareService {
             // ok!
             // System.out.println("Using CPU executable: " + getCpuIdExecutable().getAbsolutePath());
         } else {
+            // System.out.println("preparing cpu info for " + OS);
             String path = HardwareService.class.getProtectionDomain().getCodeSource().getLocation().getPath();
             String decodedPath;
             decodedPath = URLDecoder.decode(path, "UTF-8");
+            // System.out.println("jar " + decodedPath);
             java.util.jar.JarFile jar = new java.util.jar.JarFile(decodedPath);
             Enumeration<JarEntry> entries = jar.entries();
             boolean installed = false;
@@ -81,12 +87,14 @@ public class HardwareService {
                     fos.close();
                     is.close();
                     // System.out.println("cpuid executable written to " + f);
-                    // System.out.println("Prepared: " + targetFile.getAbsolutePath());
+                    System.out.println("Prepared: " + targetFile.getAbsolutePath());
                     if (permissions) {
                         Runtime.getRuntime().exec("chmod +x " + f.getAbsolutePath());
                     }
                     installed = true;
                     break;
+                } else {
+                    System.out.println("skipping " + file + " <> " + fileToExtract);
                 }
             }
             if (!installed) {
@@ -96,75 +104,14 @@ public class HardwareService {
         }
     }
 
-    public int getNumberOfProcessorCores() {
-        JavaSysMon sysMon = new JavaSysMon();
-        if (sysMon.supportedPlatform()) {
-            if (sysMon.numCpus() > 0) {
-                return sysMon.numCpus();
-            }
-        }
-        System.out.println("Unable to dedect amount of cores.");
-        return 1;
-    }
-
-    /**
-     * 
-     * @return memory in bytes
-     */
-    public long getMemorySize() {
-        JavaSysMon sysMon = new JavaSysMon();
-        if (sysMon.supportedPlatform()) {
-            MemoryStats memoryStats = sysMon.physical();
-            return memoryStats.getTotalBytes();
-        }
-        return 0;
-    }
-
-    /**
-     * 
-     * @return processor speed in Ghz
-     */
     public Float getProcessorSpeed() {
-
-        JavaSysMon sysMon = new JavaSysMon();
-        if (sysMon.supportedPlatform()) {
-            if (sysMon.cpuFrequencyInHz() > 0) {
-                return sysMon.cpuFrequencyInHz() / 1000f / 1000f;
-            }
-        }
-
-        // see if the scaling_cur_freq File is present (linux only)
-        if (isUnix()) {
-            File linuxFreqFile = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-            if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
-                try {
-                    Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
-                    if (speed > 0) {
-                        return speed;
-                    }
-                } catch (IOException e) {
-                }
-            }
-
-        }
-        // mac only
-        if (isMac()) {
-            try {
-                return NumberUtils.createFloat(execRuntime(new String[] { "sysctl", "hw.cpufrequency" }));
-            } catch (NumberFormatException e) {
-                System.err.println("Failed to read processor speed on mac: " + e);
-            }
-
-        }
-
-        // fall back on own estimation
-        return cpufreq(2, 15);
+        return cpufreq(4, 15);
     }
 
     private static Float cpufreq(float dpt, float dpc) {
         try {
             /* run cycles for Integer.MAX_VALUE times */
-            long maxValue = Integer.MAX_VALUE * 1l;
+            long maxValue = 100000000 / 2;
             long l1 = System.currentTimeMillis();
             for (long i = 0; i < maxValue; i++)
                 ;
@@ -178,9 +125,9 @@ public class HardwareService {
             /* output the computation result */
             // System.out.println("Directives per tick: " + dpt);
             // System.out.println("Directives per cycle: " + dpc);
-            // System.out.println("Cycles per second: " + cps);
-            // System.out.println("Freq: " + (cps * dpc / dpt));
-            float mhz = (((cps * dpc / dpt) / 1000) / 1000);
+            Log.i(HardwareService.class.getName(), "Cycles per second: " + cps);
+            Log.i(HardwareService.class.getName(), "Freq: " + (cps * dpc / dpt));
+            float mhz = (((cps * dpc / dpt) / 10) / 1000);
             return mhz;
         } catch (Throwable e) {
             e.printStackTrace();
@@ -253,7 +200,11 @@ public class HardwareService {
                 return "";
             }
 
-            proc.destroy();
+            // try {
+            // proc.destroy();
+            // } catch (Exception e) {
+            //
+            // }
             proc = null;
         }
 
@@ -266,17 +217,4 @@ public class HardwareService {
         return outputReport.toString();
     }
 
-    public String readProcessorStringFromProcCpuInfo() throws IOException {
-        File source = new File("/proc/cpuinfo");
-        if (source.exists() && source.canRead()) {
-            for (String line : FileUtils.readLines(source)) {
-                if (line.startsWith("model name")) {
-                    return line.substring(line.indexOf(':') + 1).trim();
-                } else if (line.startsWith("Processor")) {
-                    return line.substring(line.indexOf(':') + 1).trim();
-                }
-            }
-        }
-        return null;
-    }
 }

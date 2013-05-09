@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.hwbot</groupId>
-	<artifactId>bench-common</artifactId>
+	<groupId>org.hwbot.bench</groupId>
+	<artifactId>hwbotopengl</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.1</version>
+	<version>1.0.0</version>
 	<name>HWBOT Demo Benchmark</name>
 	<url>http://hwbot.org</url>
 	<organization>
@@ -32,18 +32,17 @@
 			</roles>
 			<timezone>+1</timezone>
 		</developer>
-		<developer>
-			<name>Pieter-Jan Plaisier</name>
-			<email>pieterjanplaisier@hwbot.org</email>
-			<organization>COLARDYN IT</organization>
-			<roles>
-				<role>Analyst</role>
-				<role>Tester</role>
-			</roles>
-			<timezone>+1</timezone>
-		</developer>
 	</developers>
-	<inceptionYear>2013</inceptionYear>
+	<inceptionYear>2004</inceptionYear>
+
+	<scm>
+		<developerConnection>scm:svn:http://svn.hwbot.org/source/hwbotbench/trunk</developerConnection>
+		<url>http://svn.hwbot.org/source/trunk</url>
+	</scm>
+	<issueManagement>
+		<system>JIRA</system>
+		<url>http://bugs.hwbot.org/browse/GPUBENCH</url>
+	</issueManagement>
 
 	<properties>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
@@ -53,14 +52,14 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.hwbot</groupId>
+			<artifactId>bench-common</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.6</version>
-		</dependency>
-                <dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -83,27 +82,64 @@
 			<version>4.1</version>
 		</dependency>
 		<dependency>
-		  <groupId>org.swinglabs</groupId>
-		  <artifactId>swing-layout</artifactId>
-		  <version>1.0.3</version>
-		 </dependency>
-		 <dependency>
-		  <groupId>javasysmon</groupId>
-		  <artifactId>javasysmon</artifactId>
-		  <version>0.3.4</version>
-		 </dependency>
-	 	<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-			<scope>test</scope>
+			<groupId>org.swinglabs</groupId>
+			<artifactId>swing-layout</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<!-- 
+		<dependency>
+			<groupId>jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>jogl</groupId>
+			<artifactId>macosx</artifactId>
+			<version>2.0</version>
+		</dependency>
+		 -->
+		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>2.0-rc11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>2.0-rc11</version>
+			<classifier>natives-macosx-universal</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.gluegen</groupId>
+			<artifactId>gluegen-rt</artifactId>
+			<version>2.0-rc11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.gluegen</groupId>
+			<artifactId>gluegen-rt</artifactId>
+			<version>2.0-rc11</version>
+			<classifier>natives-macosx-universal</classifier>
 		</dependency>
 	</dependencies>
 
 	<build>
-		<finalName>benchbot</finalName>
+		<finalName>gpubot</finalName>
 		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<inherited>true</inherited>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<mainClass>org.hwbot.bench.BootStrap</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>2.5</version>
@@ -122,6 +158,37 @@
 									<filtering>true</filtering>
 								</resource>
 							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+						<filters>
+			                <filter>
+			                  <artifact>*:*</artifact>
+			                  <excludes>
+			                    <exclude>META-INF/*.SF</exclude>
+			                    <exclude>META-INF/*.DSA</exclude>
+			                    <exclude>META-INF/*.RSA</exclude>
+			                  </excludes>
+			                </filter>	
+						</filters>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>org.hwbot.bench.BootStrap</mainClass>
+								</transformer>
+							</transformers>
 						</configuration>
 					</execution>
 				</executions>
@@ -153,7 +220,6 @@
 				</plugins>
 			</build>
 		</profile>
-
 	</profiles>
 
 	<pluginRepositories>
@@ -175,17 +241,23 @@
 			<url>http://repo.hwbot.org/</url>
 		</repository>
 		<repository>
+			<id>eclipse</id>
+			<url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
+		</repository>
+		<repository>
 			<id>maven.springframework.org</id>
 			<name>SpringSource releases</name>
 			<url>http://maven.springframework.org/release</url>
 		</repository>
 	</repositories>
 	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
 		<repository>
 			<id>COLARDYN IT official repo</id>
 			<name>HWBOT official repo</name>
 			<url>scp://repo.hwbot.org/home/ubuntu/.m2/repository</url>
 		</repository>
+		<!-- use the following if you ARE using a snapshot version. -->
 		<snapshotRepository>
 			<id>COLARDYN IT official repo</id>
 			<name>HWBOT official snapshot repo</name>

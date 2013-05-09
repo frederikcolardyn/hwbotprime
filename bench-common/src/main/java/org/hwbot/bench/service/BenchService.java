@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.ServiceLoader;
@@ -33,6 +35,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.hwbot.bench.api.Benchmark;
+import org.hwbot.bench.model.Response;
 import org.hwbot.bench.remote.BasicResponseStatusHandler;
 import org.hwbot.bench.security.EncryptionModule;
 import org.hwbot.bench.ui.BenchUI;
@@ -43,221 +46,246 @@ import org.hwbot.bench.ui.console.SystemConsole;
 import org.hwbot.bench.ui.console.SystemProgressBar;
 import org.hwbot.bench.ui.swing.BenchSwingUI;
 import org.hwbot.bench.ui.swing.JProgressBarProgressBar;
-import org.hwbot.bench.ui.swing.JTextAreaConsole;
 
 public abstract class BenchService {
 
-	public String processor;
-	public long score;
-	private String version = this.getClass().getPackage().getImplementationVersion();
-	protected int availableProcessors;
+    public String processor;
+    public long score;
+    private String version = this.getClass().getPackage().getImplementationVersion();
+    protected int availableProcessors, availableProcessorThreads;
 
-	protected BenchUI benchUI;
-	protected ProgressBar progressBar;
-	protected Output output;
+    protected BenchUI benchUI;
+    protected ProgressBar progressBar;
+    protected Output output;
 
-	protected byte[] key;
-	protected byte[] iv;
-	// processor speed in Mhz
-	protected Float processorSpeed;
+    protected byte[] key;
+    protected byte[] iv;
+    // processor speed in Mhz
+    protected Float processorSpeed;
+    private String server = System.getProperty("server", "http://hwbot.org");
+    public static boolean headless;
+    protected static EncryptionModule encryptionModule;
 
-	public BenchService() {
-		try {
-			ServiceLoader<EncryptionModule> encryptionLoader = ServiceLoader.load(EncryptionModule.class);
-			for (EncryptionModule encryptionModule : encryptionLoader) {
-				try {
-					key = Hex.decodeHex(encryptionModule.getKey());
-					iv = Hex.decodeHex(encryptionModule.getIv());
-				} catch (DecoderException e) {
-					throw new RuntimeException(e);
-				}
-			}
-			if (key == null) {
-				System.out.println("No encryption modules loaded.");
-			}
-		} catch (Exception e) {
-			// no encryption
-			System.err.println("No encryption module found.");
-			e.printStackTrace();
-		}
-	}
+    public BenchService() {
+        try {
+            ServiceLoader<EncryptionModule> encryptionLoader = ServiceLoader.load(EncryptionModule.class);
+            for (EncryptionModule encryptionModule : encryptionLoader) {
+                BenchService.encryptionModule = encryptionModule;
+                try {
+                    key = Hex.decodeHex(encryptionModule.getKey());
+                    iv = Hex.decodeHex(encryptionModule.getIv());
+                } catch (DecoderException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (key == null) {
+                System.out.println("No encryption modules loaded.");
+            }
+        } catch (Exception e) {
+            // no encryption
+            System.err.println("No encryption module found.");
+            e.printStackTrace();
+        }
+    }
 
-	public void initialize(boolean ui) throws IOException {
-		HardwareService hardwareService = new HardwareService();
-		processor = hardwareService.getProcessorInfo();
-		availableProcessors = Runtime.getRuntime().availableProcessors();
+    public void initialize(boolean ui) throws IOException {
+        HardwareService hardwareService = new HardwareService();
+        processor = hardwareService.getProcessorInfo();
+        availableProcessors = Runtime.getRuntime().availableProcessors();
+        processorSpeed = hardwareService.getProcessorSpeed();
+        availableProcessorThreads = hardwareService.getNumberOfProcessorCores();
 
-		if (ui) {
-			System.out.println("Using UI mode.");
-			try {
-				UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-			} catch (Exception e) {
-				try {
-					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-				} catch (Exception e1) {
-				}
-			}
+        BenchService.headless = !ui;
 
-			JFrame frame = new JFrame("HWBOT Bench");
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			BenchSwingUI benchUI = new BenchSwingUI(this, getTitle(), getSubtitle());
-			// Get the size of the screen
-			Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-			// Determine the new location of the window
-			int w = frame.getSize().width;
-			int h = frame.getSize().height;
-			int x = (dim.width - w) / 2;
-			int y = (dim.height - h) / 2;
-			// Move the window
-			frame.setLocation(x, y);
-			frame.setContentPane(benchUI);
-			frame.pack();
-			frame.setVisible(true);
+        if (ui) {
+            System.out.println("Using UI mode.");
+            try {
+                UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+            } catch (Exception e) {
+                try {
+                    UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                } catch (Exception e1) {
+                }
+            }
 
-			JProgressBar progressbar = benchUI.getjProgressBar1();
-			progressbar.setMaximum(100);
+            JFrame frame = new JFrame("HWBOT Prime " + version);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            BenchSwingUI benchUI = new BenchSwingUI(this, getTitle(), getSubtitle());
+            // Get the size of the screen
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+            // Determine the new location of the window
+            int w = frame.getSize().width;
+            int h = frame.getSize().height;
+            int x = (dim.width - w) / 2;
+            int y = (dim.height - h) / 2;
+            // Move the window
+            frame.setLocation(x, y);
+            frame.setContentPane(benchUI);
+            frame.pack();
+            frame.setVisible(true);
 
-			output = new JTextAreaConsole(benchUI.getConsole());
-			progressBar = new JProgressBarProgressBar(progressbar);
-			this.benchUI = benchUI;
-		} else {
-			BenchConsole benchUI = new BenchConsole(this);
+            JProgressBar progressbar = benchUI.getjProgressBar1();
+            progressbar.setMaximum(100);
 
-			output = new SystemConsole();
-			progressBar = new SystemProgressBar(100);
-			this.benchUI = benchUI;
-		}
+            // output = new JTextAreaConsole(benchUI.getConsole());
 
-		output.write("--------- HWBOT BENCH " + version + " ----------\n");
-		output.write("Processor detected:\n" + processor);
-		output.write("Estimating speed... ", false);
-		processorSpeed = hardwareService.getProcessorSpeed();
-		output.write(getProcessorFrequency() + " Mhz");
+            benchUI.getProcessor().setText(processor);
+            benchUI.getFrequency().setText(getProcessorFrequency());
+            benchUI.getThreads().setText(""+availableProcessorThreads);
+            
+            frame.pack();
 
-		benchUI.waitForCommands();
-	}
+            progressBar = new JProgressBarProgressBar(progressbar);
+            this.benchUI = benchUI;
+        } else {
+            BenchConsole benchUI = new BenchConsole(this);
 
-	public abstract String getSubtitle();
+            output = new SystemConsole();
+            progressBar = new SystemProgressBar(100);
+            this.benchUI = benchUI;
 
-	public abstract String getTitle();
+            output.write("--------- HWBOT BENCH " + version + " ----------\n");
+            output.write("Processor detected:\n" + processor);
+            output.write("Estimating speed... ", false);
+            output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency() + "MHz");
 
-	public String getProcessorFrequency() {
-		String freq;
-		if (processorSpeed == null) {
-			freq = "n/a";
-		} else {
-			NumberFormat instance = NumberFormat.getInstance(Locale.ENGLISH);
-			instance.setMaximumFractionDigits(2);
-			freq = instance.format(processorSpeed);
-		}
-		return freq;
-	}
+        }
 
-	public void benchmark() {
-		ExecutorService exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
-			public Thread newThread(Runnable runnable) {
-				Thread thread = new Thread(runnable);
-				thread.setName("benchmark");
-				thread.setDaemon(false);
-				return thread;
-			}
-		});
-		exec.submit(instantiateBenchmark());
-	}
+        benchUI.waitForCommands();
+    }
 
-	public abstract Benchmark instantiateBenchmark();
+    public abstract String getSubtitle();
 
-	public void submit() {
-		HttpParams httpParameters = new BasicHttpParams();
-		int timeoutConnection = 20;
-		HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection * 1000);
-		HttpConnectionParams.setSoTimeout(httpParameters, timeoutConnection * 1000);
-		HttpClient httpclient = new DefaultHttpClient(httpParameters);
-		try {
-			// Create a response handler
-			BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
-			HttpPost req = new HttpPost("http://hwbot.org/submit/api?client=" + getClient() + "&clientVersion=" + getClientVersion());
-			req.addHeader("Accept", "application/xml");
-			MultipartEntity mpEntity = new MultipartEntity();
-			byte[] bytes = getDataFile();
-			// mpEntity.addPart("data", new StringBody(xml));
-			mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
-			req.setEntity(mpEntity);
+    public abstract String getTitle();
 
-			Response response = DataServiceXml.parseResponse(httpclient.execute(req, responseHandler));
+    public String getProcessorFrequency() {
+        String freq;
+        if (processorSpeed == null) {
+            freq = "n/a";
+        } else {
+            NumberFormat instance = NumberFormat.getInstance(Locale.ENGLISH);
+            instance.setMaximumFractionDigits(2);
+            freq = instance.format(processorSpeed);
+        }
+        return freq;
+    }
 
-			if ("success".equals(response.getStatus())) {
-				String url = response.getUrl();
-				try {
-					Desktop.getDesktop().browse(new URI(url));
-				} catch (Exception e) {
-					output.write("Failed to open your browser, please open " + url + " to view your submission.");
-				}
-			} else {
-				output.write("Failed to submit score. Status was: " + response);
-				output.write(response.getMessage());
-			}
+    public void benchmark() {
+        ExecutorService exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable);
+                thread.setName("benchmark");
+                thread.setDaemon(false);
+                return thread;
+            }
+        });
+        exec.submit(instantiateBenchmark());
+    }
 
-		} catch (HttpHostConnectException e) {
-			output.write("Failed to connect to HWBOT server! Are you connected to the internet?");
-			e.printStackTrace();
-		} catch (Exception e) {
-			output.write("Error communicating with online service. If this issue persists, please contact HWBOT crew. Error: " + e.getMessage());
-			e.printStackTrace();
-		} finally {
-			httpclient.getConnectionManager().shutdown();
-		}
-	}
+    public abstract Benchmark instantiateBenchmark();
 
-	public byte[] getDataFile() {
-		byte[] bytes = null;
-		try {
-			String xml = DataServiceXml.createXml(getClient(), version, processor, processorSpeed, score);
-			if (key != null) {
-				bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
-			} else {
-				bytes = xml.getBytes("utf8");
-			}
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-		return bytes;
-	}
+    public void submit() {
+        HttpParams httpParameters = new BasicHttpParams();
+        int timeoutConnection = 20;
+        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection * 1000);
+        HttpConnectionParams.setSoTimeout(httpParameters, timeoutConnection * 1000);
+        HttpClient httpclient = new DefaultHttpClient(httpParameters);
+        try {
+            // Create a response handler
+            byte[] bytes = getDataFile();
+            // checksum can only be used in case of online submission, not saved files
+            String checksum = toSHA1(bytes);
 
-	protected abstract String getClient();
+            BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
+            HttpPost req = new HttpPost(server + "/submit/api?client=" + getClient() + "&clientVersion=" + getClientVersion());
+            req.addHeader("Accept", "application/xml");
+            MultipartEntity mpEntity = new MultipartEntity();
+            mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
+            req.setEntity(mpEntity);
 
-	protected abstract String getClientVersion();
+            Response response = DataServiceXml.parseResponse(httpclient.execute(req, responseHandler));
 
-	/**
-	 * Encrypt an array of bytes. Befor encrypting, you have to set the cipher to use, key and iv (if applicable)
-	 * 
-	 * @param data
-	 * @return the encrypted data
-	 */
-	public byte[] encrypt(String cipher, byte[] data) {
-		try {
-			String[] config = cipher.split("/");
-			Key encryptKey = new SecretKeySpec(key, config[0]);
-			Cipher c = Cipher.getInstance(cipher);
+            if ("success".equals(response.getStatus())) {
+                String url = response.getUrl();
+                try {
+                    Desktop.getDesktop().browse(new URI(url));
+                } catch (Exception e) {
+                    output.write("Failed to open your browser, please open " + url + " to view your submission.");
+                }
+            } else {
+                output.write("Failed to submit score. Status was: " + response);
+                output.write(response.getMessage());
+            }
 
-			if ("CBC".equals(config[1])) {
-				c.init(Cipher.ENCRYPT_MODE, encryptKey, new IvParameterSpec(iv));
-			} else if ("ECB".equals(config[1])) {
-				c.init(Cipher.ENCRYPT_MODE, encryptKey);
-			}
-			return c.doFinal(data);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to encrypt: " + e);
-		}
-	}
+        } catch (HttpHostConnectException e) {
+            output.write("Failed to connect to HWBOT server! Are you connected to the internet?");
+            e.printStackTrace();
+        } catch (Exception e) {
+            output.write("Error communicating with online service. If this issue persists, please contact HWBOT crew. Error: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            httpclient.getConnectionManager().shutdown();
+        }
+    }
 
-	public int getAvailableProcessors() {
-		return availableProcessors;
-	}
+    public byte[] getDataFile() throws UnsupportedEncodingException {
+        byte[] bytes = null;
+        String xml = DataServiceXml.createXml(getClient(), version, processor, processorSpeed, score, !headless, BenchService.encryptionModule);
+        // System.out.println("Using encryptionModule: " + (BenchService.encryptionModule == null ? "n/a" :
+        // BenchService.encryptionModule.getClass().getName()));
+        // System.out.println(xml);
+        if (key != null) {
+            bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
+        } else {
+            bytes = xml.getBytes("utf8");
+        }
+        return bytes;
+    }
 
-	public void setAvailableProcessors(int availableProcessors) {
-		this.availableProcessors = availableProcessors;
-	}
+    public static String toSHA1(byte[] string) {
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException();
+        }
+        return Hex.encodeHexString(md.digest(string));
+    }
 
-	public abstract String formatScore(Long score);
+    protected abstract String getClient();
+
+    protected abstract String getClientVersion();
+
+    /**
+     * Encrypt an array of bytes. Befor encrypting, you have to set the cipher to use, key and iv (if applicable)
+     * 
+     * @param data
+     * @return the encrypted data
+     */
+    public byte[] encrypt(String cipher, byte[] data) {
+        try {
+            String[] config = cipher.split("/");
+            Key encryptKey = new SecretKeySpec(key, config[0]);
+            Cipher c = Cipher.getInstance(cipher);
+
+            if ("CBC".equals(config[1])) {
+                c.init(Cipher.ENCRYPT_MODE, encryptKey, new IvParameterSpec(iv));
+            } else if ("ECB".equals(config[1])) {
+                c.init(Cipher.ENCRYPT_MODE, encryptKey);
+            }
+            return c.doFinal(data);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to encrypt: " + e);
+        }
+    }
+
+    public int getAvailableProcessors() {
+        return availableProcessors;
+    }
+
+    public void setAvailableProcessors(int availableProcessors) {
+        this.availableProcessors = availableProcessors;
+    }
+
+    public abstract String formatScore(Long score);
 }
