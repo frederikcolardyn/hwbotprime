@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarEntry;
 
 import org.apache.commons.io.FileUtils;
@@ -131,6 +134,47 @@ public class HardwareService {
      */
     public Float getProcessorSpeed() {
 
+        // see if the scaling_cur_freq File is present (linux only)
+        if (isUnix()) {
+            // cat "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq
+            File linuxFreqFile = new File("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+            if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
+                try {
+                    Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
+                    if (speed > 0) {
+                        return speed;
+                    }
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        // only for intel core i7?
+        int dpt = 2;
+        int dpc = 15;
+
+        // fall back on own estimation
+        System.out.println("Calculating cpu speed... this may take a few seconds on mobile processors.");
+        Float speed = cpufreq(dpt, dpc);
+
+        // yay, arbitrary numbers!
+        if (speed != null && (speed > 100 && speed < 12000)) {
+            return speed;
+        } else {
+            // System.out.println("not using calculated speed " + speed);
+        }
+
+        // mac only
+        if (isMac()) {
+            try {
+                speed = NumberUtils.createFloat(StringUtils.substringAfterLast(execRuntime(new String[] { "sysctl", "hw.cpufrequency" }), ":").trim());
+                speed = speed / 1000 / 1000;
+            } catch (NumberFormatException e) {
+                System.err.println("Failed to read processor speed on mac: " + e);
+            }
+        }
+
+        // utility class, reports stock speed mostly
         JavaSysMon sysMon = new JavaSysMon();
         if (sysMon.supportedPlatform()) {
             try {
@@ -142,36 +186,13 @@ public class HardwareService {
             }
         }
 
-        // see if the scaling_cur_freq File is present (linux only)
-        if (isUnix()) {
-            File linuxFreqFile = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-            if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
-                try {
-                    Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
-                    if (speed > 0) {
-                        return speed;
-                    }
-                } catch (IOException e) {
-                }
-            }
-
-        }
-        // mac only
-        if (isMac()) {
-            try {
-                return NumberUtils.createFloat(execRuntime(new String[] { "sysctl", "hw.cpufrequency" }));
-            } catch (NumberFormatException e) {
-                System.err.println("Failed to read processor speed on mac: " + e);
-            }
-        }
-
         // calculate based on bogomips on unix
         if (isUnix()) {
             File linuxFreqFile = new File("/proc/cpuinfo");
             if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
                 try {
                     List<String> lines = FileUtils.readLines(linuxFreqFile);
-                    float speed = 0;
+                    speed = 0f;
                     String proc = null;
                     for (String line : lines) {
                         if (line.contains("Processor")) {
@@ -190,11 +211,7 @@ public class HardwareService {
             }
         }
 
-        int dpt = 2;
-        int dpc = 15;
-
-        // fall back on own estimation
-        return cpufreq(dpt, dpc);
+        return null;
     }
 
     private float mipsToSpeed(String proc, Float mips) {
@@ -211,25 +228,67 @@ public class HardwareService {
     }
 
     private static Float cpufreq(float dpt, float dpc) {
+        Map<Float, Integer> speeds = new HashMap<Float, Integer>();
+        long before = System.currentTimeMillis();
+        int runs = 100;
+        int current = 0;
+        Float estimate = null;
+        while (current++ < runs) {
+            Float run = calculateSpeed(dpt, dpc, current == 1);
+            if (run != null) {
+                Integer count = speeds.get(run);
+                if (count == null) {
+                    speeds.put(run, 1);
+                } else {
+                    speeds.put(run, count + 1);
+                }
+            }
+            // if (run != null && (estimate == null || run > estimate)) {
+            // estimate = run;
+            // System.out.println("updated estimate: " + estimate + "MHz");
+            // }
+        }
+
+        int highestCount = 0;
+        Set<Float> speedKeys = speeds.keySet();
+        for (Float key : speedKeys) {
+            Integer count = speeds.get(key);
+            if (count > highestCount) {
+                highestCount = count;
+            }
+        }
+        for (Float key : speedKeys) {
+            Integer count = speeds.get(key);
+            if (count == highestCount) {
+                estimate = key;
+                break;
+            }
+        }
+
+        // System.out.println("estimation " + estimate + "MHz took " + (System.currentTimeMillis() - before) + "ms");
+        return estimate;
+    }
+
+    public static Float calculateSpeed(float dpt, float dpc, boolean warmup) {
         try {
             /* run cycles for Integer.MAX_VALUE times */
-            long maxValue = Integer.MAX_VALUE * 1l;
+            long maxValue = (Integer.MAX_VALUE * 1l / (warmup ? 50 : 100));
             long l1 = System.currentTimeMillis();
             for (long i = 0; i < maxValue; i++)
                 ;
             long l2 = System.currentTimeMillis();
-            // System.out.println("l1: "+l1);
-            // System.out.println("l2: "+l2);
+            // System.out.println("l1: " + l1);
+            // System.out.println("l2: " + l2);
 
             /* compute the cycles per second */
-            long cps = (maxValue / (l2 - l1)) / 1000 * 100;
+            long cps = (maxValue / (l2 - l1));
 
             /* output the computation result */
-            System.out.println("Directives per tick: " + dpt);
-            System.out.println("Directives per cycle: " + dpc);
-            System.out.println("Cycles per second: " + cps);
-            System.out.println("Freq: " + (cps * dpc / dpt));
-            float mhz = (((cps * dpc / dpt) / 1000) / 1000);
+            // System.out.println("Directives per tick: " + dpt);
+            // System.out.println("Directives per cycle: " + dpc);
+            // System.out.println("Cycles per second: " + cps);
+            float mhz = (((cps * dpc / dpt) / 1000 / 1000 * 100));
+            // System.out.println("mhz: " + mhz);
             return mhz;
         } catch (Throwable e) {
             e.printStackTrace();
