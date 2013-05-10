@@ -142,7 +142,9 @@ public class HardwareService {
                 try {
                     Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
                     if (speed > 0) {
-                        return speed / 1000f;
+                        speed = speed / 1000f;
+                        // System.out.println("detected speed cpuinfo_max_freq: "+speed);
+                        return speed;
                     }
                 } catch (IOException e) {
                 }
