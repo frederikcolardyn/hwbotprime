@@ -142,7 +142,7 @@ public class HardwareService {
                 try {
                     Float speed = Float.parseFloat(FileUtils.readFileToString(linuxFreqFile));
                     if (speed > 0) {
-                        return speed;
+                        return speed / 1000f;
                     }
                 } catch (IOException e) {
                 }
