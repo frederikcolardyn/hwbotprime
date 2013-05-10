@@ -51,7 +51,7 @@ public abstract class BenchService {
 
     public String processor;
     public long score;
-    private String version = this.getClass().getPackage().getImplementationVersion();
+    protected String version = this.getClass().getPackage().getImplementationVersion();
     protected int availableProcessors, availableProcessorThreads;
 
     protected BenchUI benchUI;
@@ -194,7 +194,7 @@ public abstract class BenchService {
             // Create a response handler
             byte[] bytes = getDataFile();
             // checksum can only be used in case of online submission, not saved files
-            String checksum = toSHA1(bytes);
+            // String checksum = toSHA1(bytes);
 
             BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
             HttpPost req = new HttpPost(server + "/submit/api?client=" + getClient() + "&clientVersion=" + getClientVersion());

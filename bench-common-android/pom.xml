@@ -24,7 +24,7 @@
 					<address>frederikcolardyn@gmail.com</address>
 				</configuration>
 			</notifier>
-		</notifiers>
+		</notifiers>	
 	</ciManagement>
 	<developers>
 		<developer>

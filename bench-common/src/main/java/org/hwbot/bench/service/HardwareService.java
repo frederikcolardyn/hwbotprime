@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarEntry;
 
 import org.apache.commons.io.FileUtils;
@@ -99,8 +100,12 @@ public class HardwareService {
     public int getNumberOfProcessorCores() {
         JavaSysMon sysMon = new JavaSysMon();
         if (sysMon.supportedPlatform()) {
-            if (sysMon.numCpus() > 0) {
-                return sysMon.numCpus();
+            try {
+                if (sysMon.numCpus() > 0) {
+                    return sysMon.numCpus();
+                }
+            } catch (Exception e) {
+                // ignore
             }
         }
         System.out.println("Unable to dedect amount of cores.");
@@ -128,8 +133,12 @@ public class HardwareService {
 
         JavaSysMon sysMon = new JavaSysMon();
         if (sysMon.supportedPlatform()) {
-            if (sysMon.cpuFrequencyInHz() > 0) {
-                return sysMon.cpuFrequencyInHz() / 1000f / 1000f;
+            try {
+                if (sysMon.cpuFrequencyInHz() > 0) {
+                    return sysMon.cpuFrequencyInHz() / 1000f / 1000f;
+                }
+            } catch (Exception e) {
+                // ignore
             }
         }
 
@@ -154,11 +163,51 @@ public class HardwareService {
             } catch (NumberFormatException e) {
                 System.err.println("Failed to read processor speed on mac: " + e);
             }
-
         }
 
+        // calculate based on bogomips on unix
+        if (isUnix()) {
+            File linuxFreqFile = new File("/proc/cpuinfo");
+            if (linuxFreqFile.exists() && linuxFreqFile.canRead()) {
+                try {
+                    List<String> lines = FileUtils.readLines(linuxFreqFile);
+                    float speed = 0;
+                    String proc = null;
+                    for (String line : lines) {
+                        if (line.contains("Processor")) {
+                            proc = StringUtils.substringAfterLast(line, ":").trim();
+                        }
+                        if (line.contains("BogoMIPS")) {
+                            Float mips = Float.parseFloat(StringUtils.substringAfterLast(line, ":").trim());
+                            speed = mipsToSpeed(proc, mips);
+                        }
+                    }
+                    if (speed > 0) {
+                        return speed;
+                    }
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        int dpt = 2;
+        int dpc = 15;
+
         // fall back on own estimation
-        return cpufreq(2, 15);
+        return cpufreq(dpt, dpc);
+    }
+
+    private float mipsToSpeed(String proc, Float mips) {
+        if (proc == null) {
+            return 0;
+        } else {
+            proc = proc.toLowerCase();
+            if (proc.contains("arm")) {
+                // very uneducated guess
+                return mips / 2;
+            }
+        }
+        return 0;
     }
 
     private static Float cpufreq(float dpt, float dpc) {
@@ -176,10 +225,10 @@ public class HardwareService {
             long cps = (maxValue / (l2 - l1)) / 1000 * 100;
 
             /* output the computation result */
-            // System.out.println("Directives per tick: " + dpt);
-            // System.out.println("Directives per cycle: " + dpc);
-            // System.out.println("Cycles per second: " + cps);
-            // System.out.println("Freq: " + (cps * dpc / dpt));
+            System.out.println("Directives per tick: " + dpt);
+            System.out.println("Directives per cycle: " + dpc);
+            System.out.println("Cycles per second: " + cps);
+            System.out.println("Freq: " + (cps * dpc / dpt));
             float mhz = (((cps * dpc / dpt) / 1000) / 1000);
             return mhz;
         } catch (Throwable e) {
@@ -258,9 +307,9 @@ public class HardwareService {
         }
 
         if (errorBuffer.length() > 0) {
-            System.err.println("could not finish execution because of error(s).");
-            System.err.println("*** Error : " + errorBuffer.toString());
-            return "";
+            // System.err.println("could not finish execution because of error(s).");
+            // System.err.println("*** Error : " + errorBuffer.toString());
+            return null;
         }
 
         return outputReport.toString();

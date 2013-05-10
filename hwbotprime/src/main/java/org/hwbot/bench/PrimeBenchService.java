@@ -32,7 +32,7 @@ public class PrimeBenchService extends BenchService {
 
 	@Override
 	protected String getClientVersion() {
-		return "0.1.0";
+		return version;
 	}
 
 }
