@@ -100,11 +100,13 @@ public abstract class BenchService implements Runnable {
         HardwareService hardwareService = new HardwareService();
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
+
         processorSpeed = hardwareService.measureCpuSpeed();
         if (processorSpeed == null) {
             System.err.println("Can not measure cpu speed, trying default speed...");
             processorSpeed = hardwareService.getDefaultProcessorSpeed();
         }
+
         availableProcessorThreads = hardwareService.getNumberOfProcessorCores();
 
         BenchService.headless = !ui;
