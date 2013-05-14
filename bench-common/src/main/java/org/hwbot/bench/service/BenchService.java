@@ -16,7 +16,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -68,6 +71,8 @@ public abstract class BenchService implements Runnable {
     public static boolean headless;
     protected static EncryptionModule encryptionModule;
     private Benchmark benchmark;
+    private ScheduledFuture<?> processorFrequencyMonitorScheduler;
+    private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
 
     public BenchService() {
         try {
@@ -137,10 +142,14 @@ public abstract class BenchService implements Runnable {
             // output = new JTextAreaConsole(benchUI.getConsole());
 
             benchUI.getProcessor().setText(processor);
-            benchUI.getFrequency().setText(getProcessorFrequency());
+            benchUI.getFrequency().setText(getProcessorFrequency(processorSpeed));
             benchUI.getThreads().setText("" + availableProcessorThreads);
 
             frame.pack();
+
+            scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
+            processorFrequencyMonitorScheduler = scheduledThreadPoolExecutor.scheduleWithFixedDelay(
+                    new ProcessorFrequencyMonitor(hardwareService, benchUI.getFrequency()), 1l, 1l, TimeUnit.SECONDS);
 
             progressBar = new JProgressBarProgressBar(progressbar);
             this.benchUI = benchUI;
@@ -154,8 +163,7 @@ public abstract class BenchService implements Runnable {
             output.write("--------- HWBOT Prime " + version + " ----------\n");
             output.write("Processor detected:\n" + processor);
             output.write("Estimating speed... ", false);
-            output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency() + "MHz");
-
+            output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency(processorSpeed) + "MHz");
         }
 
         benchUI.waitForCommands();
@@ -165,7 +173,7 @@ public abstract class BenchService implements Runnable {
 
     public abstract String getTitle();
 
-    public String getProcessorFrequency() {
+    public static String getProcessorFrequency(Float processorSpeed) {
         String freq;
         if (processorSpeed == null) {
             freq = "n/a";
@@ -180,7 +188,7 @@ public abstract class BenchService implements Runnable {
     private ExecutorService exec;
 
     public void benchmark() {
-        exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
+        exec = Executors.newFixedThreadPool(2, new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable);
                 thread.setPriority(Thread.MAX_PRIORITY);
@@ -189,6 +197,10 @@ public abstract class BenchService implements Runnable {
                 return thread;
             }
         });
+        if (scheduledThreadPoolExecutor != null) {
+            scheduledThreadPoolExecutor.shutdownNow();
+            processorFrequencyMonitorScheduler.cancel(true);
+        }
         benchmark = instantiateBenchmark();
         new Thread(this).start();
     }

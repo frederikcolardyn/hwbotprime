@@ -4,11 +4,13 @@ import junit.framework.Assert;
 
 import org.hwbot.bench.api.BenchmarkConfiguration;
 import org.hwbot.bench.ui.console.SystemProgressBar;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class PrimeBenchmarkTest {
 
     @Test
+    @Ignore
     public void testSpeed() {
 
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
