@@ -30,6 +30,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
 
 /*
  * This is the expected maximum length of the brand string.
@@ -150,5 +152,10 @@ const char *cpuid_vendor_string(int);
 void cpuid_brand(char *buffer, size_t length);
 
 void cpuid_address_size(uint8_t *physical, uint8_t *virtual);
+
+/**
+ * Returns clockspeed for intel processors.
+ */
+uint64_t rdtsc(void);
 
 #endif /* _CPUID_H */

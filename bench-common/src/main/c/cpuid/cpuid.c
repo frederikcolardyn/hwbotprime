@@ -28,6 +28,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include <cpuid.h>
 #define CPUID_BIT(b) (1ULL << (b))
@@ -312,3 +314,16 @@ cpuid_vendor_string(int v)
 	return cpuid_vendor_strings[v];
 }
 
+#ifdef __i386
+__inline__ uint64_t rdtsc(void) {
+  uint64_t x;
+  __asm__ volatile ("rdtsc" : "=A" (x));
+  return x;
+}
+#elif defined __amd64
+__inline__ uint64_t rdtsc(void) {
+  uint64_t a, d;
+  __asm__ volatile ("rdtsc" : "=a" (a), "=d" (d));
+  return (d<<32) | a;
+}
+#endif

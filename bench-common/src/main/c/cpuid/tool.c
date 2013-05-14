@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define FEATURES (1 << 0)
 #define VENDOR   (1 << 1)
@@ -40,7 +41,7 @@ static void
 usage(FILE *fp, int status)
 {
 
-	fprintf(fp, "Usage: cpuid -[a|b|f|h|v]\n");
+	fprintf(fp, "Usage: cpuid -[a|b|f|h|v|s]\n");
 	exit(status);
 }
 
@@ -92,8 +93,16 @@ main(int argc, char *argv[])
 	case 'v':
 		printf("%s\n", cpuid_vendor_string(cpuid_vendor()));
 		break;
+	case 's':
+		;
+		uint64_t startCount = rdtsc();
+		usleep(500000);
+		uint64_t endCount = rdtsc();
+		printf("%llu", (endCount - startCount) * 2 / 1000000);
+		break;
 	case 'h':
 		usage(stdout, EXIT_SUCCESS);
+		break;
 	default:
 		usage(stderr, EXIT_FAILURE);
 	}

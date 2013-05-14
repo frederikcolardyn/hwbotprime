@@ -12,8 +12,10 @@ import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.ServiceLoader;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
 import javax.crypto.Cipher;
@@ -47,7 +49,7 @@ import org.hwbot.bench.ui.console.SystemProgressBar;
 import org.hwbot.bench.ui.swing.BenchSwingUI;
 import org.hwbot.bench.ui.swing.JProgressBarProgressBar;
 
-public abstract class BenchService {
+public abstract class BenchService implements Runnable {
 
     public String processor;
     public long score;
@@ -65,6 +67,7 @@ public abstract class BenchService {
     private String server = System.getProperty("server", "http://hwbot.org");
     public static boolean headless;
     protected static EncryptionModule encryptionModule;
+    private Benchmark benchmark;
 
     public BenchService() {
         try {
@@ -92,7 +95,11 @@ public abstract class BenchService {
         HardwareService hardwareService = new HardwareService();
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
-        processorSpeed = hardwareService.getProcessorSpeed();
+        processorSpeed = hardwareService.measureCpuSpeed();
+        if (processorSpeed == null) {
+            System.err.println("Can not measure cpu speed, trying default speed...");
+            processorSpeed = hardwareService.getDefaultProcessorSpeed();
+        }
         availableProcessorThreads = hardwareService.getNumberOfProcessorCores();
 
         BenchService.headless = !ui;
@@ -131,8 +138,8 @@ public abstract class BenchService {
 
             benchUI.getProcessor().setText(processor);
             benchUI.getFrequency().setText(getProcessorFrequency());
-            benchUI.getThreads().setText(""+availableProcessorThreads);
-            
+            benchUI.getThreads().setText("" + availableProcessorThreads);
+
             frame.pack();
 
             progressBar = new JProgressBarProgressBar(progressbar);
@@ -144,7 +151,7 @@ public abstract class BenchService {
             progressBar = new SystemProgressBar(100);
             this.benchUI = benchUI;
 
-            output.write("--------- HWBOT BENCH " + version + " ----------\n");
+            output.write("--------- HWBOT Prime " + version + " ----------\n");
             output.write("Processor detected:\n" + processor);
             output.write("Estimating speed... ", false);
             output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency() + "MHz");
@@ -170,16 +177,33 @@ public abstract class BenchService {
         return freq;
     }
 
+    private ExecutorService exec;
+
     public void benchmark() {
-        ExecutorService exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
+        exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable);
+                thread.setPriority(Thread.MAX_PRIORITY);
                 thread.setName("benchmark");
                 thread.setDaemon(false);
                 return thread;
             }
         });
-        exec.submit(instantiateBenchmark());
+        benchmark = instantiateBenchmark();
+        new Thread(this).start();
+    }
+
+    public void run() {
+        Future<Long> submit = exec.submit(benchmark);
+        // wait for outout
+        try {
+            submit.get();
+            benchUI.notifyBenchmarkFinished(benchmark);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 
     public abstract Benchmark instantiateBenchmark();
@@ -197,7 +221,7 @@ public abstract class BenchService {
             // String checksum = toSHA1(bytes);
 
             BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
-            HttpPost req = new HttpPost(server + "/submit/api?client=" + getClient() + "&clientVersion=" + getClientVersion());
+            HttpPost req = new HttpPost(server + "/submit/api?client=" + benchmark.getClient() + "&clientVersion=" + getClientVersion());
             req.addHeader("Accept", "application/xml");
             MultipartEntity mpEntity = new MultipartEntity();
             mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
@@ -230,7 +254,8 @@ public abstract class BenchService {
 
     public byte[] getDataFile() throws UnsupportedEncodingException {
         byte[] bytes = null;
-        String xml = DataServiceXml.createXml(getClient(), version, processor, processorSpeed, score, !headless, BenchService.encryptionModule);
+        String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, processorSpeed, benchmark.getScore(), !headless,
+                BenchService.encryptionModule);
         // System.out.println("Using encryptionModule: " + (BenchService.encryptionModule == null ? "n/a" :
         // BenchService.encryptionModule.getClass().getName()));
         // System.out.println(xml);
@@ -251,8 +276,6 @@ public abstract class BenchService {
         }
         return Hex.encodeHexString(md.digest(string));
     }
-
-    protected abstract String getClient();
 
     protected abstract String getClientVersion();
 

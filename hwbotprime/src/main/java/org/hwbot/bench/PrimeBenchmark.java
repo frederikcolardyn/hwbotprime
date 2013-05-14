@@ -11,44 +11,65 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.hwbot.bench.api.Benchmark;
-import org.hwbot.bench.service.BenchService;
-import org.hwbot.bench.ui.BenchUI;
+import org.hwbot.bench.api.BenchmarkConfiguration;
 import org.hwbot.bench.ui.ProgressBar;
 
 public class PrimeBenchmark extends Benchmark {
 
-    // protected static final int workCount = 1000000;
-    protected static final int workCount = 1000000;
+    public static final String WORK_COUNT = "workcount";
+    public static final String SILENT = "silent";
+    // protected static final int workCountQuick = 1000000;
+    // protected static final int workCountStability = 2000000;
     protected static final int iterations = 100;
     protected int batchsize = Integer.valueOf(System.getProperty("batchsize", "16"));
+    private boolean silent;
 
-    public PrimeBenchmark(BenchService benchService, BenchUI benchUI, int threads, ProgressBar progressBar) {
-        super(benchService, benchUI, threads, progressBar);
+    public PrimeBenchmark(int threads, ProgressBar progressBar) {
+        super(threads, progressBar);
+    }
+
+    public PrimeBenchmark(BenchmarkConfiguration config, int threads, ProgressBar progressBar) {
+        super(config, threads, progressBar);
     }
 
     @Override
-    public Long benchmark() {
-        System.out.print("Warm up phase:   ");
-        benchrun(300000, 0, false);
-        System.out.println(" done!");
-        System.out.print("Benchmark phase: ");
-        int runs = 1;
-        int currentrun = 0;
-        long bestrun = Long.MAX_VALUE;
-        // this.progressBar.setMaxValue(runs);
-        while (currentrun++ < runs) {
-            Long benchrun = benchrun(workCount, currentrun, false);
-            // System.out.println(benchrun);
-            if (benchrun < bestrun) {
-                bestrun = benchrun;
-            }
-        }
-        System.out.println(" done!");
-        return bestrun;
+    public String getClient() {
+        return "hwbotprime";
     }
 
-    public Long benchrun(int workCount, int currentrun, boolean warmup) {
-        int workleft = workCount;
+    @Override
+    public void warmup() {
+        BenchmarkConfiguration configurationWarmup = new BenchmarkConfiguration();
+        configurationWarmup.setValue(PrimeBenchmark.WORK_COUNT, 5000l);
+        configurationWarmup.setValue(PrimeBenchmark.SILENT, true);
+
+        benchmark(configurationWarmup);
+    }
+
+    @Override
+    public Long benchmark(BenchmarkConfiguration configuration) {
+        super.config = configuration;
+        Long workCount = (Long) super.config.getValue(WORK_COUNT);
+        if (Boolean.TRUE.equals(super.config.getValue(SILENT))) {
+            this.silent = true;
+        }
+        if (!silent) {
+            System.out.print("Warm up phase:   ");
+        }
+        benchrun(200000l, 0, false);
+        if (!silent) {
+            System.out.println(" done!");
+            System.out.print("Benchmark phase: ");
+        }
+        Long benchrun = benchrun(workCount, 0, false);
+        if (!silent) {
+            System.out.println(" done!");
+        }
+        return benchrun;
+    }
+
+    public Long benchrun(long workCount, int currentrun, boolean warmup) {
+        long workleft = workCount;
         long before = System.currentTimeMillis();
         int primeStart = 5;
         int iteration = 0;
@@ -81,7 +102,9 @@ public class PrimeBenchmark extends Benchmark {
                         if (workleft % (workCount / iterations) == 0) {
                             iteration++;
                             if (!warmup) {
-                                this.progressBar.setValue(iteration);
+                                if (!silent) {
+                                    this.progressBar.setValue(iteration);
+                                }
                             }
                         }
                     } catch (TimeoutException e) {
@@ -105,7 +128,9 @@ public class PrimeBenchmark extends Benchmark {
                 if (workleft % (workCount / iterations) == 0) {
                     iteration++;
                     if (!warmup) {
-                        this.progressBar.setValue(iteration);
+                        if (!silent) {
+                            this.progressBar.setValue(iteration);
+                        }
                     }
                 }
             } catch (InterruptedException e) {
@@ -124,10 +149,6 @@ public class PrimeBenchmark extends Benchmark {
         }
 
         return System.currentTimeMillis() - before;
-    }
-
-    public static int getWorkcount() {
-        return workCount;
     }
 
     public static int getIterations() {
