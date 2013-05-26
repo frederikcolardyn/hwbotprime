@@ -11,7 +11,7 @@
 	</organization>
 
 	<scm>
-		<developerConnection>scm:git:https://github.com/frederikcolardyn/benchbot.git</developerConnection>
+		<developerConnection>scm:git:https://github.com/frederikcolardyn/benchbot.git/cpuid</developerConnection>
 	</scm>
 
 	<ciManagement>
