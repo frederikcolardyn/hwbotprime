@@ -3,6 +3,7 @@ package org.hwbot.bench;
 import junit.framework.Assert;
 
 import org.hwbot.bench.service.HardwareService;
+import org.hwbot.cpuid.CpuId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,17 +17,17 @@ public class HardwareServiceTest {
     }
 
     @Test
-    public void testDefaultSpeed() {
-        Float cpuFrequencyInHz = hardwareService.getDefaultProcessorSpeed();
-        Assert.assertTrue(cpuFrequencyInHz > 0);
-        System.out.println("Default: " + cpuFrequencyInHz);
+    public void testLoadLibrary() {
+        Assert.assertTrue(CpuId.sampleFrequency() > 0f);
+        String model = CpuId.model();
+        Assert.assertNotNull(model);
     }
 
     @Test
-    public void testMeasureSpeed() {
-        Float cpuFrequencyInHz = hardwareService.measureCpuSpeed();
-        Assert.assertNotNull(cpuFrequencyInHz);
-        System.out.println("Measured: " + cpuFrequencyInHz);
+    public void testDefaultSpeed() {
+        Float cpuFrequencyInHz = hardwareService.getEstimatedProcessorSpeed();
+        Assert.assertTrue(cpuFrequencyInHz > 0);
+        System.out.println("Default: " + cpuFrequencyInHz);
     }
 
 }

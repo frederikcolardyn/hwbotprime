@@ -11,9 +11,9 @@ public class ProcessorFrequencyMonitor implements Runnable {
         this.hardwareService = hardwareService;
         this.frequency = frequency;
     }
-
+    
     public void run() {
-        Float processorSpeed = hardwareService.measureCpuSpeed();
+        Float processorSpeed = hardwareService.getEstimatedProcessorSpeed();
         if (processorSpeed != null) {
             frequency.setText(BenchService.getProcessorFrequency(processorSpeed));
         }

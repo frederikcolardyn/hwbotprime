@@ -42,6 +42,7 @@ public abstract class Benchmark implements Callable<Long> {
         if (config == null) {
             return null;
         } else {
+            warmup();
             this.score = benchmark(config);
             return score;
         }

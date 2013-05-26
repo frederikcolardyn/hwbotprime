@@ -2,16 +2,16 @@ package org.hwbot.bench.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.jar.JarEntry;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.hwbot.bench.util.Util;
+import org.hwbot.cpuid.CpuId;
 
 import com.jezhumble.javasysmon.JavaSysMon;
 import com.jezhumble.javasysmon.MemoryStats;
@@ -19,13 +19,21 @@ import com.jezhumble.javasysmon.MemoryStats;
 public class HardwareService {
 
     public static String OS = System.getProperty("os.name").toLowerCase();
+    public static String OS_ARCH = System.getProperty("os.arch").toLowerCase();
     protected String version = this.getClass().getPackage().getImplementationVersion();
+    protected boolean libraryLoaded;
+
+    public HardwareService() {
+        prepareCpuid();
+    }
 
     public String getProcessorInfo() {
         String processor = null;
         try {
 
-            processor = execRuntime(new String[] { getCpuIdExecutable().getAbsolutePath(), "-b" });
+            if (libraryLoaded) {
+                processor = CpuId.model();
+            }
 
             if (StringUtils.isEmpty(processor)) {
                 processor = readProcessorStringFromProcCpuInfo();
@@ -38,8 +46,53 @@ public class HardwareService {
         return StringUtils.trim(processor);
     }
 
-    public void prepareCpuid(File targetFile) {
+    public void prepareCpuid() {
+        String libraryName = getLibraryName();
+
+        if (libraryName == null) {
+            System.err.println("No native cpu speed library for " + OS + " yet... falling back to OS tools.");
+        } else {
+
+            String libraryNameWithVersion = libraryName + "-" + version;
+            java.io.File cpuid = new java.io.File(System.getProperty("java.io.tmpdir") + java.io.File.separator + libraryNameWithVersion
+                    + getLibraryExtension());
+            if (!cpuid.exists()) {
+                // System.out.println("Installing " + libraryNameWithVersion + " in " + cpuid);
+                Util.extractFile(libraryName + getLibraryExtension(), cpuid);
+            } else {
+                // System.out.println("Using existing " + cpuid.getAbsolutePath());
+            }
+
+            // load
+            String libraryDirectory = cpuid.getParent();
+            // System.setProperty("java.library.path", libraryDirectory);
+            Util.addDirToJavaLibraryPath(libraryDirectory);
+
+            String libraryShortName = (libraryNameWithVersion.startsWith("lib")) ? StringUtils.substringAfter(libraryNameWithVersion, "lib")
+                    : libraryNameWithVersion;
+
+            // System.out.println("loading library... " + libraryShortName + " in " + System.getProperty("java.library.path"));
+            try {
+                System.loadLibrary(libraryShortName);
+                CpuId.model();
+                // CpuId.sampleFrequency();
+                libraryLoaded = true;
+            } catch (UnsatisfiedLinkError e) {
+                System.err.println("Failed to load native library on OS " + OS + ": " + e.getMessage());
+                Properties properties = System.getProperties();
+
+                Set<Entry<Object, Object>> entrySet = properties.entrySet();
+                for (Entry<Object, Object> entry : entrySet) {
+                    System.out.println(entry.getKey() + ": " + entry.getValue());
+                }
+            }
+
+        }
+    }
+
+    public String getLibraryName() {
         String property = System.getProperty("sun.arch.data.model");
+        String name;
         int bits;
         if ("32".equals(property)) {
             bits = 32;
@@ -47,62 +100,32 @@ public class HardwareService {
             bits = 64;
         }
 
-        if (isWindows()) {
-            extractFile("cpuid-win" + bits + ".exe", targetFile, false);
+        if (isArm()) {
+            name = null;
+        } else if (isWindows()) {
+            name = "cpuid-" + bits;
         } else if (isMac()) {
-            extractFile("cpuid-osx" + bits, targetFile, true);
+            name = "libCpuId-osx" + bits;
         } else if (isUnix()) {
-            extractFile("cpuid-linux" + bits, targetFile, true);
+            name = "libCpuId-" + bits;
         } else {
-            System.out.println("Your OS is not supported!!");
+            name = null;
+            System.err.println("OS '" + OS + "' is not supported!!");
         }
+        return name;
     }
 
-    public static void extractFile(String fileToExtract, File targetFile, boolean permissions) {
+    public String getLibraryExtension() {
 
-        try {
-            if (targetFile.exists()) {
-                // ok!
-                // System.out.println("Using CPU executable: " + getCpuIdExecutable().getAbsolutePath());
-            } else {
-                String path = HardwareService.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-                String decodedPath;
-                decodedPath = URLDecoder.decode(path, "UTF-8");
-
-                java.util.jar.JarFile jar = new java.util.jar.JarFile(decodedPath);
-                Enumeration<JarEntry> entries = jar.entries();
-                boolean installed = false;
-                while (entries.hasMoreElements()) {
-                    java.util.jar.JarEntry file = (java.util.jar.JarEntry) entries.nextElement();
-                    java.io.File f = targetFile;
-                    if (file.getName().equals(fileToExtract)) {
-                        if (file.isDirectory()) { // if its a directory, create it
-                            f.mkdir();
-                            continue;
-                        }
-                        java.io.InputStream is = jar.getInputStream(file); // get the input stream
-                        java.io.FileOutputStream fos = new java.io.FileOutputStream(f);
-                        while (is.available() > 0) { // write contents of 'is' to 'fos'
-                            fos.write(is.read());
-                        }
-                        fos.close();
-                        is.close();
-                        // System.out.println("cpuid executable written to " + f);
-                        // System.out.println("Prepared: " + targetFile.getAbsolutePath());
-                        if (permissions) {
-                            Runtime.getRuntime().exec("chmod +x " + f.getAbsolutePath());
-                        }
-                        installed = true;
-                        break;
-                    }
-                }
-                if (!installed) {
-                    System.err.println("Sorry, we can not run the bechmark on this platform. Please inform HWBOT crew this does not work on " + OS);
-                    throw new RuntimeException("OS not supported!");
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (isWindows()) {
+            return ".dll";
+        } else if (isMac()) {
+            return ".dylib";
+        } else if (isUnix()) {
+            return ".so";
+        } else {
+            System.err.println("OS '" + OS + "' is not supported!!");
+            return null;
         }
     }
 
@@ -117,7 +140,7 @@ public class HardwareService {
                 // ignore
             }
         }
-        System.out.println("Unable to dedect amount of cores.");
+        // System.out.println("Unable to dedect amount of cores.");
         return 1;
     }
 
@@ -138,7 +161,11 @@ public class HardwareService {
      * 
      * @return processor speed in MHz
      */
-    public Float getDefaultProcessorSpeed() {
+    public Float getEstimatedProcessorSpeed() {
+
+        if (libraryLoaded) {
+            return CpuId.sampleFrequency();
+        }
 
         // utility class, reports stock speed mostly
         JavaSysMon sysMon = new JavaSysMon();
@@ -175,7 +202,7 @@ public class HardwareService {
         // mac only
         if (isMac()) {
             try {
-                speed = NumberUtils.createFloat(StringUtils.substringAfterLast(execRuntime(new String[] { "sysctl", "hw.cpufrequency" }), ":").trim());
+                speed = NumberUtils.createFloat(StringUtils.substringAfterLast(Util.execRuntime(new String[] { "sysctl", "hw.cpufrequency" }), ":").trim());
                 speed = speed / 1000 / 1000;
             } catch (NumberFormatException e) {
                 System.err.println("Failed to read processor speed on mac: " + e);
@@ -223,27 +250,12 @@ public class HardwareService {
         return 0;
     }
 
-    public Float measureCpuSpeed() {
-        String processorInMhz = execRuntime(new String[] { getCpuIdExecutable().getAbsolutePath(), "-s" });
-
-        if (NumberUtils.isDigits(processorInMhz)) {
-            return NumberUtils.createFloat(processorInMhz);
-        } else {
-            System.err.println("Not a frequency: " + processorInMhz);
-            return null;
-        }
-    }
-
-    public File getCpuIdExecutable() {
-        java.io.File cpuid = new java.io.File(System.getProperty("java.io.tmpdir") + java.io.File.separator + "cpuid-" + version);
-        if (!cpuid.exists()) {
-            prepareCpuid(cpuid);
-        }
-        return cpuid;
-    }
-
     public static boolean isWindows() {
         return (OS.indexOf("win") >= 0);
+    }
+
+    public static boolean isArm() {
+        return (OS_ARCH.indexOf("arm") >= 0);
     }
 
     public static boolean isMac() {
@@ -252,67 +264,6 @@ public class HardwareService {
 
     public static boolean isUnix() {
         return (OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0);
-    }
-
-    public static String execRuntime(String[] strings) {
-
-        Process proc = null;
-        int inBuffer, errBuffer;
-        StringBuffer outputReport = new StringBuffer();
-        StringBuffer errorBuffer = new StringBuffer();
-
-        try {
-            proc = Runtime.getRuntime().exec(strings);
-        } catch (IOException e) {
-            return "";
-        }
-        try {
-            proc.waitFor();
-        } catch (InterruptedException e) {
-            return "";
-        }
-        if (proc != null && null != proc.getInputStream()) {
-            InputStream is = proc.getInputStream();
-            InputStream es = proc.getErrorStream();
-            OutputStream os = proc.getOutputStream();
-
-            try {
-                while ((inBuffer = is.read()) != -1) {
-                    outputReport.append((char) inBuffer);
-                }
-
-                while ((errBuffer = es.read()) != -1) {
-                    errorBuffer.append((char) errBuffer);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.err.println("error using cpuid");
-                return "";
-            }
-            try {
-                is.close();
-                is = null;
-                es.close();
-                es = null;
-                os.close();
-                os = null;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return "";
-            }
-
-            proc.destroy();
-            proc = null;
-        }
-
-        if (errorBuffer.length() > 0) {
-            // System.err.println("could not finish execution because of error(s): " + strings[0]);
-            // System.err.println("*** Error : " + errorBuffer.toString());
-            return null;
-        }
-
-        return outputReport.toString();
     }
 
     public String readProcessorStringFromProcCpuInfo() throws IOException {

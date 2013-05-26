@@ -19,49 +19,49 @@ import org.hwbot.bench.security.EncryptionModule;
 
 public class DataServiceXml {
 
-	public static String createScreenshot() {
-		try {
-			BufferedImage image = new Robot().createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-			ImageIO.write(image, "png", byteArrayOutputStream);
-			return Base64.encodeBase64String(byteArrayOutputStream.toByteArray());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
+    public static String createScreenshot() {
+        try {
+            BufferedImage image = new Robot().createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", byteArrayOutputStream);
+            return Base64.encodeBase64String(byteArrayOutputStream.toByteArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-	public static String createXml(String client, String version, String processorModel, Float processorSpeed, long scorePoints, boolean addScreenshot,
-			EncryptionModule encryptionModule) {
-		Request request = new Request(client, version, processorModel, processorSpeed, (scorePoints / 1000f));
+    public static String createXml(String client, String version, String processorModel, Float processorSpeed, Integer memoryInMB, long scorePoints,
+            boolean addScreenshot, EncryptionModule encryptionModule) {
+        Request request = new Request(client, version, processorModel, processorSpeed, memoryInMB, (scorePoints / 1000f));
 
-		if (addScreenshot) {
-			request.addScreenshot(createScreenshot());
-		}
+        if (addScreenshot) {
+            request.addScreenshot(createScreenshot());
+        }
 
-		if (encryptionModule != null) {
-			encryptionModule.addChecksum(request);
-		}
+        if (encryptionModule != null) {
+            encryptionModule.addChecksum(request);
+        }
 
-		JAXBContext jc;
-		try {
-			jc = JAXBContext.newInstance(Request.class);
-			Marshaller m = jc.createMarshaller();
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-			m.marshal(request, byteArrayOutputStream);
-			return new String(byteArrayOutputStream.toByteArray(), "utf8");
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+        JAXBContext jc;
+        try {
+            jc = JAXBContext.newInstance(Request.class);
+            Marshaller m = jc.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            m.marshal(request, byteArrayOutputStream);
+            return new String(byteArrayOutputStream.toByteArray(), "utf8");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public static Response parseResponse(String xml) {
-		try {
-			return (Response) JAXBContext.newInstance(Response.class).createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes()));
-		} catch (JAXBException e) {
-			throw new RuntimeException("Failed to parse response from HWBOT!", e);
-		}
-	}
+    public static Response parseResponse(String xml) {
+        try {
+            return (Response) JAXBContext.newInstance(Response.class).createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes()));
+        } catch (JAXBException e) {
+            throw new RuntimeException("Failed to parse response from HWBOT!", e);
+        }
+    }
 
 }

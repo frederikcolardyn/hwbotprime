@@ -1,176 +1,240 @@
 package org.hwbot.bench.model;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "submission")
-@XmlType(propOrder = { "application", "score", "screenshot", "applicationChecksum", "hardware" })
+@XmlType(propOrder = { "application", "score", "screenshot", "applicationChecksum", "hardware", "javaMetaData" })
 public class Request {
 
-	private Application application;
-	private Score score;
-	private Screenshot screenshot;
-	private Hardware hardware;
-	private String applicationChecksum;
+    private Application application;
+    private Score score;
+    private Screenshot screenshot;
+    private Hardware hardware;
+    private String applicationChecksum;
+    private MetaData javaMetaData;
 
-	public Request() {
-		super();
-	}
+    public Request() {
+    }
 
-	public Request(String client, String version, String processorModel, Float processorSpeed, float points) {
-		super();
-		application = new Application();
-		application.setName(client);
-		application.setVersion(version);
+    public Request(String client, String version, String processorModel, Float processorSpeed, Integer memoryInMB, float points) {
+        super();
+        application = new Application();
+        application.setName(client);
+        application.setVersion(version);
 
-		score = new Score();
-		score.setPoints(points);
+        score = new Score();
+        score.setPoints(points);
 
-		hardware = new Hardware();
-		Processor processor = new Processor();
-		processor.setCoreClock(processorSpeed);
-		processor.setName(processorModel);
-		hardware.setProcessor(processor);
-	}
+        hardware = new Hardware();
+        Processor processor = new Processor();
+        processor.setCoreClock(processorSpeed);
+        processor.setName(processorModel);
+        if (memoryInMB != null) {
+            Memory memory = new Memory();
+            memory.setTotalSize(memoryInMB.intValue());
+            hardware.setMemory(memory);
+        }
+        hardware.setProcessor(processor);
+        javaMetaData = new MetaData();
+    }
 
-	@XmlElement
-	public String getApplicationChecksum() {
-		return applicationChecksum;
-	}
+    @XmlElement
+    public String getApplicationChecksum() {
+        return applicationChecksum;
+    }
 
-	public void setApplicationChecksum(String applicationChecksum) {
-		this.applicationChecksum = applicationChecksum;
-	}
+    @XmlElement(name = "metadata")
+    public MetaData getJavaMetaData() {
+        return javaMetaData;
+    }
 
-	@XmlElement
-	public Application getApplication() {
-		return application;
-	}
+    public void setJavaMetaData(MetaData javaMetaData) {
+        this.javaMetaData = javaMetaData;
+    }
 
-	public void setApplication(Application application) {
-		this.application = application;
-	}
+    public void setApplicationChecksum(String applicationChecksum) {
+        this.applicationChecksum = applicationChecksum;
+    }
 
-	@XmlElement
-	public Score getScore() {
-		return score;
-	}
+    @XmlElement
+    public Application getApplication() {
+        return application;
+    }
 
-	public void setScore(Score score) {
-		this.score = score;
-	}
+    public void setApplication(Application application) {
+        this.application = application;
+    }
 
-	@XmlElement
-	public Screenshot getScreenshot() {
-		return screenshot;
-	}
+    @XmlElement
+    public Score getScore() {
+        return score;
+    }
 
-	public void setScreenshot(Screenshot screenshot) {
-		this.screenshot = screenshot;
-	}
+    public void setScore(Score score) {
+        this.score = score;
+    }
 
-	@XmlElement
-	public Hardware getHardware() {
-		return hardware;
-	}
+    @XmlElement
+    public Screenshot getScreenshot() {
+        return screenshot;
+    }
 
-	public void setHardware(Hardware hardware) {
-		this.hardware = hardware;
-	}
+    public void setScreenshot(Screenshot screenshot) {
+        this.screenshot = screenshot;
+    }
 
-	public static class Application {
-		String name;
-		String version;
+    @XmlElement
+    public Hardware getHardware() {
+        return hardware;
+    }
 
-		@XmlElement
-		public String getName() {
-			return name;
-		}
+    public void setHardware(Hardware hardware) {
+        this.hardware = hardware;
+    }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+    public static class Application {
+        String name;
+        String version;
 
-		@XmlElement
-		public String getVersion() {
-			return version;
-		}
+        @XmlElement
+        public String getName() {
+            return name;
+        }
 
-		public void setVersion(String version) {
-			this.version = version;
-		}
-	}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-	public static class Score {
-		float points;
+        @XmlElement
+        public String getVersion() {
+            return version;
+        }
 
-		@XmlElement
-		public float getPoints() {
-			return points;
-		}
+        public void setVersion(String version) {
+            this.version = version;
+        }
+    }
 
-		public void setPoints(float points) {
-			this.points = points;
-		}
-	}
+    public static class MetaData {
+        private String info = System.getProperty("java.runtime.name") + " " + System.getProperty("java.runtime.version");
+        private String name = "java";
 
-	public static class Screenshot {
-		String screenshot;
+        @XmlAttribute(name = "name")
+        public String getName() {
+            return name;
+        }
 
-		@XmlElement
-		public String getScreenshot() {
-			return screenshot;
-		}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-		public void setScreenshot(String screenshot) {
-			this.screenshot = screenshot;
-		}
+        public String getInfo() {
+            return info;
+        }
 
-	}
+        public void setInfo(String info) {
+            this.info = info;
+        }
 
-	public static class Hardware {
+    }
 
-		Processor processor;
+    public static class Score {
+        float points;
 
-		@XmlElement
-		public Processor getProcessor() {
-			return processor;
-		}
+        @XmlElement
+        public float getPoints() {
+            return points;
+        }
 
-		public void setProcessor(Processor processor) {
-			this.processor = processor;
-		}
+        public void setPoints(float points) {
+            this.points = points;
+        }
+    }
 
-	}
+    public static class Screenshot {
+        String screenshot;
 
-	public static class Processor {
-		String name;
-		Float coreClock;
+        @XmlElement
+        public String getScreenshot() {
+            return screenshot;
+        }
 
-		@XmlElement
-		public String getName() {
-			return name;
-		}
+        public void setScreenshot(String screenshot) {
+            this.screenshot = screenshot;
+        }
 
-		public void setName(String name) {
-			this.name = name;
-		}
+    }
 
-		@XmlElement
-		public Float getCoreClock() {
-			return coreClock;
-		}
+    public static class Hardware {
 
-		public void setCoreClock(Float coreClock) {
-			this.coreClock = coreClock;
-		}
+        Processor processor;
 
-	}
+        Memory memory;
 
-	public void addScreenshot(String base64) {
-		screenshot = new Screenshot();
-		screenshot.setScreenshot(base64);
-	}
+        @XmlElement
+        public Processor getProcessor() {
+            return processor;
+        }
+
+        public void setProcessor(Processor processor) {
+            this.processor = processor;
+        }
+
+        @XmlElement
+        public Memory getMemory() {
+            return memory;
+        }
+
+        public void setMemory(Memory memory) {
+            this.memory = memory;
+        }
+
+    }
+
+    public static class Processor {
+        String name;
+        Float coreClock;
+
+        @XmlElement
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @XmlElement
+        public Float getCoreClock() {
+            return coreClock;
+        }
+
+        public void setCoreClock(Float coreClock) {
+            this.coreClock = coreClock;
+        }
+
+    }
+
+    public static class Memory {
+        int totalSize;
+
+        @XmlElement
+        public int getTotalSize() {
+            return totalSize;
+        }
+
+        public void setTotalSize(int totalSize) {
+            this.totalSize = totalSize;
+        }
+
+    }
+
+    public void addScreenshot(String base64) {
+        screenshot = new Screenshot();
+        screenshot.setScreenshot(base64);
+    }
 
 }

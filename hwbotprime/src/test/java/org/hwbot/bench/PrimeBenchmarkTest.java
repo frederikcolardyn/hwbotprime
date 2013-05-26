@@ -1,5 +1,7 @@
 package org.hwbot.bench;
 
+import java.util.concurrent.TimeUnit;
+
 import junit.framework.Assert;
 
 import org.hwbot.bench.api.BenchmarkConfiguration;
@@ -10,14 +12,14 @@ import org.junit.Test;
 public class PrimeBenchmarkTest {
 
     @Test
-    @Ignore
+    // @Ignore
     public void testSpeed() {
 
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
         BenchmarkConfiguration configuration = new BenchmarkConfiguration();
-        configuration.setValue(PrimeBenchmark.WORK_COUNT, 100000l);
-        configuration.setValue(PrimeBenchmark.SILENT, true);
+        configuration.setValue(PrimeBenchmark.TIME_SPAN, TimeUnit.SECONDS.toMillis(20));
+        configuration.setValue(PrimeBenchmark.SILENT, false);
 
         PrimeBenchmark primeBenchmark = new PrimeBenchmark(16, new SystemProgressBar(100));
 
@@ -25,13 +27,11 @@ public class PrimeBenchmarkTest {
         long min = Integer.MAX_VALUE;
         long max = Integer.MIN_VALUE;
 
-        System.out.println("warmup");
         primeBenchmark.warmup();
-        System.out.println("done");
 
         while (iterations-- > 0) {
             Long benchmark = primeBenchmark.benchmark(configuration);
-            System.out.println(benchmark);
+            System.out.println("pps: " + benchmark);
             if (benchmark > max) {
                 max = benchmark;
             } else if (benchmark < min) {

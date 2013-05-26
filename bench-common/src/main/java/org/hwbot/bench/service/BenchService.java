@@ -19,7 +19,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -57,7 +56,7 @@ public abstract class BenchService implements Runnable {
     public String processor;
     public long score;
     protected String version = this.getClass().getPackage().getImplementationVersion();
-    protected int availableProcessors, availableProcessorThreads;
+    protected int availableProcessors, availableProcessorThreads, memoryInMB;
 
     protected BenchUI benchUI;
     protected ProgressBar progressBar;
@@ -101,13 +100,14 @@ public abstract class BenchService implements Runnable {
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        processorSpeed = hardwareService.measureCpuSpeed();
+        processorSpeed = hardwareService.getEstimatedProcessorSpeed();
         if (processorSpeed == null) {
             System.err.println("Can not measure cpu speed, trying default speed...");
-            processorSpeed = hardwareService.getDefaultProcessorSpeed();
+            processorSpeed = hardwareService.getEstimatedProcessorSpeed();
         }
 
         availableProcessorThreads = hardwareService.getNumberOfProcessorCores();
+        memoryInMB = (int) (hardwareService.getMemorySize() / 1024 / 1024);
 
         BenchService.headless = !ui;
 
@@ -146,12 +146,9 @@ public abstract class BenchService implements Runnable {
             benchUI.getProcessor().setText(processor);
             benchUI.getFrequency().setText(getProcessorFrequency(processorSpeed));
             benchUI.getThreads().setText("" + availableProcessorThreads);
+            benchUI.getMemory().setText("" + memoryInMB);
 
             frame.pack();
-
-            scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
-            processorFrequencyMonitorScheduler = scheduledThreadPoolExecutor.scheduleWithFixedDelay(
-                    new ProcessorFrequencyMonitor(hardwareService, benchUI.getFrequency()), 1l, 1l, TimeUnit.SECONDS);
 
             progressBar = new JProgressBarProgressBar(progressbar);
             this.benchUI = benchUI;
@@ -166,6 +163,9 @@ public abstract class BenchService implements Runnable {
             output.write("Processor detected:\n" + processor);
             output.write("Estimating speed... ", false);
             output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency(processorSpeed) + "MHz");
+            if (memoryInMB > 0) {
+                output.write(memoryInMB + " MB memory");
+            }
         }
 
         benchUI.waitForCommands();
@@ -268,7 +268,7 @@ public abstract class BenchService implements Runnable {
 
     public byte[] getDataFile() throws UnsupportedEncodingException {
         byte[] bytes = null;
-        String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, processorSpeed, benchmark.getScore(), !headless,
+        String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, processorSpeed, memoryInMB, benchmark.getScore(), !headless,
                 BenchService.encryptionModule);
         // System.out.println("Using encryptionModule: " + (BenchService.encryptionModule == null ? "n/a" :
         // BenchService.encryptionModule.getClass().getName()));

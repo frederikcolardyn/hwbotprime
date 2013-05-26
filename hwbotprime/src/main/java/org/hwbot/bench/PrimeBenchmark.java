@@ -16,7 +16,7 @@ import org.hwbot.bench.ui.ProgressBar;
 
 public class PrimeBenchmark extends Benchmark {
 
-    public static final String WORK_COUNT = "workcount";
+    public static final String TIME_SPAN = "timespan";
     public static final String SILENT = "silent";
     // protected static final int workCountQuick = 1000000;
     // protected static final int workCountStability = 2000000;
@@ -39,42 +39,43 @@ public class PrimeBenchmark extends Benchmark {
 
     @Override
     public void warmup() {
-        BenchmarkConfiguration configurationWarmup = new BenchmarkConfiguration();
-        configurationWarmup.setValue(PrimeBenchmark.WORK_COUNT, 5000l);
-        configurationWarmup.setValue(PrimeBenchmark.SILENT, true);
-
-        benchmark(configurationWarmup);
+        silent = false;
+        
+        if (!silent) {
+            System.out.print("Warm up phase:   ");
+        }
+        benchrun(2000l);
+        if (!silent) {
+            System.out.println(" done!");
+        }
     }
 
     @Override
     public Long benchmark(BenchmarkConfiguration configuration) {
         super.config = configuration;
-        Long workCount = (Long) super.config.getValue(WORK_COUNT);
+        Long timespan = (Long) super.config.getValue(TIME_SPAN);
         if (Boolean.TRUE.equals(super.config.getValue(SILENT))) {
             this.silent = true;
         }
         if (!silent) {
-            System.out.print("Warm up phase:   ");
-        }
-        benchrun(200000l, 0, false);
-        if (!silent) {
-            System.out.println(" done!");
             System.out.print("Benchmark phase: ");
         }
-        Long benchrun = benchrun(workCount, 0, false);
+        Long benchrun = benchrun(timespan);
         if (!silent) {
             System.out.println(" done!");
         }
         return benchrun;
     }
 
-    public Long benchrun(long workCount, int currentrun, boolean warmup) {
-        long workleft = workCount;
+    public Long benchrun(long timespanInMillis) {
+        long workCount = Long.MAX_VALUE;
         long before = System.currentTimeMillis();
         int primeStart = 5;
         int iteration = 0;
         int brokenWorkers = 0;
         int blocksize = threads * batchsize;
+        int seconds = (int) (timespanInMillis / 1000);
+        int progressFactor = 100 / seconds;
 
         List<Number> list = Collections.synchronizedList(new ArrayList<Number>());
         ThreadFactory tf = new ThreadFactory() {
@@ -86,8 +87,12 @@ public class PrimeBenchmark extends Benchmark {
         };
         ExecutorService exec = Executors.newFixedThreadPool(threads, tf);
         List<Future<Void>> workers = new ArrayList<Future<Void>>(blocksize * 2);
-        for (int i = 0; i < workCount; i++) {
+        long time = getTime();
+        long endTime = time + timespanInMillis;
+        int i = 0;
+        while (getTime() <= endTime) {
             // submit work to the svc for execution across the thread pool
+            i++;
             PrimeRunnable worker = new PrimeRunnable(primeStart + i, list);
             Future<Void> submit = exec.submit(worker);
             workers.add(submit);
@@ -98,17 +103,15 @@ public class PrimeBenchmark extends Benchmark {
                 for (Future<Void> future : runningWorkers) {
                     try {
                         future.get(1, TimeUnit.SECONDS);
-                        workleft--;
-                        if (workleft % (workCount / iterations) == 0) {
+                        long tl = (getTime() - time) / (1000 / progressFactor);
+                        if (tl > iteration) {
                             iteration++;
-                            if (!warmup) {
-                                if (!silent) {
-                                    this.progressBar.setValue(iteration);
-                                }
+                            if (!silent) {
+                                this.progressBar.setValue(iteration);
                             }
                         }
                     } catch (TimeoutException e) {
-                        System.err.println("x");
+                        System.err.print("x");
                         brokenWorkers++;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -124,15 +127,6 @@ public class PrimeBenchmark extends Benchmark {
         for (Future<Void> future : workers) {
             try {
                 future.get();
-                workleft--;
-                if (workleft % (workCount / iterations) == 0) {
-                    iteration++;
-                    if (!warmup) {
-                        if (!silent) {
-                            this.progressBar.setValue(iteration);
-                        }
-                    }
-                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -141,14 +135,22 @@ public class PrimeBenchmark extends Benchmark {
                 throw new RuntimeException(e);
             }
         }
-
-        // this.progressBar.setValue(currentrun);
+        this.progressBar.setValue(100);
 
         if (brokenWorkers > 0) {
-            System.err.println("[UNSTABLE] There were " + brokenWorkers + " broken workers out of " + workCount);
+            System.err.println("[UNSTABLE] There were " + brokenWorkers + " broken workers out of " + i);
         }
 
-        return System.currentTimeMillis() - before;
+        float timeneeded = (getTime() - before) / 1000f;
+
+        int primescalculated = list.size();
+        // System.out.println("primescalculated: " + primescalculated + " in " + timeneeded + "ms => " + (primescalculated / timeneeded));
+
+        return ((long) (primescalculated / timeneeded));
+    }
+
+    private long getTime() {
+        return System.currentTimeMillis();
     }
 
     public static int getIterations() {
