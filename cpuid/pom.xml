@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.hwbot</groupId>
 	<artifactId>cpuid</artifactId>
-	<version>1.1.2</version>
+	<version>1.1.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<url>http://hwbot.org</url>
 	<organization>
@@ -12,7 +11,7 @@
 	</organization>
 
 	<scm>
-		<developerConnection>scm:git:https://github.com/frederikcolardyn/benchbot.git</developerConnection>
+		<developerConnection>scm:git:https://github.com/frederikcolardyn/benchbot.git/cpuid</developerConnection>
 	</scm>
 
 	<ciManagement>
@@ -48,27 +47,6 @@
 		</developer>
 	</developers>
 	<inceptionYear>2013</inceptionYear>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.2.1</version>
-				<executions>
-					<execution>
-						<id>default</id>
-						<goals>
-							<goal>perform</goal>
-						</goals>
-						<configuration>
-							<pomFileName>cpuid/pom.xml</pomFileName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 
 	<properties>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
