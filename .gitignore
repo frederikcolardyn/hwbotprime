@@ -3,7 +3,7 @@ target/
 .classpath
 .project
 .settings/
-hwbotprime-security 
+hwbotprime-security/
 nohup.log
 *.log
 .DS_Store
