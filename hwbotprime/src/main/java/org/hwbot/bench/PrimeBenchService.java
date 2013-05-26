@@ -1,5 +1,8 @@
 package org.hwbot.bench;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.hwbot.bench.api.Benchmark;
@@ -17,8 +20,8 @@ public class PrimeBenchService extends BenchService {
     }
 
     @Override
-    public String formatScore(Long score) {
-        return String.valueOf(score);
+    public String formatScore(Number score) {
+        return new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(score);
     }
 
     @Override

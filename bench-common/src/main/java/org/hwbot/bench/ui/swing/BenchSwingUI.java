@@ -28,7 +28,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
     private JFileChooser fc;
 
     private String title = "HWBOT Benchmark";
-    private String subtitle = "Multithreaded Prime Bench - 32/64Bit - Win/Mac/Linux";
+    private String subtitle = "Multithreaded Prime Bench - ARM/x86 - Win/Mac/Linux";
 
     /**
      * Creates new form BenchUI
@@ -70,6 +70,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         startButtonStability = new javax.swing.JButton();
         memory = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
+        fc = new JFileChooser();
 
         jLabel1.setFont(new java.awt.Font("Lucida Grande", 1, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -77,7 +78,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
         jLabel3.setFont(new java.awt.Font("Lucida Grande", 0, 12)); // NOI18N
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel3.setText("Multithreaded Prime Bench - 32/64Bit - Win/Mac/Linux");
+        jLabel3.setText(subtitle);
         jLabel3.setToolTipText("");
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
@@ -125,6 +126,11 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
         saveButton.setText("Save");
         saveButton.setEnabled(false);
+        saveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveButtonActionPerformed(evt);
+            }
+        });
 
         jLabel2.setText("Processor");
 
@@ -135,8 +141,10 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         processor.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
         processor.setPreferredSize(new java.awt.Dimension(100, 20));
 
+        frequency.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         frequency.setText(" ");
         frequency.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+        frequency.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
 
         threads.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         threads.setText("1");
@@ -147,8 +155,10 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         jLabel11.setText("Score");
 
         score.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
+        score.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         score.setText(" ");
         score.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+        score.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
 
         jLabel10.setText("Primes per second");
 
@@ -166,8 +176,10 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
             }
         });
 
+        memory.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         memory.setText(" ");
         memory.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+        memory.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
 
         jLabel12.setText("MB mem");
 

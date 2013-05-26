@@ -40,7 +40,7 @@ public class PrimeBenchmark extends Benchmark {
     @Override
     public void warmup() {
         silent = false;
-        
+
         if (!silent) {
             System.out.print("Warm up phase:   ");
         }
@@ -51,7 +51,7 @@ public class PrimeBenchmark extends Benchmark {
     }
 
     @Override
-    public Long benchmark(BenchmarkConfiguration configuration) {
+    public Number benchmark(BenchmarkConfiguration configuration) {
         super.config = configuration;
         Long timespan = (Long) super.config.getValue(TIME_SPAN);
         if (Boolean.TRUE.equals(super.config.getValue(SILENT))) {
@@ -60,15 +60,14 @@ public class PrimeBenchmark extends Benchmark {
         if (!silent) {
             System.out.print("Benchmark phase: ");
         }
-        Long benchrun = benchrun(timespan);
+        Float benchrun = benchrun(timespan);
         if (!silent) {
             System.out.println(" done!");
         }
         return benchrun;
     }
 
-    public Long benchrun(long timespanInMillis) {
-        long workCount = Long.MAX_VALUE;
+    public Float benchrun(long timespanInMillis) {
         long before = System.currentTimeMillis();
         int primeStart = 5;
         int iteration = 0;
@@ -144,9 +143,7 @@ public class PrimeBenchmark extends Benchmark {
         float timeneeded = (getTime() - before) / 1000f;
 
         int primescalculated = list.size();
-        // System.out.println("primescalculated: " + primescalculated + " in " + timeneeded + "ms => " + (primescalculated / timeneeded));
-
-        return ((long) (primescalculated / timeneeded));
+        return (primescalculated / timeneeded);
     }
 
     private long getTime() {

@@ -54,7 +54,7 @@ import org.hwbot.bench.ui.swing.JProgressBarProgressBar;
 public abstract class BenchService implements Runnable {
 
     public String processor;
-    public long score;
+    public Number score;
     protected String version = this.getClass().getPackage().getImplementationVersion();
     protected int availableProcessors, availableProcessorThreads, memoryInMB;
 
@@ -72,6 +72,7 @@ public abstract class BenchService implements Runnable {
     private Benchmark benchmark;
     private ScheduledFuture<?> processorFrequencyMonitorScheduler;
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
+    private boolean processorSpeedReliable;
 
     public BenchService() {
         try {
@@ -101,10 +102,7 @@ public abstract class BenchService implements Runnable {
         availableProcessors = Runtime.getRuntime().availableProcessors();
 
         processorSpeed = hardwareService.getEstimatedProcessorSpeed();
-        if (processorSpeed == null) {
-            System.err.println("Can not measure cpu speed, trying default speed...");
-            processorSpeed = hardwareService.getEstimatedProcessorSpeed();
-        }
+        processorSpeedReliable = hardwareService.isProcessorSpeedReliable();
 
         availableProcessorThreads = hardwareService.getNumberOfProcessorCores();
         memoryInMB = (int) (hardwareService.getMemorySize() / 1024 / 1024);
@@ -147,6 +145,8 @@ public abstract class BenchService implements Runnable {
             benchUI.getFrequency().setText(getProcessorFrequency(processorSpeed));
             benchUI.getThreads().setText("" + availableProcessorThreads);
             benchUI.getMemory().setText("" + memoryInMB);
+
+            output = new SystemConsole();
 
             frame.pack();
 
@@ -208,7 +208,7 @@ public abstract class BenchService implements Runnable {
     }
 
     public void run() {
-        Future<Long> submit = exec.submit(benchmark);
+        Future<Number> submit = exec.submit(benchmark);
         // wait for outout
         try {
             submit.get();
@@ -256,11 +256,11 @@ public abstract class BenchService implements Runnable {
             }
 
         } catch (HttpHostConnectException e) {
+            e.printStackTrace();
             output.write("Failed to connect to HWBOT server! Are you connected to the internet?");
-            e.printStackTrace();
         } catch (Exception e) {
-            output.write("Error communicating with online service. If this issue persists, please contact HWBOT crew. Error: " + e.getMessage());
             e.printStackTrace();
+            output.write("Error communicating with online service. If this issue persists, please contact HWBOT crew.");
         } finally {
             httpclient.getConnectionManager().shutdown();
         }
@@ -268,8 +268,9 @@ public abstract class BenchService implements Runnable {
 
     public byte[] getDataFile() throws UnsupportedEncodingException {
         byte[] bytes = null;
-        String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, processorSpeed, memoryInMB, benchmark.getScore(), !headless,
-                BenchService.encryptionModule);
+        // processor speed ignored, not reliable enough...
+        String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, (processorSpeedReliable ? processorSpeed : null), memoryInMB,
+                this.formatScore(benchmark.getScore()), !headless, BenchService.encryptionModule);
         // System.out.println("Using encryptionModule: " + (BenchService.encryptionModule == null ? "n/a" :
         // BenchService.encryptionModule.getClass().getName()));
         // System.out.println(xml);
@@ -324,5 +325,5 @@ public abstract class BenchService implements Runnable {
         this.availableProcessors = availableProcessors;
     }
 
-    public abstract String formatScore(Long score);
+    public abstract String formatScore(Number score);
 }

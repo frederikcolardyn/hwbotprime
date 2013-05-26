@@ -22,6 +22,7 @@ public class HardwareService {
     public static String OS_ARCH = System.getProperty("os.arch").toLowerCase();
     protected String version = this.getClass().getPackage().getImplementationVersion();
     protected boolean libraryLoaded;
+    protected boolean processorSpeedReliable;
 
     public HardwareService() {
         prepareCpuid();
@@ -190,6 +191,7 @@ public class HardwareService {
                     if (speed > 0) {
                         speed = speed / 1000f;
                         // System.out.println("detected speed cpuinfo_max_freq: "+speed);
+                        processorSpeedReliable = true;
                         return speed;
                     }
                 } catch (IOException e) {
@@ -204,6 +206,7 @@ public class HardwareService {
             try {
                 speed = NumberUtils.createFloat(StringUtils.substringAfterLast(Util.execRuntime(new String[] { "sysctl", "hw.cpufrequency" }), ":").trim());
                 speed = speed / 1000 / 1000;
+                processorSpeedReliable = true;
             } catch (NumberFormatException e) {
                 System.err.println("Failed to read processor speed on mac: " + e);
             }
@@ -268,15 +271,28 @@ public class HardwareService {
 
     public String readProcessorStringFromProcCpuInfo() throws IOException {
         File source = new File("/proc/cpuinfo");
+        boolean procFound = false;
+        boolean hwFound = false;
+        String processor = "";
         if (source.exists() && source.canRead()) {
             for (String line : FileUtils.readLines(source)) {
-                if (line.startsWith("model name")) {
-                    return line.substring(line.indexOf(':') + 1).trim();
-                } else if (line.startsWith("Processor")) {
-                    return line.substring(line.indexOf(':') + 1).trim();
+                if (!procFound && line.startsWith("model name")) {
+                    procFound = true;
+                    processor = line.substring(line.indexOf(':') + 1).trim();
+                } else if (!procFound && line.startsWith("Processor")) {
+                    procFound = true;
+                    processor = line.substring(line.indexOf(':') + 1).trim();
+                } else if (!hwFound && line.toLowerCase().startsWith("hardware")) {
+                    hwFound = true;
+                    processor += " " + line.substring(line.indexOf(':') + 1).trim();
                 }
             }
         }
-        return null;
+        return processor;
     }
+
+    public boolean isProcessorSpeedReliable() {
+        return processorSpeedReliable;
+    }
+
 }

@@ -4,7 +4,7 @@
 	<groupId>org.hwbot</groupId>
 	<artifactId>hwbotprime-security</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0</version>
+	<version>1.0.2</version>
 	<name>HWBOT Prime security module</name>
 	<url>http://hwbot.org</url>
 	<organization>
@@ -59,7 +59,7 @@
 		<dependency>
 			<groupId>org.hwbot</groupId>
 			<artifactId>bench-common</artifactId>
-			<version>1.0.1</version>
+			<version>1.2.3</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

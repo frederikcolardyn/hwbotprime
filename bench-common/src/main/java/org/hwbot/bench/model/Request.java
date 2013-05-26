@@ -11,7 +11,7 @@ public class Request {
 
     private Application application;
     private Score score;
-    private Screenshot screenshot;
+    private String screenshot;
     private Hardware hardware;
     private String applicationChecksum;
     private MetaData javaMetaData;
@@ -19,7 +19,7 @@ public class Request {
     public Request() {
     }
 
-    public Request(String client, String version, String processorModel, Float processorSpeed, Integer memoryInMB, float points) {
+    public Request(String client, String version, String processorModel, Float processorSpeed, Integer memoryInMB, String points) {
         super();
         application = new Application();
         application.setName(client);
@@ -38,7 +38,8 @@ public class Request {
             hardware.setMemory(memory);
         }
         hardware.setProcessor(processor);
-        javaMetaData = new MetaData();
+        // hwbot production bug, disabled
+        // javaMetaData = new MetaData();
     }
 
     @XmlElement
@@ -78,11 +79,11 @@ public class Request {
     }
 
     @XmlElement
-    public Screenshot getScreenshot() {
+    public String getScreenshot() {
         return screenshot;
     }
 
-    public void setScreenshot(Screenshot screenshot) {
+    public void setScreenshot(String screenshot) {
         this.screenshot = screenshot;
     }
 
@@ -142,14 +143,14 @@ public class Request {
     }
 
     public static class Score {
-        float points;
+        String points;
 
         @XmlElement
-        public float getPoints() {
+        public String getPoints() {
             return points;
         }
 
-        public void setPoints(float points) {
+        public void setPoints(String points) {
             this.points = points;
         }
     }
@@ -168,6 +169,7 @@ public class Request {
 
     }
 
+    @XmlType(propOrder = { "processor", "memory" })
     public static class Hardware {
 
         Processor processor;
@@ -233,8 +235,7 @@ public class Request {
     }
 
     public void addScreenshot(String base64) {
-        screenshot = new Screenshot();
-        screenshot.setScreenshot(base64);
+        screenshot = base64;
     }
 
 }

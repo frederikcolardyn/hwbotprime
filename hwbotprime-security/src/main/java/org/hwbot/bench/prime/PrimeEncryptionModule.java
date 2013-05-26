@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.math.NumberUtils;
 import org.hwbot.bench.model.Request;
 import org.hwbot.bench.security.EncryptionModule;
 
@@ -26,7 +27,7 @@ public class PrimeEncryptionModule implements EncryptionModule {
 		buffer.append("-");
 		buffer.append(request.getApplication().getVersion());
 		buffer.append("-");
-		buffer.append((int) (request.getScore().getPoints() * 1000));
+		buffer.append((int) (NumberUtils.toFloat(request.getScore().getPoints()) * 1000));
 		buffer.append("-");
 		buffer.append(request.getHardware().getProcessor().getName());
 		try {

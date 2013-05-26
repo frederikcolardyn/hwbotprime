@@ -4,12 +4,12 @@ import java.util.concurrent.Callable;
 
 import org.hwbot.bench.ui.ProgressBar;
 
-public abstract class Benchmark implements Callable<Long> {
+public abstract class Benchmark implements Callable<Number> {
 
     protected final int threads;
     protected final ProgressBar progressBar;
     protected BenchmarkConfiguration config;
-    protected Long score;
+    protected Number score;
 
     public Benchmark(int threads, ProgressBar progressBar) {
         this.threads = threads;
@@ -33,11 +33,11 @@ public abstract class Benchmark implements Callable<Long> {
     public void warmup() {
     };
 
-    public abstract Long benchmark(BenchmarkConfiguration configuration);
+    public abstract Number benchmark(BenchmarkConfiguration configuration);
 
     public abstract String getClient();
 
-    public Long call() throws Exception {
+    public Number call() throws Exception {
         System.out.println("Starting benchmark...");
         if (config == null) {
             return null;
@@ -48,7 +48,7 @@ public abstract class Benchmark implements Callable<Long> {
         }
     }
 
-    public Long getScore() {
+    public Number getScore() {
         return score;
     }
 
