@@ -66,7 +66,6 @@ unsupported:
  {
  	char buffer[200];
  	cpuid_brand(buffer, sizeof(buffer));
- 	puts("hello");
    	return (*env)->NewStringUTF(env, buffer);
  }
 

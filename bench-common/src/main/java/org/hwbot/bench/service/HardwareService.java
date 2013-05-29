@@ -3,9 +3,6 @@ package org.hwbot.bench.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -62,6 +59,7 @@ public class HardwareService {
                 Util.extractFile(libraryName + getLibraryExtension(), cpuid);
             } else {
                 // System.out.println("Using existing " + cpuid.getAbsolutePath());
+                Util.extractFile(libraryName + getLibraryExtension(), cpuid);
             }
 
             // load
@@ -72,20 +70,25 @@ public class HardwareService {
             String libraryShortName = (libraryNameWithVersion.startsWith("lib")) ? StringUtils.substringAfter(libraryNameWithVersion, "lib")
                     : libraryNameWithVersion;
 
-            // System.out.println("loading library... " + libraryShortName + " in " + System.getProperty("java.library.path"));
             try {
-                System.loadLibrary(libraryShortName);
+                if (isWindows()) {
+                    String absolutePath = cpuid.getAbsolutePath().replace("\\", "/");
+                    try {
+                        System.load(absolutePath);
+                    } catch (UnsatisfiedLinkError e) {
+                        // try 32 bit for 32 bit java on windows 64 bit
+                        libraryName = libraryName.replace("64", "32");
+                        Util.extractFile(libraryName + getLibraryExtension(), cpuid);
+                        System.load(absolutePath);
+                    }
+                } else {
+                    System.loadLibrary(libraryShortName);
+                }
                 CpuId.model();
                 // CpuId.sampleFrequency();
                 libraryLoaded = true;
             } catch (UnsatisfiedLinkError e) {
-                System.err.println("Failed to load native library on OS " + OS + ": " + e.getMessage());
-                Properties properties = System.getProperties();
-
-                Set<Entry<Object, Object>> entrySet = properties.entrySet();
-                for (Entry<Object, Object> entry : entrySet) {
-                    System.out.println(entry.getKey() + ": " + entry.getValue());
-                }
+                System.err.println("Failed to load native library " + libraryShortName + " on OS " + OS + ": " + e.getMessage());
             }
 
         }
