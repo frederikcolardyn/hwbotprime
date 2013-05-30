@@ -30,4 +30,10 @@ public class HardwareServiceTest {
         System.out.println("Default: " + cpuFrequencyInHz);
     }
 
+    @Test
+    public void testReadTemperature() {
+        Float temperature = hardwareService.getProcessorTemperature();
+        Assert.assertNotNull(temperature);
+    }
+
 }

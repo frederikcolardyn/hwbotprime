@@ -3,13 +3,17 @@ package org.hwbot.bench.service;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutionException;
@@ -73,6 +77,8 @@ public abstract class BenchService implements Runnable {
     private ScheduledFuture<?> processorFrequencyMonitorScheduler;
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
     private boolean processorSpeedReliable;
+    private String outputFile;
+    private HardwareService hardwareService;
 
     public BenchService() {
         try {
@@ -96,8 +102,9 @@ public abstract class BenchService implements Runnable {
         }
     }
 
-    public void initialize(boolean ui) throws IOException {
-        HardwareService hardwareService = new HardwareService();
+    public void initialize(boolean ui, String outputFile) throws IOException {
+        this.outputFile = outputFile;
+        hardwareService = new HardwareService();
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
 
@@ -153,16 +160,18 @@ public abstract class BenchService implements Runnable {
             progressBar = new JProgressBarProgressBar(progressbar);
             this.benchUI = benchUI;
         } else {
-            BenchConsole benchUI = new BenchConsole(this);
+            BenchConsole benchUI = new BenchConsole(this, outputFile);
 
             output = new SystemConsole();
             progressBar = new SystemProgressBar(100);
             this.benchUI = benchUI;
+            Float processorTemperature = hardwareService.getProcessorTemperature();
 
             output.write("--------- HWBOT Prime " + version + " ----------\n");
             output.write("Processor detected:\n" + processor);
             output.write("Estimating speed... ", false);
-            output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency(processorSpeed) + "MHz");
+            output.write(((availableProcessorThreads > 1) ? availableProcessorThreads + "x " : "") + getProcessorFrequency(processorSpeed) + "MHz"
+                    + (processorTemperature != null ? " @ " + processorTemperature + " C" : ""));
             if (memoryInMB > 0) {
                 output.write(memoryInMB + " MB memory");
             }
@@ -235,7 +244,8 @@ public abstract class BenchService implements Runnable {
             // String checksum = toSHA1(bytes);
 
             BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
-            HttpPost req = new HttpPost(server + "/submit/api?client=" + benchmark.getClient() + "&clientVersion=" + getClientVersion());
+            HttpPost req = new HttpPost(server + "/submit/api?client=" + URLEncoder.encode(benchmark.getClient(), "ISO-8859-1") + "&clientVersion="
+                    + getClientVersion());
             req.addHeader("Accept", "application/xml");
             MultipartEntity mpEntity = new MultipartEntity();
             mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
@@ -326,4 +336,23 @@ public abstract class BenchService implements Runnable {
     }
 
     public abstract String formatScore(Number score);
+
+    public void saveToFile(File file) {
+        if (file.isDirectory()) {
+            file = new File(file, "HWBOT Prime - " + new SimpleDateFormat("dd-MM-yyyy HH'h'mm'm'") + ".hwbot");
+        }
+        byte[] dataFile;
+        try {
+            dataFile = getDataFile();
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(dataFile);
+            fileOutputStream.close();
+        } catch (Exception e) {
+            System.err.println("Failed to save the file: " + file.getAbsolutePath() + ". Reason: " + e.getMessage());
+        }
+    }
+
+    public HardwareService getHardwareService() {
+        return this.hardwareService;
+    }
 }

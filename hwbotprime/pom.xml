@@ -3,7 +3,7 @@
 	<groupId>org.hwbot</groupId>
 	<artifactId>hwbotprime</artifactId>
 	<packaging>jar</packaging>
-	<version>0.6.6</version>
+	<version>0.7.1</version>
 	<name>HWBOT Demo Benchmark</name>
 	<url>http://hwbot.org</url>
 	<organization>
@@ -64,7 +64,7 @@
 		<dependency>
 			<groupId>org.hwbot</groupId>
 			<artifactId>bench-common</artifactId>
-			<version>1.3.0</version>
+			<version>1.4.1</version>
 		</dependency>
 		<!-- private library, not shared on github -->
 		<dependency>

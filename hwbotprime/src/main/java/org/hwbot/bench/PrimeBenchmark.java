@@ -34,7 +34,7 @@ public class PrimeBenchmark extends Benchmark {
 
     @Override
     public String getClient() {
-        return "hwbotprime";
+        return "HWBOT Prime";
     }
 
     @Override

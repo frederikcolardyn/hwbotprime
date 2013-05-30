@@ -3,6 +3,8 @@ package org.hwbot.bench.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -23,6 +25,40 @@ public class HardwareService {
 
     public HardwareService() {
         prepareCpuid();
+    }
+
+    public Float getProcessorTemperature() {
+
+        Float temp = null;
+        try {
+            if (isUnix()) {
+                File temperatureFile = new File("/sys/class/thermal/thermal_zone0/temp");
+                if (temperatureFile.exists()) {
+                    temp = (Float.parseFloat(FileUtils.readFileToString(temperatureFile)) / 1000f);
+                }
+            } else if (isMac()) {
+                java.io.File targetFile = prepareTemperaturMac();
+                String output = Util.execRuntime(new String[] { targetFile.getAbsolutePath(), "-c", "-l", "-a" });
+                Pattern p = Pattern.compile("CPU[A-Za-z0-9 ]{0,20}: ([0-9]{1,3}) C");
+                Matcher matcher = p.matcher(output);
+                if (matcher.find()) {
+                    temp = Float.parseFloat(matcher.group(1));
+                }
+            } else if (isWindows()) {
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to measure temperature. Reason: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return temp;
+    }
+
+    public java.io.File prepareTemperaturMac() {
+        java.io.File targetFile = new java.io.File(System.getProperty("java.io.tmpdir") + java.io.File.separator + "temperature");
+        if (!targetFile.exists()) {
+            Util.extractFile("tempmonitor", targetFile);
+        }
+        return targetFile;
     }
 
     public String getProcessorInfo() {

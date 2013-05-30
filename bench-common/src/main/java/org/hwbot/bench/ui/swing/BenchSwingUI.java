@@ -6,9 +6,7 @@ package org.hwbot.bench.ui.swing;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -290,15 +288,10 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         int returnVal = fc.showOpenDialog(saveButton);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
-            if (file.isDirectory()) {
-                file = new File(file, title + " - " + new SimpleDateFormat("dd-MM-yyyy HH'h'mm'm'") + ".hwbot");
-            }
+            
             // write xml to this file
             try {
-                byte[] dataFile = benchService.getDataFile();
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                fileOutputStream.write(dataFile);
-                fileOutputStream.close();
+                this.benchService.saveToFile(file);
                 JOptionPane.showMessageDialog(this, "Date file saved to: " + file.getAbsolutePath());
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Failed to save the file. Sorry! Error: " + e.getMessage());

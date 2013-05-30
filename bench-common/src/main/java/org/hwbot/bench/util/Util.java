@@ -1,8 +1,7 @@
 package org.hwbot.bench.util;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -44,20 +43,22 @@ public class Util {
                         }
                         fos.close();
                         is.close();
-                        // System.out.println("cpuid executable written to " + f);
-                        // System.out.println("Prepared: " + targetFile.getAbsolutePath());
+
+                        f.setExecutable(true);
+
                         installed = true;
                         break;
                     }
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             // try loading as stream
             System.out.println("Jar file not found, loading as resource.");
             InputStream resourceAsStream = Util.class.getClassLoader().getResourceAsStream(fileToExtract);
             if (resourceAsStream != null) {
                 try {
-                    IOUtils.copy(resourceAsStream, new FileWriter(targetFile));
+                    IOUtils.copy(resourceAsStream, new FileOutputStream(targetFile));
+                    targetFile.setExecutable(true);
                 } catch (IOException e1) {
                     throw new RuntimeException(e1);
                 }
@@ -65,9 +66,6 @@ public class Util {
                 System.out.println("Resource " + fileToExtract + " not found.");
                 throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            System.out.println("Jar file not found, " + e);
-            throw new RuntimeException(e);
         }
         return installed;
     }
