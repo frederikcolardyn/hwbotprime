@@ -34,7 +34,6 @@ import javax.swing.UIManager;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpHostConnectException;
@@ -72,14 +71,13 @@ public abstract class BenchService implements Runnable {
     protected byte[] iv;
     // processor speed in Mhz
     protected Float processorSpeed;
-    private String server = System.getProperty("server", "http://uat.hwbot.org");
+    private String server = System.getProperty("server", "http://hwbot.org");
     public static boolean headless;
     protected static EncryptionModule encryptionModule;
     private Benchmark benchmark;
     private ScheduledFuture<?> processorFrequencyMonitorScheduler;
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
     private boolean processorSpeedReliable;
-    private String outputFile;
     private HardwareService hardwareService;
     private String checksum = "";
     private char[] checksumChars;
@@ -107,7 +105,6 @@ public abstract class BenchService implements Runnable {
     }
 
     public void initialize(boolean ui, String outputFile) throws IOException {
-        this.outputFile = outputFile;
         hardwareService = new HardwareService();
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
