@@ -33,6 +33,8 @@ import javax.swing.UIManager;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpHostConnectException;
@@ -70,7 +72,7 @@ public abstract class BenchService implements Runnable {
     protected byte[] iv;
     // processor speed in Mhz
     protected Float processorSpeed;
-    private String server = System.getProperty("server", "http://hwbot.org");
+    private String server = System.getProperty("server", "http://uat.hwbot.org");
     public static boolean headless;
     protected static EncryptionModule encryptionModule;
     private Benchmark benchmark;
@@ -79,6 +81,8 @@ public abstract class BenchService implements Runnable {
     private boolean processorSpeedReliable;
     private String outputFile;
     private HardwareService hardwareService;
+    private String checksum = "";
+    private char[] checksumChars;
 
     public BenchService() {
         try {
@@ -107,6 +111,7 @@ public abstract class BenchService implements Runnable {
         hardwareService = new HardwareService();
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
+        checksum += processor + availableProcessors;
 
         processorSpeed = hardwareService.getEstimatedProcessorSpeed();
         processorSpeedReliable = hardwareService.isProcessorSpeedReliable();
@@ -220,11 +225,16 @@ public abstract class BenchService implements Runnable {
         Future<Number> submit = exec.submit(benchmark);
         // wait for outout
         try {
-            submit.get();
+            score = submit.get();
+            checksum += score;
+            checksum = toSHA1(checksum.getBytes("UTF8"));
+            checksumChars = checksum.toCharArray();
             benchUI.notifyBenchmarkFinished(benchmark);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
@@ -279,17 +289,27 @@ public abstract class BenchService implements Runnable {
     public byte[] getDataFile() throws UnsupportedEncodingException {
         byte[] bytes = null;
         // processor speed ignored, not reliable enough...
+        verifyMemoryUnaltered();
         String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, (processorSpeedReliable ? processorSpeed : null), memoryInMB,
                 this.formatScore(benchmark.getScore()), !headless, BenchService.encryptionModule);
-        // System.out.println("Using encryptionModule: " + (BenchService.encryptionModule == null ? "n/a" :
-        // BenchService.encryptionModule.getClass().getName()));
-        // System.out.println(xml);
         if (key != null) {
             bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
         } else {
             bytes = xml.getBytes("utf8");
         }
         return bytes;
+    }
+
+    private void verifyMemoryUnaltered() {
+        try {
+            checksum = processor + availableProcessors + score;
+            checksum = toSHA1(checksum.getBytes("UTF8"));
+            if (!ArrayUtils.isEquals(checksumChars, checksum.toCharArray())) {
+                throw new SecurityException("Memory has been altered. Bad hacker! Shoo!");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException();
+        }
     }
 
     public static String toSHA1(byte[] string) {
@@ -355,4 +375,5 @@ public abstract class BenchService implements Runnable {
     public HardwareService getHardwareService() {
         return this.hardwareService;
     }
+
 }

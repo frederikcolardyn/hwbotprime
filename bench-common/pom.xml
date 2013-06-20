@@ -3,7 +3,7 @@
 	<groupId>org.hwbot</groupId>
 	<artifactId>bench-common</artifactId>
 	<packaging>jar</packaging>
-	<version>1.4.1</version>
+	<version>1.5.0</version>
 	<name>HWBOT Demo Benchmark</name>
 	<url>http://hwbot.org</url>
 	<organization>
