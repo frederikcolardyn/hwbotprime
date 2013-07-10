@@ -4,10 +4,8 @@ import org.hwbot.bench.model.Request;
 
 public interface EncryptionModule {
 
-	public char[] getIv();
+    public void addChecksum(Request request);
 
-	public char[] getKey();
-
-	public void addChecksum(Request request);
+    public byte[] encrypt(byte[] bytes);
 
 }

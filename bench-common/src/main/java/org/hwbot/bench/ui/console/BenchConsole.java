@@ -68,4 +68,9 @@ public class BenchConsole implements BenchUI {
         benchService.benchmark();
     }
 
+    @Override
+    public void notifyError(String message) {
+        System.out.println("[ERROR] " + message);
+    }
+
 }

@@ -29,7 +29,7 @@ public class PrimeBenchmark extends Benchmark {
     }
 
     public PrimeBenchmark(BenchmarkConfiguration config, int threads, ProgressBar progressBar) {
-        super(config, threads, progressBar);
+        super(config, Integer.valueOf(System.getProperty("threads", String.valueOf(threads))), progressBar);
     }
 
     @Override

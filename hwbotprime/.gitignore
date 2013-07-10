@@ -6,3 +6,5 @@ target/
 nohup.out
 *.log
 .DS_Store
+sign.sh
+hwbotprime.jar

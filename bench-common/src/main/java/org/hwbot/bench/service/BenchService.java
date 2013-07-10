@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
@@ -24,14 +23,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import javax.swing.JFrame;
 import javax.swing.JProgressBar;
 import javax.swing.UIManager;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.client.HttpClient;
@@ -67,8 +62,8 @@ public abstract class BenchService implements Runnable {
     protected ProgressBar progressBar;
     protected Output output;
 
-    protected byte[] key;
-    protected byte[] iv;
+    // protected byte[] key;
+    // protected byte[] iv;
     // processor speed in Mhz
     protected Float processorSpeed;
     private String server = System.getProperty("server", "http://hwbot.org");
@@ -79,7 +74,7 @@ public abstract class BenchService implements Runnable {
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
     private boolean processorSpeedReliable;
     private HardwareService hardwareService;
-    private String checksum = "";
+    private String checksum, checksumbase;
     private char[] checksumChars;
 
     public BenchService() {
@@ -87,15 +82,6 @@ public abstract class BenchService implements Runnable {
             ServiceLoader<EncryptionModule> encryptionLoader = ServiceLoader.load(EncryptionModule.class);
             for (EncryptionModule encryptionModule : encryptionLoader) {
                 BenchService.encryptionModule = encryptionModule;
-                try {
-                    key = Hex.decodeHex(encryptionModule.getKey());
-                    iv = Hex.decodeHex(encryptionModule.getIv());
-                } catch (DecoderException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            if (key == null) {
-                System.out.println("No encryption modules loaded.");
             }
         } catch (Exception e) {
             // no encryption
@@ -108,7 +94,7 @@ public abstract class BenchService implements Runnable {
         hardwareService = new HardwareService();
         processor = hardwareService.getProcessorInfo();
         availableProcessors = Runtime.getRuntime().availableProcessors();
-        checksum += processor + availableProcessors;
+        checksumbase = processor + availableProcessors;
 
         processorSpeed = hardwareService.getEstimatedProcessorSpeed();
         processorSpeedReliable = hardwareService.isProcessorSpeedReliable();
@@ -223,8 +209,7 @@ public abstract class BenchService implements Runnable {
         // wait for outout
         try {
             score = submit.get();
-            checksum += score;
-            checksum = toSHA1(checksum.getBytes("UTF8"));
+            checksum = toSHA1((checksumbase + score).getBytes("UTF8"));
             checksumChars = checksum.toCharArray();
             benchUI.notifyBenchmarkFinished(benchmark);
         } catch (InterruptedException e) {
@@ -264,9 +249,9 @@ public abstract class BenchService implements Runnable {
                 String url = response.getUrl();
                 try {
                     Desktop.getDesktop().browse(new URI(url));
-                } catch (Exception e) {
-                    output.write("Failed to open your browser, please open " + url + " to view your submission.");
-                }
+                } catch (Exception e) {output.write("Failed to open your browser, please open " + url + " to view your submission.");}
+            } else if ("error".equals(response.getStatus())) {
+                this.benchUI.notifyError(response.getMessage());
             } else {
                 output.write("Failed to submit score. Status was: " + response);
                 output.write(response.getMessage());
@@ -289,8 +274,8 @@ public abstract class BenchService implements Runnable {
         verifyMemoryUnaltered();
         String xml = DataServiceXml.createXml(benchmark.getClient(), version, processor, (processorSpeedReliable ? processorSpeed : null), memoryInMB,
                 this.formatScore(benchmark.getScore()), !headless, BenchService.encryptionModule);
-        if (key != null) {
-            bytes = encrypt("AES/CBC/PKCS5Padding", xml.getBytes("utf8"));
+        if (BenchService.encryptionModule != null) {
+            bytes = BenchService.encryptionModule.encrypt(xml.getBytes("utf8"));
         } else {
             bytes = xml.getBytes("utf8");
         }
@@ -320,29 +305,6 @@ public abstract class BenchService implements Runnable {
     }
 
     protected abstract String getClientVersion();
-
-    /**
-     * Encrypt an array of bytes. Befor encrypting, you have to set the cipher to use, key and iv (if applicable)
-     * 
-     * @param data
-     * @return the encrypted data
-     */
-    public byte[] encrypt(String cipher, byte[] data) {
-        try {
-            String[] config = cipher.split("/");
-            Key encryptKey = new SecretKeySpec(key, config[0]);
-            Cipher c = Cipher.getInstance(cipher);
-
-            if ("CBC".equals(config[1])) {
-                c.init(Cipher.ENCRYPT_MODE, encryptKey, new IvParameterSpec(iv));
-            } else if ("ECB".equals(config[1])) {
-                c.init(Cipher.ENCRYPT_MODE, encryptKey);
-            }
-            return c.doFinal(data);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to encrypt: " + e);
-        }
-    }
 
     public int getAvailableProcessors() {
         return availableProcessors;

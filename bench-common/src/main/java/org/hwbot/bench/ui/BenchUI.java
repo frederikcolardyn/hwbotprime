@@ -6,4 +6,6 @@ public interface BenchUI extends BenchmarkStatusAware {
 
 	void waitForCommands();
 
+    void notifyError(String message);
+
 }

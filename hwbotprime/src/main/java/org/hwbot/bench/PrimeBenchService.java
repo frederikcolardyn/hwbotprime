@@ -1,5 +1,6 @@
 package org.hwbot.bench;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.hwbot.bench.api.Benchmark;
@@ -18,7 +19,7 @@ public class PrimeBenchService extends BenchService {
 
     @Override
     public String formatScore(Number score) {
-        return String.format("%.2f", score);
+        return String.format(Locale.ENGLISH, "%.2f", score);
     }
 
     @Override
