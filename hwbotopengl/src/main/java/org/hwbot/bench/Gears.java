@@ -9,14 +9,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 
+import com.sun.j3d.utils.universe.*;
+import com.sun.j3d.utils.geometry.*;
+import javax.media.j3d.*;
+import javax.swing.text.AbstractDocument.BranchElement;
+import javax.vecmath.*;
+
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.AWTGLAutoDrawable;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.awt.GLJPanel;
-
-import org.hwbot.bench.service.HardwareService;
 
 import com.jogamp.opengl.util.Animator;
 
@@ -29,327 +33,345 @@ import com.jogamp.opengl.util.Animator;
  */
 
 public class Gears implements GLEventListener, MouseListener, MouseMotionListener {
-	public static void main(String[] args) {
-		new Gears().benchmark();
-	}
+    public static void main(String[] args) throws IOException {
+//         new Gears().benchmark();
+        com.sun.j3d.utils.universe.SimpleUniverse uni = new com.sun.j3d.utils.universe.SimpleUniverse();
+        BranchGroup group = new BranchGroup();
 
-	public Long benchmark() {
-		Frame frame = new Frame("Gear Demo");
-		GLCanvas canvas = new GLCanvas();
-		final Gears gears = new Gears();
-		canvas.addGLEventListener(gears);
-		
-		frame.add(canvas);
-		frame.setSize(600, 600);
-		final Animator animator = new Animator(canvas);
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				// Run this on another thread than the AWT event queue to
-				// make sure the call to Animator.stop() completes before
-				// exiting
-				new Thread(new Runnable() {
-					public void run() {
-						animator.stop();
-						System.exit(0);
-					}
-				}).start();
-			}
-		});
-		frame.setVisible(true);
-		System.out.println("Starting animation...");
+        Sphere ball = new Sphere(0.5f);
+        uni.addBranchGraph(group);
 
-		animator.setRunAsFastAsPossible(true);
-		animator.setUpdateFPSFrames(50, null);
-		animator.start();
+        Color3f color = new Color3f(0, 0, 2);
+        BoundingSphere bounds = new BoundingSphere(new Point3d(0, 0, 0), 1000);
+        Vector3f direction = new Vector3f(5, -6, -10);
+        DirectionalLight light = new DirectionalLight();
+        light.setInfluencingBounds(bounds);
 
-		try {
-			Thread.sleep(4000);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
+        group.addChild(ball);
+        group.addChild(light);
+        uni.getViewingPlatform().setNominalViewingTransform();
+        
+        System.in.read();
+    }
 
-		animator.stop();
-		System.out.println("Animation finished.");
+    public Long benchmark() {
 
-		System.out.println("FPS: " + animator.getTotalFPS());
+        Frame frame = new Frame("Gear Demo");
+        GLCanvas canvas = new GLCanvas();
+        final Gears gears = new Gears();
+        canvas.addGLEventListener(gears);
 
-		return (long) animator.getTotalFPS();
-	}
+        frame.add(canvas);
+        frame.setSize(600, 600);
+        final Animator animator = new Animator(canvas);
+        frame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                // Run this on another thread than the AWT event queue to
+                // make sure the call to Animator.stop() completes before
+                // exiting
+                new Thread(new Runnable() {
+                    public void run() {
+                        animator.stop();
+                        System.exit(0);
+                    }
+                }).start();
+            }
+        });
+        frame.setVisible(true);
+        System.out.println("Starting gears animation...");
 
-	private float view_rotx = 20.0f, view_roty = 30.0f, view_rotz = 0.0f;
-	private int gear1, gear2, gear3;
-	private float angle = 0.0f;
+        animator.setRunAsFastAsPossible(true);
+        animator.setUpdateFPSFrames(50, null);
+        animator.start();
 
-	private int prevMouseX, prevMouseY;
-	private boolean mouseRButtonDown = false;
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
+        }
 
-	public void init(GLAutoDrawable drawable) {
-		// Use debug pipeline
-		// drawable.setGL(new DebugGL(drawable.getGL()));
+        animator.stop();
+        System.out.println("Animation finished.");
 
-		GL2 gl = drawable.getGL().getGL2();
+        System.out.println("FPS: " + animator.getTotalFPS());
 
-		System.err.println("INIT GL IS: " + gl.getClass().getName());
+        return (long) animator.getTotalFPS();
+    }
 
-		System.err.println("Chosen GLCapabilities: " + drawable.getChosenGLCapabilities());
+    private float view_rotx = 20.0f, view_roty = 30.0f, view_rotz = 0.0f;
+    private int gear1, gear2, gear3;
+    private float angle = 0.0f;
 
-		// render as fast as possible. 1 = 60fps
-		gl.setSwapInterval(0);
+    private int prevMouseX, prevMouseY;
+    private boolean mouseRButtonDown = false;
 
-		float pos[] = { 5.0f, 5.0f, 10.0f, 0.0f };
-		float red[] = { 0.8f, 0.1f, 0.0f, 1.0f };
-		float green[] = { 0.0f, 0.8f, 0.2f, 1.0f };
-		float blue[] = { 0.2f, 0.2f, 1.0f, 1.0f };
+    public void init(GLAutoDrawable drawable) {
+        // Use debug pipeline
+        // drawable.setGL(new DebugGL(drawable.getGL()));
 
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, pos, 0);
-		gl.glEnable(GL2.GL_CULL_FACE);
-		gl.glEnable(GL2.GL_LIGHTING);
-		gl.glEnable(GL2.GL_LIGHT0);
-		gl.glEnable(GL2.GL_DEPTH_TEST);
+        GL2 gl = drawable.getGL().getGL2();
 
-		/* make the gears */
-		gear1 = gl.glGenLists(1);
-		gl.glNewList(gear1, GL2.GL_COMPILE);
-		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, red, 0);
-		gear(gl, 1.0f, 4.0f, 1.0f, 20, 0.7f);
-		gl.glEndList();
+        System.err.println("INIT GL IS: " + gl.getClass().getName());
 
-		gear2 = gl.glGenLists(1);
-		gl.glNewList(gear2, GL2.GL_COMPILE);
-		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, green, 0);
-		gear(gl, 0.5f, 2.0f, 2.0f, 10, 0.7f);
-		gl.glEndList();
+        System.err.println("Chosen GLCapabilities: " + drawable.getChosenGLCapabilities());
 
-		gear3 = gl.glGenLists(1);
-		gl.glNewList(gear3, GL2.GL_COMPILE);
-		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, blue, 0);
-		gear(gl, 1.3f, 2.0f, 0.5f, 10, 0.7f);
-		gl.glEndList();
+        // render as fast as possible. 1 = 60fps
+        gl.setSwapInterval(0);
 
-		gl.glEnable(GL2.GL_NORMALIZE);
+        float pos[] = { 5.0f, 5.0f, 10.0f, 0.0f };
+        float red[] = { 0.8f, 0.1f, 0.0f, 1.0f };
+        float green[] = { 0.0f, 0.8f, 0.2f, 1.0f };
+        float blue[] = { 0.2f, 0.2f, 1.0f, 1.0f };
 
-		if (drawable instanceof AWTGLAutoDrawable) {
-			AWTGLAutoDrawable awtDrawable = (AWTGLAutoDrawable) drawable;
-			awtDrawable.addMouseListener(this);
-			awtDrawable.addMouseMotionListener(this);
-		}
-	}
+        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, pos, 0);
+        gl.glEnable(GL2.GL_CULL_FACE);
+        gl.glEnable(GL2.GL_LIGHTING);
+        gl.glEnable(GL2.GL_LIGHT0);
+        gl.glEnable(GL2.GL_DEPTH_TEST);
 
-	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-		GL2 gl = drawable.getGL().getGL2();
+        /* make the gears */
+        gear1 = gl.glGenLists(1);
+        gl.glNewList(gear1, GL2.GL_COMPILE);
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, red, 0);
+        gear(gl, 1.0f, 4.0f, 1.0f, 20, 0.7f);
+        gl.glEndList();
 
-		float h = (float) height / (float) width;
+        gear2 = gl.glGenLists(1);
+        gl.glNewList(gear2, GL2.GL_COMPILE);
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, green, 0);
+        gear(gl, 0.5f, 2.0f, 2.0f, 10, 0.7f);
+        gl.glEndList();
 
-		gl.glMatrixMode(GL2.GL_PROJECTION);
+        gear3 = gl.glGenLists(1);
+        gl.glNewList(gear3, GL2.GL_COMPILE);
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, blue, 0);
+        gear(gl, 1.3f, 2.0f, 0.5f, 10, 0.7f);
+        gl.glEndList();
 
-		System.err.println("GL_VENDOR: " + gl.glGetString(GL2.GL_VENDOR));
-		System.err.println("GL_RENDERER: " + gl.glGetString(GL2.GL_RENDERER));
-		System.err.println("GL_VERSION: " + gl.glGetString(GL2.GL_VERSION));
-		gl.glLoadIdentity();
-		gl.glFrustum(-1.0f, 1.0f, -h, h, 5.0f, 60.0f);
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
-		gl.glLoadIdentity();
-		gl.glTranslatef(0.0f, 0.0f, -40.0f);
-	}
+        gl.glEnable(GL2.GL_NORMALIZE);
 
-	public void dispose(GLAutoDrawable drawable) {
-		System.out.println("Gears.dispose: " + drawable);
-	}
+        if (drawable instanceof AWTGLAutoDrawable) {
+            AWTGLAutoDrawable awtDrawable = (AWTGLAutoDrawable) drawable;
+            awtDrawable.addMouseListener(this);
+            awtDrawable.addMouseMotionListener(this);
+        }
+    }
 
-	public void display(GLAutoDrawable drawable) {
-		// Turn the gears' teeth
-		angle += 2.0f;
+    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+        GL2 gl = drawable.getGL().getGL2();
 
-		// Get the GL corresponding to the drawable we are animating
-		GL2 gl = drawable.getGL().getGL2();
+        float h = (float) height / (float) width;
 
-		// Special handling for the case where the GLJPanel is translucent
-		// and wants to be composited with other Java 2D content
-		if ((drawable instanceof GLJPanel) && !((GLJPanel) drawable).isOpaque() && ((GLJPanel) drawable).shouldPreserveColorBufferIfTranslucent()) {
-			gl.glClear(GL2.GL_DEPTH_BUFFER_BIT);
-		} else {
-			gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-		}
+        gl.glMatrixMode(GL2.GL_PROJECTION);
 
-		// Rotate the entire assembly of gears based on how the user
-		// dragged the mouse around
-		gl.glPushMatrix();
-		gl.glRotatef(view_rotx, 1.0f, 0.0f, 0.0f);
-		gl.glRotatef(view_roty, 0.0f, 1.0f, 0.0f);
-		gl.glRotatef(view_rotz, 0.0f, 0.0f, 1.0f);
+        System.err.println("GL_VENDOR: " + gl.glGetString(GL2.GL_VENDOR));
+        System.err.println("GL_RENDERER: " + gl.glGetString(GL2.GL_RENDERER));
+        System.err.println("GL_VERSION: " + gl.glGetString(GL2.GL_VERSION));
+        gl.glLoadIdentity();
+        gl.glFrustum(-1.0f, 1.0f, -h, h, 5.0f, 60.0f);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        gl.glTranslatef(0.0f, 0.0f, -40.0f);
+    }
 
-		// Place the first gear and call its display list
-		gl.glPushMatrix();
-		gl.glTranslatef(-3.0f, -2.0f, 0.0f);
-		gl.glRotatef(angle, 0.0f, 0.0f, 1.0f);
-		gl.glCallList(gear1);
-		gl.glPopMatrix();
+    public void dispose(GLAutoDrawable drawable) {
+        System.out.println("Gears.dispose: " + drawable);
+    }
 
-		// Place the second gear and call its display list
-		gl.glPushMatrix();
-		gl.glTranslatef(3.1f, -2.0f, 0.0f);
-		gl.glRotatef(-2.0f * angle - 9.0f, 0.0f, 0.0f, 1.0f);
-		gl.glCallList(gear2);
-		gl.glPopMatrix();
+    public void display(GLAutoDrawable drawable) {
+        // Turn the gears' teeth
+        angle += 2.0f;
 
-		// Place the third gear and call its display list
-		gl.glPushMatrix();
-		gl.glTranslatef(-3.1f, 4.2f, 0.0f);
-		gl.glRotatef(-2.0f * angle - 25.0f, 0.0f, 0.0f, 1.0f);
-		gl.glCallList(gear3);
-		gl.glPopMatrix();
+        // Get the GL corresponding to the drawable we are animating
+        GL2 gl = drawable.getGL().getGL2();
 
-		// Remember that every push needs a pop; this one is paired with
-		// rotating the entire gear assembly
-		gl.glPopMatrix();
-	}
+        // Special handling for the case where the GLJPanel is translucent
+        // and wants to be composited with other Java 2D content
+        if ((drawable instanceof GLJPanel) && !((GLJPanel) drawable).isOpaque() && ((GLJPanel) drawable).shouldPreserveColorBufferIfTranslucent()) {
+            gl.glClear(GL2.GL_DEPTH_BUFFER_BIT);
+        } else {
+            gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+        }
 
-	public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
-	}
+        // Rotate the entire assembly of gears based on how the user
+        // dragged the mouse around
+        gl.glPushMatrix();
+        gl.glRotatef(view_rotx, 1.0f, 0.0f, 0.0f);
+        gl.glRotatef(view_roty, 0.0f, 1.0f, 0.0f);
+        gl.glRotatef(view_rotz, 0.0f, 0.0f, 1.0f);
 
-	public static void gear(GL2 gl, float inner_radius, float outer_radius, float width, int teeth, float tooth_depth) {
-		int i;
-		float r0, r1, r2;
-		float angle, da;
-		float u, v, len;
+        // Place the first gear and call its display list
+        gl.glPushMatrix();
+        gl.glTranslatef(-3.0f, -2.0f, 0.0f);
+        gl.glRotatef(angle, 0.0f, 0.0f, 1.0f);
+        gl.glCallList(gear1);
+        gl.glPopMatrix();
 
-		r0 = inner_radius;
-		r1 = outer_radius - tooth_depth / 2.0f;
-		r2 = outer_radius + tooth_depth / 2.0f;
+        // Place the second gear and call its display list
+        gl.glPushMatrix();
+        gl.glTranslatef(3.1f, -2.0f, 0.0f);
+        gl.glRotatef(-2.0f * angle - 9.0f, 0.0f, 0.0f, 1.0f);
+        gl.glCallList(gear2);
+        gl.glPopMatrix();
 
-		da = 2.0f * (float) Math.PI / teeth / 4.0f;
+        // Place the third gear and call its display list
+        gl.glPushMatrix();
+        gl.glTranslatef(-3.1f, 4.2f, 0.0f);
+        gl.glRotatef(-2.0f * angle - 25.0f, 0.0f, 0.0f, 1.0f);
+        gl.glCallList(gear3);
+        gl.glPopMatrix();
 
-		gl.glShadeModel(GL2.GL_FLAT);
+        // Remember that every push needs a pop; this one is paired with
+        // rotating the entire gear assembly
+        gl.glPopMatrix();
+    }
 
-		gl.glNormal3f(0.0f, 0.0f, 1.0f);
+    public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
+    }
 
-		/* draw front face */
-		gl.glBegin(GL2.GL_QUAD_STRIP);
-		for (i = 0; i <= teeth; i++) {
-			angle = i * 2.0f * (float) Math.PI / teeth;
-			gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), width * 0.5f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), width * 0.5f);
-			if (i < teeth) {
-				gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), width * 0.5f);
-				gl.glVertex3f(r1 * (float) Math.cos(angle + 3.0f * da), r1 * (float) Math.sin(angle + 3.0f * da), width * 0.5f);
-			}
-		}
-		gl.glEnd();
+    public static void gear(GL2 gl, float inner_radius, float outer_radius, float width, int teeth, float tooth_depth) {
+        int i;
+        float r0, r1, r2;
+        float angle, da;
+        float u, v, len;
 
-		/* draw front sides of teeth */
-		gl.glBegin(GL2.GL_QUADS);
-		for (i = 0; i < teeth; i++) {
-			angle = i * 2.0f * (float) Math.PI / teeth;
-			gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), width * 0.5f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), width * 0.5f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + 2.0f * da), r2 * (float) Math.sin(angle + 2.0f * da), width * 0.5f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle + 3.0f * da), r1 * (float) Math.sin(angle + 3.0f * da), width * 0.5f);
-		}
-		gl.glEnd();
+        r0 = inner_radius;
+        r1 = outer_radius - tooth_depth / 2.0f;
+        r2 = outer_radius + tooth_depth / 2.0f;
 
-		/* draw back face */
-		gl.glBegin(GL2.GL_QUAD_STRIP);
-		for (i = 0; i <= teeth; i++) {
-			angle = i * 2.0f * (float) Math.PI / teeth;
-			gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), -width * 0.5f);
-			gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), -width * 0.5f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), -width * 0.5f);
-			gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), -width * 0.5f);
-		}
-		gl.glEnd();
+        da = 2.0f * (float) Math.PI / teeth / 4.0f;
 
-		/* draw back sides of teeth */
-		gl.glBegin(GL2.GL_QUADS);
-		for (i = 0; i < teeth; i++) {
-			angle = i * 2.0f * (float) Math.PI / teeth;
-			gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), -width * 0.5f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + 2 * da), r2 * (float) Math.sin(angle + 2 * da), -width * 0.5f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), -width * 0.5f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), -width * 0.5f);
-		}
-		gl.glEnd();
+        gl.glShadeModel(GL2.GL_FLAT);
 
-		/* draw outward faces of teeth */
-		gl.glBegin(GL2.GL_QUAD_STRIP);
-		for (i = 0; i < teeth; i++) {
-			angle = i * 2.0f * (float) Math.PI / teeth;
-			gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), width * 0.5f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), -width * 0.5f);
-			u = r2 * (float) Math.cos(angle + da) - r1 * (float) Math.cos(angle);
-			v = r2 * (float) Math.sin(angle + da) - r1 * (float) Math.sin(angle);
-			len = (float) Math.sqrt(u * u + v * v);
-			u /= len;
-			v /= len;
-			gl.glNormal3f(v, -u, 0.0f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), width * 0.5f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), -width * 0.5f);
-			gl.glNormal3f((float) Math.cos(angle), (float) Math.sin(angle), 0.0f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + 2 * da), r2 * (float) Math.sin(angle + 2 * da), width * 0.5f);
-			gl.glVertex3f(r2 * (float) Math.cos(angle + 2 * da), r2 * (float) Math.sin(angle + 2 * da), -width * 0.5f);
-			u = r1 * (float) Math.cos(angle + 3 * da) - r2 * (float) Math.cos(angle + 2 * da);
-			v = r1 * (float) Math.sin(angle + 3 * da) - r2 * (float) Math.sin(angle + 2 * da);
-			gl.glNormal3f(v, -u, 0.0f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), width * 0.5f);
-			gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), -width * 0.5f);
-			gl.glNormal3f((float) Math.cos(angle), (float) Math.sin(angle), 0.0f);
-		}
-		gl.glVertex3f(r1 * (float) Math.cos(0), r1 * (float) Math.sin(0), width * 0.5f);
-		gl.glVertex3f(r1 * (float) Math.cos(0), r1 * (float) Math.sin(0), -width * 0.5f);
-		gl.glEnd();
+        gl.glNormal3f(0.0f, 0.0f, 1.0f);
 
-		gl.glShadeModel(GL2.GL_SMOOTH);
+        /* draw front face */
+        gl.glBegin(GL2.GL_QUAD_STRIP);
+        for (i = 0; i <= teeth; i++) {
+            angle = i * 2.0f * (float) Math.PI / teeth;
+            gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), width * 0.5f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), width * 0.5f);
+            if (i < teeth) {
+                gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), width * 0.5f);
+                gl.glVertex3f(r1 * (float) Math.cos(angle + 3.0f * da), r1 * (float) Math.sin(angle + 3.0f * da), width * 0.5f);
+            }
+        }
+        gl.glEnd();
 
-		/* draw inside radius cylinder */
-		gl.glBegin(GL2.GL_QUAD_STRIP);
-		for (i = 0; i <= teeth; i++) {
-			angle = i * 2.0f * (float) Math.PI / teeth;
-			gl.glNormal3f(-(float) Math.cos(angle), -(float) Math.sin(angle), 0.0f);
-			gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), -width * 0.5f);
-			gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), width * 0.5f);
-		}
-		gl.glEnd();
-	}
+        /* draw front sides of teeth */
+        gl.glBegin(GL2.GL_QUADS);
+        for (i = 0; i < teeth; i++) {
+            angle = i * 2.0f * (float) Math.PI / teeth;
+            gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), width * 0.5f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), width * 0.5f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + 2.0f * da), r2 * (float) Math.sin(angle + 2.0f * da), width * 0.5f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle + 3.0f * da), r1 * (float) Math.sin(angle + 3.0f * da), width * 0.5f);
+        }
+        gl.glEnd();
 
-	// Methods required for the implementation of MouseListener
-	public void mouseEntered(MouseEvent e) {
-	}
+        /* draw back face */
+        gl.glBegin(GL2.GL_QUAD_STRIP);
+        for (i = 0; i <= teeth; i++) {
+            angle = i * 2.0f * (float) Math.PI / teeth;
+            gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), -width * 0.5f);
+            gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), -width * 0.5f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), -width * 0.5f);
+            gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), -width * 0.5f);
+        }
+        gl.glEnd();
 
-	public void mouseExited(MouseEvent e) {
-	}
+        /* draw back sides of teeth */
+        gl.glBegin(GL2.GL_QUADS);
+        for (i = 0; i < teeth; i++) {
+            angle = i * 2.0f * (float) Math.PI / teeth;
+            gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), -width * 0.5f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + 2 * da), r2 * (float) Math.sin(angle + 2 * da), -width * 0.5f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), -width * 0.5f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), -width * 0.5f);
+        }
+        gl.glEnd();
 
-	public void mousePressed(MouseEvent e) {
-		prevMouseX = e.getX();
-		prevMouseY = e.getY();
-		if ((e.getModifiers() & e.BUTTON3_MASK) != 0) {
-			mouseRButtonDown = true;
-		}
-	}
+        /* draw outward faces of teeth */
+        gl.glBegin(GL2.GL_QUAD_STRIP);
+        for (i = 0; i < teeth; i++) {
+            angle = i * 2.0f * (float) Math.PI / teeth;
+            gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), width * 0.5f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle), r1 * (float) Math.sin(angle), -width * 0.5f);
+            u = r2 * (float) Math.cos(angle + da) - r1 * (float) Math.cos(angle);
+            v = r2 * (float) Math.sin(angle + da) - r1 * (float) Math.sin(angle);
+            len = (float) Math.sqrt(u * u + v * v);
+            u /= len;
+            v /= len;
+            gl.glNormal3f(v, -u, 0.0f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), width * 0.5f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + da), r2 * (float) Math.sin(angle + da), -width * 0.5f);
+            gl.glNormal3f((float) Math.cos(angle), (float) Math.sin(angle), 0.0f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + 2 * da), r2 * (float) Math.sin(angle + 2 * da), width * 0.5f);
+            gl.glVertex3f(r2 * (float) Math.cos(angle + 2 * da), r2 * (float) Math.sin(angle + 2 * da), -width * 0.5f);
+            u = r1 * (float) Math.cos(angle + 3 * da) - r2 * (float) Math.cos(angle + 2 * da);
+            v = r1 * (float) Math.sin(angle + 3 * da) - r2 * (float) Math.sin(angle + 2 * da);
+            gl.glNormal3f(v, -u, 0.0f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), width * 0.5f);
+            gl.glVertex3f(r1 * (float) Math.cos(angle + 3 * da), r1 * (float) Math.sin(angle + 3 * da), -width * 0.5f);
+            gl.glNormal3f((float) Math.cos(angle), (float) Math.sin(angle), 0.0f);
+        }
+        gl.glVertex3f(r1 * (float) Math.cos(0), r1 * (float) Math.sin(0), width * 0.5f);
+        gl.glVertex3f(r1 * (float) Math.cos(0), r1 * (float) Math.sin(0), -width * 0.5f);
+        gl.glEnd();
 
-	public void mouseReleased(MouseEvent e) {
-		if ((e.getModifiers() & e.BUTTON3_MASK) != 0) {
-			mouseRButtonDown = false;
-		}
-	}
+        gl.glShadeModel(GL2.GL_SMOOTH);
 
-	public void mouseClicked(MouseEvent e) {
-	}
+        /* draw inside radius cylinder */
+        gl.glBegin(GL2.GL_QUAD_STRIP);
+        for (i = 0; i <= teeth; i++) {
+            angle = i * 2.0f * (float) Math.PI / teeth;
+            gl.glNormal3f(-(float) Math.cos(angle), -(float) Math.sin(angle), 0.0f);
+            gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), -width * 0.5f);
+            gl.glVertex3f(r0 * (float) Math.cos(angle), r0 * (float) Math.sin(angle), width * 0.5f);
+        }
+        gl.glEnd();
+    }
 
-	// Methods required for the implementation of MouseMotionListener
-	public void mouseDragged(MouseEvent e) {
-		int x = e.getX();
-		int y = e.getY();
-		Dimension size = e.getComponent().getSize();
+    // Methods required for the implementation of MouseListener
+    public void mouseEntered(MouseEvent e) {
+    }
 
-		float thetaY = 360.0f * ((float) (x - prevMouseX) / (float) size.width);
-		float thetaX = 360.0f * ((float) (prevMouseY - y) / (float) size.height);
+    public void mouseExited(MouseEvent e) {
+    }
 
-		prevMouseX = x;
-		prevMouseY = y;
+    public void mousePressed(MouseEvent e) {
+        prevMouseX = e.getX();
+        prevMouseY = e.getY();
+        if ((e.getModifiers() & e.BUTTON3_MASK) != 0) {
+            mouseRButtonDown = true;
+        }
+    }
 
-		view_rotx += thetaX;
-		view_roty += thetaY;
-	}
+    public void mouseReleased(MouseEvent e) {
+        if ((e.getModifiers() & e.BUTTON3_MASK) != 0) {
+            mouseRButtonDown = false;
+        }
+    }
 
-	public void mouseMoved(MouseEvent e) {
-	}
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    // Methods required for the implementation of MouseMotionListener
+    public void mouseDragged(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        Dimension size = e.getComponent().getSize();
+
+        float thetaY = 360.0f * ((float) (x - prevMouseX) / (float) size.width);
+        float thetaX = 360.0f * ((float) (prevMouseY - y) / (float) size.height);
+
+        prevMouseX = x;
+        prevMouseY = y;
+
+        view_rotx += thetaX;
+        view_roty += thetaY;
+    }
+
+    public void mouseMoved(MouseEvent e) {
+    }
 }

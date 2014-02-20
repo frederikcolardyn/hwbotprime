@@ -67,7 +67,7 @@ public class BenchFrame extends Frame implements GLEventListener, WindowListener
 
 			add(canvas, BorderLayout.CENTER);
 
-			System.out.println("Starting animation...");
+			System.out.println("Starting jogl...");
 			Animator anim = new Animator(canvas);
 			anim.setRunAsFastAsPossible(true);
 			anim.start();

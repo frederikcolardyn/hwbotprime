@@ -5,34 +5,34 @@ import org.hwbot.bench.service.BenchService;
 
 public class GpuBenchService extends BenchService {
 
-	@Override
-	public Benchmark instantiateBenchmark() {
-		return new GpuBenchmark(this, super.benchUI, super.availableProcessors, super.progressBar);
-	}
+    @Override
+    public Benchmark instantiateBenchmark() {
+        return new GpuBenchmark(this, super.benchUI, super.availableProcessors, super.progressBar);
+    }
 
-	@Override
-	public String formatScore(Long score) {
-		return (score.intValue()) + "fps";
-	}
+    @Override
+    public String formatScore(Number score) {
+        if (score == null) {
+            return "no score";
+        } else {
+            return (score.intValue()) + "fps";
 
-	@Override
-	public String getSubtitle() {
-		return "OpenGL GPU Bench - 32/64Bit - Win/Mac/Linux";
-	}
+        }
+    }
 
-	@Override
-	public String getTitle() {
-		return "HWBOT OpenGL Benchmark";
-	}
+    @Override
+    public String getSubtitle() {
+        return "OpenGL GPU Bench - 32/64Bit - Win/Mac/Linux";
+    }
 
-	@Override
-	protected String getClient() {
-		return "hwbotopengl";
-	}
+    @Override
+    public String getTitle() {
+        return "HWBOT OpenGL Benchmark";
+    }
 
-	@Override
-	protected String getClientVersion() {
-		return "0.1.0";
-	}
+    @Override
+    protected String getClientVersion() {
+        return "0.1.0";
+    }
 
 }

@@ -13,12 +13,12 @@ public class BootStrap {
 		BenchService bench = new GpuBenchService();
 
 		if (GraphicsEnvironment.isHeadless() || "true".equals(System.getProperty("java.awt.headless")) || (args.length >= 1 && args[0].equals("console"))) {
-			bench.initialize(false);
+			bench.initialize(false, null);
 		} else {
 			try {
-				bench.initialize(true);
+				bench.initialize(true, null);
 			} catch (HeadlessException e) {
-				bench.initialize(false);
+				bench.initialize(false, null);
 			}
 		}
 	}
