@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">HWBOT ANDROID PRIME BENCH 0.1</string>
+    <string name="app_name">HWBOT PRIME beta</string>
     <string name="dummy_content">Hit "start" to benchmark your android.</string>
     <string name="dummy_button">START</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_bench">BenchActivity</string>
+    <string name="title_activity_main">HWBOT Prime benchmark</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_section1">Analyze</string>
+    <string name="title_section2">Compare</string>
+    <string name="title_section3">Me</string>
 
 </resources>
