@@ -6,6 +6,14 @@ import org.hwbot.bench.security.EncryptionModule;
 import org.hwbot.prime.model.DeviceInfo;
 import org.hwbot.prime.model.PersistentLogin;
 
+import android.os.Build;
+
+/**
+ * Very dumb xml implementation in order to avoid any dependencies. JDK libraries are even avoided so it can be ported easier to iOS with RoboVM.
+ * 
+ * @author frederik
+ * 
+ */
 public class DataServiceXml {
 
     private static DataServiceXml service;
@@ -21,6 +29,9 @@ public class DataServiceXml {
     }
 
     public static String createXml(String version, Number score, DeviceInfo deviceInfo, PersistentLogin credentials, EncryptionModule encryptionModule) {
+
+        AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
+
         StringBuffer xml = new StringBuffer();
         xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
         xml.append("<submission xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://hwbot.org/submit/api\">");
@@ -49,9 +60,16 @@ public class DataServiceXml {
                 xml.append("<id>" + deviceInfo.getProcessorId() + "</id>");
             }
             xml.append("<name><![CDATA[" + deviceInfo.getProcessor() + "]]></name>");
-            if (deviceInfo.getProcessorClock() != null) {
-                xml.append("<coreClock><![CDATA[" + (deviceInfo.getProcessorClock().intValue()) + "]]></coreClock>");
+            if (hardwareService.getMaxRecordedProcessorSpeed() > 0) {
+                xml.append("<coreClock>" + (hardwareService.getMaxRecordedProcessorSpeed()) + "</coreClock>");
             }
+            if (hardwareService.getIdleTemperature() > 0) {
+                xml.append("<idleTemp>" + (hardwareService.getIdleTemperature()) + "</idleTemp>");
+            }
+            if (hardwareService.getLoadTemperature() > 0) {
+                xml.append("<loadTemp>" + (hardwareService.getLoadTemperature()) + "</loadTemp>");
+            }
+
             xml.append("</processor>");
         }
         if (deviceInfo.getVideocard() != null) {
@@ -65,7 +83,8 @@ public class DataServiceXml {
         xml.append("</hardware>");
         xml.append("<software>");
         xml.append("<os>");
-        xml.append("<family>" + AndroidHardwareService.OS + "</family>");
+        xml.append("<family>Android</family>");
+        xml.append("<fullName>Android " + Build.VERSION.RELEASE + "</fullName>");
         xml.append("</os>");
         xml.append("</software>");
 
@@ -75,6 +94,10 @@ public class DataServiceXml {
             xml.append(String.format("%s=%s%n\n", envName, env.get(envName)));
 
         }
+        xml.append("</metadata>");
+
+        xml.append("<metadata name=\"kernel\">");
+        xml.append(hardwareService.getKernel());
         xml.append("</metadata>");
 
         xml.append("</submission>");

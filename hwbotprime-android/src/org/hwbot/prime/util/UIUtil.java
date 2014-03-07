@@ -10,11 +10,16 @@ public class UIUtil {
 
 	public static void setTextInView(View rootView, int id, String text) {
 		View findViewById = rootView.findViewById(id);
-		ViewGroup cpuRow = (ViewGroup) findViewById;
-		TextView cpuView = new TextView(MainActivity.activity);
-		cpuRow.removeAllViews();
-		cpuRow.addView(cpuView);
-		cpuView.setText(text);
+		if (findViewById instanceof ViewGroup) {
+			ViewGroup viewGroup = (ViewGroup) findViewById;
+			TextView view = new TextView(MainActivity.activity);
+			viewGroup.removeAllViews();
+			viewGroup.addView(view);
+			view.setText(text);
+		} else if (findViewById instanceof TextView) {
+			TextView textView = (TextView) findViewById;
+			textView.setText(text);
+		}
 	}
 
 }

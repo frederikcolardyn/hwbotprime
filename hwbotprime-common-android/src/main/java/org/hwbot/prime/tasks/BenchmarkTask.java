@@ -1,12 +1,13 @@
 package org.hwbot.prime.tasks;
 
+import java.util.concurrent.Callable;
+
 import org.hwbot.bench.PrimeBenchmark;
 import org.hwbot.prime.service.BenchmarkStatusAware;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
-public class BenchmarkTask extends AsyncTask<Void, Void, Number> {
+public class BenchmarkTask implements Callable<Number> {
 
     private BenchmarkStatusAware observer;
     private PrimeBenchmark benchmark;
@@ -17,7 +18,7 @@ public class BenchmarkTask extends AsyncTask<Void, Void, Number> {
     }
 
     @Override
-    public Number doInBackground(Void... params) {
+    public Number call() {
         Number score;
         try {
             score = benchmark.call();

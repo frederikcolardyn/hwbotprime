@@ -19,9 +19,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="org.hwbot.prime.MainActivity"
-            android:label="@string/title_activity_main"
-            android:screenOrientation="portrait"
-   			android:configChanges="orientation|keyboardHidden">
+            android:label="@string/title_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

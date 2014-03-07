@@ -77,7 +77,11 @@ public class BenchService implements Runnable {
         }
 
         output = new ViewConsole(console);
-        this.progressBar = new AndroidProgressBar(progressbar, 100);
+        if (progressbar != null) {
+            this.progressBar = new AndroidProgressBar(progressbar, 100);
+        } else {
+            this.progressBar = null;
+        }
         this.benchUI = benchUI;
 
         // output.write("Processor detected:\n" + processor);

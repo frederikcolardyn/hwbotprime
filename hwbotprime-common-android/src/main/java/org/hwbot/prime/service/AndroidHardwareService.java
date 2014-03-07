@@ -6,8 +6,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.hwbot.bench.model.Device;
 import org.hwbot.bench.model.Hardware;
 import org.hwbot.bench.model.Memory;
@@ -15,31 +24,25 @@ import org.hwbot.bench.model.Processor;
 import org.hwbot.bench.prime.HardwareService;
 import org.hwbot.prime.model.DeviceInfo;
 
-import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextSwitcher;
 
-public class AndroidHardwareService extends Activity implements HardwareService, SensorEventListener {
+public class AndroidHardwareService implements HardwareService, SensorEventListener, Runnable {
 
     protected static AndroidHardwareService service;
     protected DeviceInfo deviceInfo;
 
     public static String OS = System.getProperty("os.name").toLowerCase();
-    private SensorManager mSensorManager;
-    private Sensor mTempSensor;
     private float temperature;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mSensorManager = (SensorManager) getSystemService(Activity.SENSOR_SERVICE);
-        mTempSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-    }
+    private TextSwitcher temperatureLabel;
+    private ScheduledExecutorService monitorThread;
+    private int loadTemperature;
+    private int idleTemperature;
+    private int maxProcessorFrequency;
 
     private AndroidHardwareService() {
     }
@@ -66,10 +69,15 @@ public class AndroidHardwareService extends Activity implements HardwareService,
         return Build.MODEL;
     }
 
-    public Float getProcessorSpeed() {
+    public int getProcessorSpeed() {
         String fileContents = getFileContents("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-        Log.i("Max freq", fileContents);
-        return Float.parseFloat(fileContents) / 1000;
+        int maxFreqMHz = Integer.parseInt(fileContents) / 1000;
+        Log.i(this.getClass().getSimpleName(), "Max freq: " + maxFreqMHz + " MHz");
+        return maxFreqMHz;
+    }
+
+    public int getMaxRecordedProcessorSpeed() {
+        return this.maxProcessorFrequency;
     }
 
     public String execRuntime(String[] strings) {
@@ -193,7 +201,7 @@ public class AndroidHardwareService extends Activity implements HardwareService,
 
     private Processor gatherProcessorInfo() {
         Processor processor = new Processor();
-        processor.setCoreClock(getProcessorSpeed());
+        processor.setCoreClock((float) getProcessorSpeed());
         processor.setName(getProcessorInfo());
         processor.setEffectiveCores(getNumberOfProcessorCores());
         processor.setIdleTemp(getProcessorTemperature());
@@ -216,11 +224,14 @@ public class AndroidHardwareService extends Activity implements HardwareService,
             reader = new RandomAccessFile(file, "r");
             load = reader.readLine();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            // Log.w("io error", ex.getMessage());
+            // ex.printStackTrace();
         } finally {
-            try {
-                reader.close();
-            } catch (IOException e) {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
             }
         }
         return load;
@@ -261,6 +272,9 @@ public class AndroidHardwareService extends Activity implements HardwareService,
     public void onSensorChanged(SensorEvent event) {
         Log.i("sensor", "" + event.values);
         temperature = event.values[event.values.length - 1];
+        if (this.temperatureLabel != null) {
+            this.temperatureLabel.setText(String.format(Locale.ENGLISH, "%.0f °C", temperature));
+        }
     }
 
     @Override
@@ -268,17 +282,17 @@ public class AndroidHardwareService extends Activity implements HardwareService,
         Log.i("sensor", "accuracy: " + accuracy);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, mTempSensor, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-    }
+    // @Override
+    // protected void onResume() {
+    // super.onResume();
+    // mSensorManager.registerListener(this, mTempSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    // }
+    //
+    // @Override
+    // protected void onPause() {
+    // super.onPause();
+    // mSensorManager.unregisterListener(this);
+    // }
 
     public void setDeviceInfo(DeviceInfo deviceInfo) {
         this.deviceInfo = deviceInfo;
@@ -288,4 +302,110 @@ public class AndroidHardwareService extends Activity implements HardwareService,
         return deviceInfo;
     }
 
+    public int getProcessorCores() {
+        return getNumCores();
+    }
+
+    public int getLoadTemperature() {
+        return this.loadTemperature;
+    }
+
+    public int getIdleTemperature() {
+        return this.idleTemperature;
+    }
+
+    int maxFreq0 = 0;
+
+    public void restartMonitor() {
+        monitorThread = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable);
+                thread.setPriority(Thread.MIN_PRIORITY);
+                thread.setName("monitor");
+                thread.setDaemon(false);
+                return thread;
+            }
+        });
+    }
+
+    public void stopMonitorCpuFrequency() {
+        try {
+            if (monitorThread != null) {
+                monitorThread.shutdownNow();
+                monitorThread = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void startMonitorCpuFrequency() {
+        try {
+            if (monitorThread == null) {
+                restartMonitor();
+            }
+            monitorThread.scheduleAtFixedRate(this, 0, 500, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Map<Integer, TextSwitcher> cpuFreqMonitors = new HashMap<>();
+
+    public void monitorCpuFrequency(final int core, final TextSwitcher textSwitcher) {
+        cpuFreqMonitors.put(core, textSwitcher);
+
+        // initialize
+        Log.i(this.getClass().getSimpleName(), "Adding monitor for core " + core);
+        String curFreq = getFileContents("/sys/devices/system/cpu/cpu" + core + "/cpufreq/scaling_cur_freq");
+        if (curFreq != null) {
+            if (NumberUtils.isDigits(curFreq)) {
+                int mhz = Integer.parseInt(curFreq) / 1000;
+                // Log.i(this.getClass().getSimpleName(), "Progress MHz: " + mhz);
+                textSwitcher.setText(mhz + " MHz");
+            } else {
+                textSwitcher.setText("down");
+            }
+        }
+    }
+
+    public void monitorTemperature(TextSwitcher temperatureLabel) {
+        this.temperatureLabel = temperatureLabel;
+    }
+
+    @Override
+    public void run() {
+        try {
+            Set<Integer> cores = cpuFreqMonitors.keySet();
+            for (Integer core : cores) {
+                TextSwitcher textSwitcher = cpuFreqMonitors.get(core);
+                String fileContents = getFileContents("/sys/devices/system/cpu/cpu" + core + "/cpufreq/scaling_cur_freq");
+                if (NumberUtils.isDigits(fileContents)) {
+                    int mhz = Integer.parseInt(fileContents) / 1000;
+                    this.maxProcessorFrequency = Math.max(this.maxProcessorFrequency, mhz);
+                    textSwitcher.setText(mhz + " MHz");
+                } else {
+                    textSwitcher.setText("down");
+                }
+            }
+            if (this.temperatureLabel != null) {
+                String fileContents = getFileContents("/sys/class/thermal/thermal_zone0/temp");
+                if (NumberUtils.isDigits(fileContents)) {
+                    int celcius = Integer.parseInt(fileContents);
+                    this.idleTemperature = Math.min(this.idleTemperature, celcius);
+                    this.loadTemperature = Math.max(this.loadTemperature, celcius);
+                    this.temperatureLabel.setText(celcius + " ºC");
+                } else {
+                    this.temperatureLabel.setText("not available");
+                }
+            }
+        } catch (Exception e) {
+            Log.e(this.getClass().getSimpleName(), e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public String getKernel() {
+        return getFileContents("/proc/version");
+    }
 }

@@ -45,16 +45,16 @@ public class TabFragmentAccount extends Fragment {
 	public View mLoginFormView;
 	public View mLoginStatusView;
 	public TextView mLoginStatusMessageView;
+	public View rootView;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		Log.i("CREATE", "account tab");
-		View rootView = inflater.inflate(R.layout.fragment_main_account, container, false);
+		rootView = inflater.inflate(R.layout.fragment_main_account, container, false);
 
 		// check if already logged in
 		if (SecurityService.getInstance().getCredentials() != null) {
-			UIUtil.setTextInView(rootView, R.id.login_form, "Logged in as " + SecurityService.getInstance().getCredentials().getUserName());
-			// TODO logout
+			prepareViewAsLoggedIn();
 		} else {
 			// Set up the login form.
 			mEmail = MainActivity.activity.getIntent().getStringExtra(EXTRA_EMAIL);
@@ -112,8 +112,19 @@ public class TabFragmentAccount extends Fragment {
 		return rootView;
 	}
 
+	private void prepareViewAsLoggedIn() {
+		if (rootView != null) {
+			UIUtil.setTextInView(rootView, R.id.login_form, "Logged in as " + SecurityService.getInstance().getCredentials().getUserName());
+		}
+	}
+
 	public void reloadLogin() {
-		Log.i(this.getClass().getSimpleName(), "Credentials: " + SecurityService.getInstance().getCredentials());
+		if (SecurityService.getInstance().getCredentials() != null) {
+			Log.i(this.getClass().getSimpleName(), "Credentials: " + SecurityService.getInstance().getCredentials());
+			prepareViewAsLoggedIn();
+		} else {
+			Log.i(this.getClass().getSimpleName(), "Not logged in.");
+		}
 	}
 
 	/**
