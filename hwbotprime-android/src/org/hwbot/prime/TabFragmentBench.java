@@ -298,7 +298,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 					monitorThreadHandler.post(AndroidHardwareService.getInstance());
 					//Add some downtime
 					try {
-						Thread.sleep(500);
+						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}

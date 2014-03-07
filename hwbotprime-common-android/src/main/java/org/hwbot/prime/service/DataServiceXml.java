@@ -63,10 +63,10 @@ public class DataServiceXml {
             if (hardwareService.getMaxRecordedProcessorSpeed() > 0) {
                 xml.append("<coreClock>" + (hardwareService.getMaxRecordedProcessorSpeed()) + "</coreClock>");
             }
-            if (hardwareService.getIdleTemperature() > 0) {
+            if (hardwareService.getIdleTemperature() > 0 && hardwareService.getIdleTemperature() < Integer.MAX_VALUE) {
                 xml.append("<idleTemp>" + (hardwareService.getIdleTemperature()) + "</idleTemp>");
             }
-            if (hardwareService.getLoadTemperature() > 0) {
+            if (hardwareService.getLoadTemperature() > 0 && hardwareService.getLoadTemperature() < Integer.MAX_VALUE) {
                 xml.append("<loadTemp>" + (hardwareService.getLoadTemperature()) + "</loadTemp>");
             }
 

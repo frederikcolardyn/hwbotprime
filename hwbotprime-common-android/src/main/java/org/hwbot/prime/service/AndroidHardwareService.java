@@ -41,7 +41,7 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
     private TextSwitcher temperatureLabel;
     private ScheduledExecutorService monitorThread;
     private int loadTemperature;
-    private int idleTemperature;
+    private int idleTemperature = Integer.MAX_VALUE;
     private int maxProcessorFrequency;
 
     private AndroidHardwareService() {

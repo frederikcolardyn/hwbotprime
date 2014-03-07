@@ -21,6 +21,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener, PersistentLoginAware {
 
@@ -265,6 +266,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SecurityService.getInstance().setCredentials(null);
 	}
 
+	public void resetBestScore() {
+		Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
+		edit.remove("bestScore");
+		edit.commit();
+	}
+
 	public boolean updateBestScore(Number score) {
 		float bestScore = getBestScore();
 		if (score.floatValue() > bestScore) {
@@ -283,4 +290,26 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		return bestScore;
 	}
 
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		Log.i(this.getClass().getSimpleName(), "Preparing options menu.");
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle item selection
+		switch (item.getItemId()) {
+		case R.id.action_logout:
+			Log.i(this.getClass().getSimpleName(), "Logging out.");
+			SecurityService.getInstance().setCredentials(null);
+			return true;
+		case R.id.action_reset:
+			Log.i(this.getClass().getSimpleName(), "Reset best score.");
+			resetBestScore();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
 }
