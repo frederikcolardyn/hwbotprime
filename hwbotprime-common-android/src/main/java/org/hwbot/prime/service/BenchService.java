@@ -49,6 +49,7 @@ public class BenchService implements Runnable {
 
     // public static String SERVER = "http://192.168.0.249:9090";
     public static String SERVER = "http://uat.hwbot.org";
+    public static String SERVER_MOBILE = "http://uat.hwbot.org";
 
     private BenchService() {
         hardwareService = AndroidHardwareService.getInstance();

@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.UnknownHostException;
 
+import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.BenchService;
@@ -17,8 +19,9 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
 
     private String token;
     private PersistentLoginAware observer;
+    private NetworkStatusAware networkStatusAware;
 
-    public LoginTokenTask(PersistentLoginAware observer, String token) {
+    public LoginTokenTask(NetworkStatusAware networkStatusAware, PersistentLoginAware observer, String token) {
         this.observer = observer;
         this.token = token;
     }
@@ -34,6 +37,8 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
             Log.i(this.getClass().getSimpleName(), "Token: " + loginToken);
             observer.notifyPersistentLoginOk(loginToken);
             return loginToken;
+        } catch (UnknownHostException e) {
+            networkStatusAware.showNetworkPopupOnce();
         } catch (Exception e) {
             Log.i(this.getClass().getSimpleName(), "Error: " + e.getMessage());
             e.printStackTrace();

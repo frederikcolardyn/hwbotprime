@@ -6,20 +6,25 @@ import org.hwbot.prime.model.Result;
 import org.hwbot.prime.model.SubmissionRanking;
 import org.hwbot.prime.service.AndroidHardwareService;
 import org.hwbot.prime.service.BenchService;
+import org.hwbot.prime.tasks.ImageLoaderTask;
 import org.hwbot.prime.tasks.RankingLoaderTask;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
+import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -74,19 +79,14 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		} else {
 			TextView rankingTitle = new TextView(context);
 			rankingTitle.setText(deviceInfo.getProcessor());
-			rankingTitle.setTextSize(16);
+			rankingTitle.setTextSize(18);
 
-			TextView loading = new TextView(context);
-			loading.setText("Loading...");
-			loading.setTextSize(14);
 			compareView.removeAllViews();
 			compareView.addView(rankingTitle);
 			compareView.addView(createHr(context));
-			compareView.addView(loading);
-			compareView.addView(createHr(context));
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
-			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(tabFragment, BenchService.SERVER
+			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&limit=50&params=app=hwbot_prime&target=&cpuId=" + deviceInfo.getProcessorId());
 			rankingLoaderTask.execute((Void) null);
 		}
@@ -102,19 +102,14 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		} else {
 			TextView rankingTitle = new TextView(context);
 			rankingTitle.setText(deviceInfo.getProcessorCore());
-			rankingTitle.setTextSize(16);
+			rankingTitle.setTextSize(18);
 
-			TextView loading = new TextView(context);
-			loading.setText("Loading...");
-			loading.setTextSize(14);
 			compareView.removeAllViews();
 			compareView.addView(rankingTitle);
 			compareView.addView(createHr(context));
-			compareView.addView(loading);
-			compareView.addView(createHr(context));
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
-			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(tabFragment, BenchService.SERVER
+			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&limit=50&params=app=hwbot_prime&target=&cpuCoreId=" + deviceInfo.getProcessorCoreId());
 			rankingLoaderTask.execute((Void) null);
 		}
@@ -130,19 +125,14 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		} else {
 			TextView rankingTitle = new TextView(context);
 			rankingTitle.setText(deviceInfo.getProcessorFamily());
-			rankingTitle.setTextSize(16);
+			rankingTitle.setTextSize(18);
 
-			TextView loading = new TextView(context);
-			loading.setText("Loading...");
-			loading.setTextSize(14);
 			compareView.removeAllViews();
 			compareView.addView(rankingTitle);
 			compareView.addView(createHr(context));
-			compareView.addView(loading);
-			compareView.addView(createHr(context));
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
-			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(tabFragment, BenchService.SERVER
+			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&limit=50&params=app=hwbot_prime&target=&cpuFamilyId=" + deviceInfo.getProcessorFamilyId());
 			rankingLoaderTask.execute((Void) null);
 		}
@@ -220,45 +210,105 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 	@Override
 	public void notifySubmissionRanking(final SubmissionRanking ranking) {
-		Log.i(this.getClass().getSimpleName(), "Submission ranking: " + ranking);
+		// Log.i(this.getClass().getSimpleName(), "Submission ranking: " + ranking);
 
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					TableLayout table = new TableLayout(rootView.getContext());
+					Context context = rootView.getContext();
+					Log.i(this.getClass().getSimpleName(), "List: " + ranking.getSubmissions().size());
+					for (final Result result : ranking.getSubmissions()) {
+						RelativeLayout relativeLayout = new RelativeLayout(context);
+						RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+								RelativeLayout.LayoutParams.WRAP_CONTENT);
+						layoutParams.bottomMargin = 20;
+						layoutParams.leftMargin = 1;
+						relativeLayout.setLayoutParams(layoutParams);
+						relativeLayout.setBackgroundResource(R.drawable.container_dropshadow);
 
-					table.setStretchAllColumns(true);
-					table.setShrinkAllColumns(true);
+						TextView user = new TextView(context);
+						user.setText(result.getScore() + " - " + result.getUser());
+						user.setPadding(170, 5, 5, 5);
+						user.setTextAppearance(context, R.style.NotificationUser);
 
-					if (ranking.getSubmissions().size() == 0) {
-						TableRow rowHeader = new TableRow(rootView.getContext());
-						rowHeader.setGravity(Gravity.CENTER_HORIZONTAL);
-						rowHeader.addView(createTextView("No submissions with this hardware yet.", 16, true));
-						table.addView(rowHeader);
-					} else {
-						TableRow tableRowHeader = new TableRow(rootView.getContext());
-						tableRowHeader.setGravity(Gravity.CENTER_HORIZONTAL);
-						tableRowHeader.addView(createTextView("Score", 16, 10, 2, 3, 2, false));
-						tableRowHeader.addView(createTextView("User", 2, 16, 10, 2, 3, 2));
-						table.addView(tableRowHeader);
-						for (Result result : ranking.getSubmissions()) {
-							TableRow row = new TableRow(rootView.getContext());
-							row.addView(createTextView(result.score, 14, 10, 2, 3, 2, false));
-							row.addView(createTextView(result.user, 2, 14, 10, 2, 3, 2));
-							table.addView(row);
+						TextView message = new TextView(context);
+						message.setText(result.getHardware());
+						message.setPadding(170, 40, 5, 5);
+						message.setTextAppearance(context, R.style.NotificationMessage);
 
-							row = new TableRow(rootView.getContext());
-							row.addView(createTextView("cpu:", 14, 10, 2, 3, 2, false));
-							row.addView(createTextView(result.hardware, 2, 14, 10, 2, 3, 2));
-							table.addView(row);
+						if (result.getImage() != null) {
+							try {
+								// cache drawables?
+								String url;
+								if (result.getImage().startsWith("http")) {
+									url = result.getImage();
+								} else {
+									url = BenchService.SERVER + result.getImage();
+								}
+								ImageView imageView = new ImageView(context);
+								imageView.setMaxHeight(150);
+								imageView.setMaxWidth(150);
+								imageView.setMinimumHeight(150);
+								imageView.setMinimumWidth(150);
+								imageView.setScaleType(ScaleType.FIT_XY);
+								// imageView.setAdjustViewBounds(true);
+								imageView.setTag(url);
+								imageView.setPadding(10, 5, 5, 5);
+								relativeLayout.addView(imageView);
+								new ImageLoaderTask().execute(imageView);
+							} catch (Exception e) {
+								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+								e.printStackTrace();
+							}
 						}
+						relativeLayout.setHapticFeedbackEnabled(true);
+						relativeLayout.setClickable(true);
+						relativeLayout.setOnClickListener(new OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/submission/" + result.getId()));
+								MainActivity.activity.startActivity(intent);
+							}
+						});
+						relativeLayout.addView(user);
+						relativeLayout.addView(message);
+						//						if (compareView.getChildCount() > 2) {
+						//							compareView.removeViewAt(2);
+						//						}
+						compareView.addView(relativeLayout);
 					}
-					Log.i(this.getClass().getSimpleName(), "child count: " + compareView.getChildCount());
-					if (compareView.getChildCount() > 2) {
-						compareView.removeViewAt(2);
-					}
-					compareView.addView(table);
+
+					//					TableLayout table = new TableLayout(rootView.getContext());
+					//
+					//					table.setStretchAllColumns(true);
+					//					table.setShrinkAllColumns(true);
+					//
+					//					if (ranking.getSubmissions().size() == 0) {
+					//						TableRow rowHeader = new TableRow(rootView.getContext());
+					//						rowHeader.setGravity(Gravity.CENTER_HORIZONTAL);
+					//						rowHeader.addView(createTextView("No submissions with this hardware yet.", 16, true));
+					//						table.addView(rowHeader);
+					//					} else {
+					//						TableRow tableRowHeader = new TableRow(rootView.getContext());
+					//						tableRowHeader.setGravity(Gravity.CENTER_HORIZONTAL);
+					//						tableRowHeader.addView(createTextView("Score", 16, 10, 2, 3, 2, false));
+					//						tableRowHeader.addView(createTextView("User", 2, 16, 10, 2, 3, 2));
+					//						table.addView(tableRowHeader);
+					//						for (Result result : ranking.getSubmissions()) {
+					//							TableRow row = new TableRow(rootView.getContext());
+					//							row.addView(createTextView(result.score, 14, 10, 2, 3, 2, false));
+					//							row.addView(createTextView(result.user, 2, 14, 10, 2, 3, 2));
+					//							table.addView(row);
+					//
+					//							row = new TableRow(rootView.getContext());
+					//							row.addView(createTextView("cpu:", 14, 10, 2, 3, 2, false));
+					//							row.addView(createTextView(result.hardware, 2, 14, 10, 2, 3, 2));
+					//							table.addView(row);
+					//						}
+					//					}
+					//					Log.i(this.getClass().getSimpleName(), "child count: " + compareView.getChildCount());
+					//					compareView.addView(table);
 				}
 			});
 		}

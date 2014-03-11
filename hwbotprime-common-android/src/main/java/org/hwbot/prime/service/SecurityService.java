@@ -8,6 +8,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.hwbot.bench.prime.PrimeEncryptionModule;
 import org.hwbot.bench.security.EncryptionModule;
+import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.tasks.LoginTokenTask;
@@ -87,10 +88,10 @@ public class SecurityService {
         }
     }
 
-    public void loadToken(PersistentLoginAware persistentLoginAware, String token) {
+    public void loadToken(NetworkStatusAware networkStatusAware, PersistentLoginAware persistentLoginAware, String token) {
         if (StringUtils.isNotEmpty(token)) {
             org.hwbot.bench.prime.Log.info(this.getClass().getSimpleName(), "Loading credentials for token " + token);
-            new LoginTokenTask(persistentLoginAware, token).execute((Void) null);
+            new LoginTokenTask(networkStatusAware, persistentLoginAware, token).execute((Void) null);
         }
     }
 

@@ -3,7 +3,9 @@ package org.hwbot.prime.tasks;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.UnknownHostException;
 
+import org.hwbot.prime.MainActivity;
 import org.hwbot.prime.TabFragmentAccount;
 import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.BenchService;
@@ -48,8 +50,11 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLogin> {
 				reader.close();
 				in.close();
 			}
+		} catch (UnknownHostException e) {
+			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
 			Log.e(this.getClass().getSimpleName(), "Failed to authenticate: " + e.getMessage());
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -60,8 +65,8 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLogin> {
 		this.tabFragmentAccount.showProgress(false);
 		if (persistentLogin != null) {
 			SecurityService.getInstance().setCredentials(persistentLogin);
-			// MainActivity.activity.finish();
 			Log.i(this.getClass().getSimpleName(), "Logged in " + SecurityService.getInstance().getCredentials().getToken());
+			MainActivity.activity.loggedIn();
 		} else {
 			this.tabFragmentAccount.mPasswordView.setError(this.tabFragmentAccount.getString(org.hwbot.prime.R.string.error_incorrect_password));
 			this.tabFragmentAccount.mPasswordView.requestFocus();

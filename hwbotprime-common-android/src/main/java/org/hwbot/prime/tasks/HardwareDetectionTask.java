@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.UnknownHostException;
 
 import org.hwbot.prime.api.HardwareStatusAware;
+import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.model.DeviceInfo;
 import org.hwbot.prime.service.BenchService;
 
@@ -17,8 +19,10 @@ public class HardwareDetectionTask extends AsyncTask<Void, Void, DeviceInfo> {
 
     private HardwareStatusAware observer;
     private String deviceName;
+    private final NetworkStatusAware networkStatusAware;
 
-    public HardwareDetectionTask(HardwareStatusAware observer, String deviceName) {
+    public HardwareDetectionTask(NetworkStatusAware networkStatusAware, HardwareStatusAware observer, String deviceName) {
+        this.networkStatusAware = networkStatusAware;
         this.observer = observer;
         this.deviceName = deviceName;
     }
@@ -32,6 +36,8 @@ public class HardwareDetectionTask extends AsyncTask<Void, Void, DeviceInfo> {
             reader = new JsonReader(in);
             DeviceInfo deviceInfo = readDeviceInfo(reader);
             observer.notifyDeviceInfo(deviceInfo);
+        } catch (UnknownHostException e) {
+            networkStatusAware.showNetworkPopupOnce();
         } catch (Exception e) {
             Log.i(this.getClass().getSimpleName(), "Error: " + e.getMessage());
             e.printStackTrace();

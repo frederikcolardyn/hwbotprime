@@ -2,6 +2,7 @@ package org.hwbot.prime.tasks;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.UnknownHostException;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -12,6 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.SubmissionStatusAware;
 import org.hwbot.prime.service.BasicResponseStatusHandler;
 import org.hwbot.prime.service.BenchService;
@@ -25,9 +27,10 @@ import android.util.Log;
 public class SubmitResultTask extends AsyncTask<Void, Void, SubmitResponse> {
 
     private final byte[] data;
-    private final SubmissionStatusAware submissionStatusAware;
+    private SubmissionStatusAware submissionStatusAware;
+    private NetworkStatusAware networkStatusAware;
 
-    public SubmitResultTask(SubmissionStatusAware submissionStatusAware, byte[] data) {
+    public SubmitResultTask(NetworkStatusAware networkStatusAware, SubmissionStatusAware submissionStatusAware, byte[] data) {
         this.submissionStatusAware = submissionStatusAware;
         this.data = data;
     }
@@ -62,6 +65,8 @@ public class SubmitResultTask extends AsyncTask<Void, Void, SubmitResponse> {
                 reader.close();
                 in.close();
             }
+        } catch (UnknownHostException e) {
+            networkStatusAware.showNetworkPopupOnce();
         } catch (HttpHostConnectException e) {
             Log.i(this.getClass().getName(), "Failed to connect to HWBOT server! Are you connected to the internet?");
             e.printStackTrace();

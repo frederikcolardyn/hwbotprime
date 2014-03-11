@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class UIUtil {
+public class AndroidUtil {
 
 	public static void setTextInView(View rootView, int id, String text) {
 		View findViewById = rootView.findViewById(id);
@@ -21,5 +21,5 @@ public class UIUtil {
 			textView.setText(text);
 		}
 	}
-
+	
 }

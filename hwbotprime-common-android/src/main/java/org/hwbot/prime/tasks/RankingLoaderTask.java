@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.SubmissionRankingAware;
 import org.hwbot.prime.model.Result;
 import org.hwbot.prime.model.SubmissionRanking;
@@ -19,8 +21,9 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
 
     private SubmissionRankingAware observer;
     private String url;
+    private NetworkStatusAware networkStatusAware;
 
-    public RankingLoaderTask(SubmissionRankingAware observer, String url) {
+    public RankingLoaderTask(NetworkStatusAware networkStatusAware, SubmissionRankingAware observer, String url) {
         this.observer = observer;
         this.url = url;
     }
@@ -37,6 +40,8 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
             SubmissionRanking ranking = readSubmissionRanking(reader);
             observer.notifySubmissionRanking(ranking);
             return ranking;
+        } catch (UnknownHostException e) {
+            networkStatusAware.showNetworkPopupOnce();
         } catch (Exception e) {
             Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
             e.printStackTrace();
@@ -117,6 +122,10 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
                 result.country = reader.nextString();
             } else if (name.equals("id")) {
                 result.id = reader.nextInt();
+            } else if (name.equals("image")) {
+                result.image = reader.nextString();
+            } else if (name.equals("description")) {
+                result.description = reader.nextString();
             } else {
                 reader.skipValue();
             }

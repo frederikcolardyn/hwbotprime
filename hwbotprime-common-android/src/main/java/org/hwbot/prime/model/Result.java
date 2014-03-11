@@ -10,8 +10,24 @@ public class Result {
                 + "]";
     }
 
-    public String user, team, hardware, score, points, country;
+    public String user, team, hardware, score, points, country, image, description;
     public Integer id;
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public String getUser() {
         return user;

@@ -14,9 +14,8 @@ import org.hwbot.prime.service.BenchmarkStatusAware;
 import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.service.SubmitResponse;
 import org.hwbot.prime.tasks.BenchmarkTask;
-import org.hwbot.prime.tasks.HardwareDetectionTask;
 import org.hwbot.prime.tasks.SubmitResultTask;
-import org.hwbot.prime.util.UIUtil;
+import org.hwbot.prime.util.AndroidUtil;
 
 import android.graphics.Color;
 import android.os.Build;
@@ -61,14 +60,14 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 		if (MainActivity.activity != null) {
 
-			UIUtil.setTextInView(rootView, R.id.tableRowSoC, Build.BOARD);
-			UIUtil.setTextInView(rootView, R.id.tableRowModel, Build.MODEL);
-			UIUtil.setTextInView(rootView, R.id.tableRowDevice, RESOLVING);
-			UIUtil.setTextInView(rootView, R.id.tableRowProcessor, RESOLVING);
-			UIUtil.setTextInView(rootView, R.id.tableRowVideocard, RESOLVING);
-			UIUtil.setTextInView(rootView, R.id.tableRowMemory, RESOLVING);
-			UIUtil.setTextInView(rootView, R.id.tableRowBuild, "Android " + Build.VERSION.RELEASE);
-			UIUtil.setTextInView(rootView, R.id.tableRowKernel, AndroidHardwareService.getInstance().getKernel());
+			AndroidUtil.setTextInView(rootView, R.id.tableRowSoC, Build.BOARD);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowModel, Build.MODEL);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowDevice, RESOLVING);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowProcessor, RESOLVING);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowVideocard, RESOLVING);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowMemory, RESOLVING);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowBuild, "Android " + Build.VERSION.RELEASE);
+			AndroidUtil.setTextInView(rootView, R.id.tableRowKernel, AndroidHardwareService.getInstance().getKernel());
 
 			statusLabel = (TextSwitcher) rootView.findViewById(R.id.textSwitcher);
 			temperatureStatus = (TextSwitcher) rootView.findViewById(R.id.temperatureLabel);
@@ -104,20 +103,14 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			updateBestScore();
 
 			Log.i(this.getClass().getName(), "Submitting hardware worker...");
-			HardwareDetectionTask hardwareDetectionTask = new HardwareDetectionTask(this, Build.MODEL);
-			hardwareDetectionTask.execute((Void) null);
-
 			// cpu load bars
 			AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
-			// hardwareService.setActivity(MainActivity.activity);
 			stopMonitorCpuFrequency();
 			int cores = hardwareService.getProcessorCores();
-			//			LinearLayout layout = (LinearLayout) rootView.findViewById(R.id.temp);
 
 			TableLayout tableLayout = (TableLayout) rootView.findViewById(R.id.tableHardware);
 			for (int core = 0; core < cores; core++) {
 				TextSwitcher frequencyLabel = new TextSwitcher(MainActivity.activity);
-				// Set the ViewFactory of the TextSwitcher that will create TextView object when asked
 				frequencyLabel.setFactory(viewFactory);
 
 				TableRow tableRow = new TableRow(MainActivity.activity);
@@ -131,21 +124,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				layoutParams.setMargins(32, 0, 0, 0);
 				tableLayout.addView(tableRow, (3 + core), layoutParams);
 
-				// LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-				// layoutParams.width = LayoutParams.MATCH_PARENT;
-				// pg.setLayoutParams(layoutParams);
-				//				pg.setMax(hardwareService.getProcessorSpeed());
-				//				final float[] roundedCorners = new float[] { 5, 5, 5, 5, 5, 5, 5, 5 };
-				//				ShapeDrawable pgDrawable = new ShapeDrawable(new RectShape());
-				//				String MyColor = "#FF533B";
-				//				pgDrawable.getPaint().setColor(Color.parseColor(MyColor));
-				//				pgDrawable.setPadding(0, 3, 0, 2);
-				//				ClipDrawable progress = new ClipDrawable(pgDrawable, Gravity.HORIZONTAL_GRAVITY_MASK, ClipDrawable.HORIZONTAL);
-				//				pg.setProgressDrawable(progress);
-				//				pg.setBackgroundColor(Color.parseColor("#D2D2D2"));
-				// pg.setBackgroundDrawable(getResources().getDrawable(android.R.drawable.progress_horizontal));
 				hardwareService.monitorCpuFrequency(core, frequencyLabel);
-				//				layout.addView(pg);
 			}
 			hardwareService.monitorTemperature(temperatureStatus);
 			startMonitorCpuFrequency();
@@ -218,7 +197,8 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 						if (AndroidHardwareService.getInstance().getDeviceInfo() != null
 								&& AndroidHardwareService.getInstance().getDeviceInfo().getProcessorId() != null) {
 							try {
-								new SubmitResultTask(submissionStatusAware, BenchService.getInstance().getDataFile()).execute((Void) null);
+								new SubmitResultTask(MainActivity.activity, submissionStatusAware, BenchService.getInstance().getDataFile())
+										.execute((Void) null);
 							} catch (Exception e) {
 								Log.e(this.getClass().getSimpleName(), "Failed to submit " + e.getMessage());
 								e.printStackTrace();
@@ -260,10 +240,10 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				@Override
 				public void run() {
 					statusLabel.setText("ready");
-					UIUtil.setTextInView(rootView, R.id.tableRowDevice, (deviceInfo.getName() != null ? deviceInfo.getName() : UNKOWN));
-					UIUtil.setTextInView(rootView, R.id.tableRowProcessor, (deviceInfo.getProcessor() != null ? deviceInfo.getProcessor() : UNKOWN));
-					UIUtil.setTextInView(rootView, R.id.tableRowVideocard, (deviceInfo.getVideocard() != null ? deviceInfo.getVideocard() : UNKOWN));
-					UIUtil.setTextInView(rootView, R.id.tableRowMemory, (deviceInfo.getRam() != null ? deviceInfo.getRam() + " MB" : UNKOWN));
+					AndroidUtil.setTextInView(rootView, R.id.tableRowDevice, (deviceInfo.getName() != null ? deviceInfo.getName() : UNKOWN));
+					AndroidUtil.setTextInView(rootView, R.id.tableRowProcessor, (deviceInfo.getProcessor() != null ? deviceInfo.getProcessor() : UNKOWN));
+					AndroidUtil.setTextInView(rootView, R.id.tableRowVideocard, (deviceInfo.getVideocard() != null ? deviceInfo.getVideocard() : UNKOWN));
+					AndroidUtil.setTextInView(rootView, R.id.tableRowMemory, (deviceInfo.getRam() != null ? deviceInfo.getRam() + " MB" : UNKOWN));
 				}
 			});
 		}
@@ -298,7 +278,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 					monitorThreadHandler.post(AndroidHardwareService.getInstance());
 					//Add some downtime
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(500);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}

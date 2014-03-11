@@ -2,13 +2,17 @@ package org.hwbot.prime;
 
 import java.util.Locale;
 
+import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -23,7 +27,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener, PersistentLoginAware {
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener, PersistentLoginAware, NetworkStatusAware {
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -50,6 +54,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// needed for bench functionality
 	public static MainActivity activity;
 	public static BenchService bench = BenchService.getInstance();
+	private static boolean showNetworkPopup = true;
 
 	public MainActivity() {
 		MainActivity.activity = this;
@@ -67,7 +72,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			Uri uri = intent.getData();
 			String token = uri.getQueryParameter("token");
 			Log.i("INTENT", "got token: " + token);
-			SecurityService.getInstance().loadToken(this, token);
+			SecurityService.getInstance().loadToken(this, this, token);
 		} else {
 			Log.i("INTENT", "no intent data: " + intent);
 		}
@@ -113,9 +118,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private void restoreSettings(SharedPreferences settings) {
 		Log.i(this.getClass().getSimpleName(), "Restoring settings.");
 		username = settings.getString("username", null);
+		TabFragmentAccount.mEmail = username;
 		String token = settings.getString("token", null);
 
-		SecurityService.getInstance().loadToken((PersistentLoginAware) this, token);
+		SecurityService.getInstance().loadToken(this, (PersistentLoginAware) this, token);
 	}
 
 	private void storeSettings(SharedPreferences settings) {
@@ -141,15 +147,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
 		// When the given tab is selected, switch to the corresponding page in
 		// the ViewPager.
+		Log.i(this.getClass().getSimpleName(), "Tab selected: " + tab.getText() + " #" + tab.getPosition());
 		mViewPager.setCurrentItem(tab.getPosition());
 		prepareTab(tab);
 	}
 
 	private void prepareTab(ActionBar.Tab tab) {
-		Log.i(this.getClass().getSimpleName(), "Selected: " + tab.getText() + " #" + tab.getPosition());
 		switch (tab.getPosition()) {
 		case 0:
-			// TabFragmentBench tabFragmentBench = (TabFragmentBench) mSectionsPagerAdapter.getItem(tab.getPosition());
 			// nothing to prepare
 			break;
 		case 1:
@@ -158,7 +163,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			break;
 		case 2:
 			TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(tab.getPosition());
-			tabFragmentAccount.reloadLogin();
+			tabFragmentAccount.prepareView();
 			break;
 		default:
 			Log.e(this.getClass().getSimpleName(), "unkown tab");
@@ -167,11 +172,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-		// Log.i(this.getClass().getSimpleName(), "Unselected: " + tab.getText() + " #" + tab.getPosition());
+		Log.i(this.getClass().getSimpleName(), "Unselected: " + tab.getText() + " #" + tab.getPosition());
 	}
 
 	@Override
 	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+		Log.i(this.getClass().getSimpleName(), "Tab reselected: " + tab.getText() + " #" + tab.getPosition());
 		prepareTab(tab);
 	}
 
@@ -183,7 +189,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		TabFragmentBench tabFragmentBench;
 		TabFragmentCompare tabFragmentCompare;
-		TabFragmentAccount tabFragmentAccount;
+		TabFragmentAccount tabFragmentLoggedAccount;
 
 		public SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -209,13 +215,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 				return tabFragmentCompare;
 			case 2:
-				if (tabFragmentAccount == null) {
+				if (tabFragmentLoggedAccount == null) {
 					Log.i(this.getClass().getSimpleName(), "creating account tab");
-					tabFragmentAccount = new TabFragmentAccount();
+					tabFragmentLoggedAccount = new TabFragmentAccount();
 				} else {
 					Log.i(this.getClass().getSimpleName(), "reusing account tab");
 				}
-				return tabFragmentAccount;
+				return tabFragmentLoggedAccount;
 			default:
 				Log.e(this.getClass().getSimpleName(), "creating default tab");
 				return null;
@@ -272,6 +278,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		edit.commit();
 	}
 
+	public void resetToken() {
+		Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
+		edit.remove("token");
+		edit.commit();
+	}
+
 	public boolean updateBestScore(Number score) {
 		float bestScore = getBestScore();
 		if (score.floatValue() > bestScore) {
@@ -301,8 +313,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Handle item selection
 		switch (item.getItemId()) {
 		case R.id.action_logout:
-			Log.i(this.getClass().getSimpleName(), "Logging out.");
-			SecurityService.getInstance().setCredentials(null);
+			logout();
 			return true;
 		case R.id.action_reset:
 			Log.i(this.getClass().getSimpleName(), "Reset best score.");
@@ -310,6 +321,43 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	private void logout() {
+		Log.i(this.getClass().getSimpleName(), "Logging out.");
+		SecurityService.getInstance().setCredentials(null);
+		resetToken();
+		TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(2);
+		tabFragmentAccount.prepareView();
+	}
+
+	public void loggedIn() {
+		Log.i(this.getClass().getSimpleName(), "Logged in.");
+		TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(2);
+		tabFragmentAccount.prepareView();
+	}
+
+	public void showNetworkPopupOnce() {
+		if (isShowNetworkPopup()) {
+			Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage(R.string.no_network);
+			builder.setPositiveButton(R.string.no_network_btn, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					Log.i(NoNetworkDialog.class.getSimpleName(), "okay...");
+				}
+			});
+			AlertDialog dialog = builder.create();
+			dialog.show();
+		}
+	}
+
+	public boolean isShowNetworkPopup() {
+		if (showNetworkPopup) {
+			showNetworkPopup = false;
+			return true;
+		} else {
+			return false;
 		}
 	}
 }
