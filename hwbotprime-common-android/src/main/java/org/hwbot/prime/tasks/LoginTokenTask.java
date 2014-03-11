@@ -45,7 +45,9 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
             observer.notifyPersistentLoginFailed("Login failed: " + e.getMessage());
         } finally {
             try {
-                reader.close();
+                if (reader != null) {
+                    reader.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

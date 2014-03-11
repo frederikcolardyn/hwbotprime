@@ -44,7 +44,9 @@ public class HardwareDetectionTask extends AsyncTask<Void, Void, DeviceInfo> {
             observer.notifyDeviceInfo(DeviceInfo.dummy);
         } finally {
             try {
-                reader.close();
+                if (reader != null) {
+                    reader.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

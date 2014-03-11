@@ -62,8 +62,9 @@ public class SubmitResultTask extends AsyncTask<Void, Void, SubmitResponse> {
                 Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
                 e.printStackTrace();
             } finally {
-                reader.close();
-                in.close();
+                if (reader != null) {
+                    reader.close();
+                }
             }
         } catch (UnknownHostException e) {
             networkStatusAware.showNetworkPopupOnce();
