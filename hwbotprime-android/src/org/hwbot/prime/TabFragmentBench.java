@@ -14,6 +14,7 @@ import org.hwbot.prime.service.BenchmarkStatusAware;
 import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.service.SubmitResponse;
 import org.hwbot.prime.tasks.BenchmarkTask;
+import org.hwbot.prime.tasks.HardwareDetectionTask;
 import org.hwbot.prime.tasks.SubmitResultTask;
 import org.hwbot.prime.util.AndroidUtil;
 
@@ -103,6 +104,9 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			updateBestScore();
 
 			Log.i(this.getClass().getName(), "Submitting hardware worker...");
+			HardwareDetectionTask hardwareDetectionTask = new HardwareDetectionTask(MainActivity.activity, this, Build.MODEL);
+			hardwareDetectionTask.execute((Void) null);
+
 			// cpu load bars
 			AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
 			stopMonitorCpuFrequency();
@@ -235,6 +239,10 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	public void notifyDeviceInfo(final DeviceInfo deviceInfo) {
 		Log.i(this.getClass().getSimpleName(), "Device: " + deviceInfo);
 		AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
+
+		// use gson
+		MainActivity.activity.storeDeviceInfo(deviceInfo);
+
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
@@ -244,6 +252,33 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 					AndroidUtil.setTextInView(rootView, R.id.tableRowProcessor, (deviceInfo.getProcessor() != null ? deviceInfo.getProcessor() : UNKOWN));
 					AndroidUtil.setTextInView(rootView, R.id.tableRowVideocard, (deviceInfo.getVideocard() != null ? deviceInfo.getVideocard() : UNKOWN));
 					AndroidUtil.setTextInView(rootView, R.id.tableRowMemory, (deviceInfo.getRam() != null ? deviceInfo.getRam() + " MB" : UNKOWN));
+				}
+			});
+		}
+	}
+
+	@Override
+	public void notifyDeviceInfoFailed(final Status status) {
+		Log.w(this.getClass().getSimpleName(), "Failed to load device info: " + status);
+		if (MainActivity.activity != null) {
+			MainActivity.activity.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					if (AndroidHardwareService.getInstance().getDeviceInfo() != null) {
+						statusLabel.setText("HWBOT service unavailable, using cached info.");
+						notifyDeviceInfo(AndroidHardwareService.getInstance().getDeviceInfo());
+					} else {
+						switch (status) {
+						case service_down:
+							statusLabel.setText("Sorry, HWBOT service down...");
+							break;
+						case no_network:
+							statusLabel.setText("No network access...");
+							break;
+						default:
+							break;
+						}
+					}
 				}
 			});
 		}
@@ -310,4 +345,5 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			e.printStackTrace();
 		}
 	}
+
 }

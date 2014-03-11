@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils.TruncateAt;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -227,15 +228,50 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 						relativeLayout.setLayoutParams(layoutParams);
 						relativeLayout.setBackgroundResource(R.drawable.container_dropshadow);
 
+						int paddingTop = 0;
+
 						TextView user = new TextView(context);
 						user.setText(result.getScore() + " - " + result.getUser());
-						user.setPadding(170, 5, 5, 5);
+						user.setPadding(155, paddingTop += 10, 5, 5);
 						user.setTextAppearance(context, R.style.NotificationUser);
 
 						TextView message = new TextView(context);
-						message.setText(result.getHardware());
-						message.setPadding(170, 40, 5, 5);
-						message.setTextAppearance(context, R.style.NotificationMessage);
+						message.setText(result.getHardware()
+								+ (result.getCpuFreq() != null && result.getCpuFreq() > 0 ? " @ " + result.getCpuFreq() + " MHz" : ""));
+						message.setPadding(155, paddingTop += 30, 5, 5);
+						message.setTextAppearance(context, R.style.NotificationHardware);
+						message.setHorizontallyScrolling(true);
+						message.setSingleLine();
+						message.setEllipsize(TruncateAt.END);
+						message.setMaxLines(1);
+
+						TextView osBuild = null;
+						if (result.getOsBuild() != null) {
+							osBuild = new TextView(context);
+							osBuild.setText("Android " + result.getOsBuild());
+							osBuild.setPadding(155, paddingTop += 30, 5, 5);
+							osBuild.setTextAppearance(context, R.style.NotificationHardware);
+						}
+
+						TextView kernel = null;
+						if (result.getKernel() != null) {
+							kernel = new TextView(context);
+							kernel.setText("Kernel" + result.getKernel());
+							kernel.setPadding(155, paddingTop += 30, 5, 5);
+							kernel.setTextAppearance(context, R.style.NotificationHardware);
+							kernel.setMaxLines(2);
+							kernel.setEllipsize(TruncateAt.END);
+						}
+
+						TextView description = null;
+						if (result.getDescription() != null) {
+							description = new TextView(context);
+							description.setText("\"" + result.getDescription() + "\"");
+							description.setPadding(155, paddingTop += 40, 5, 5);
+							description.setTextAppearance(context, R.style.NotificationDescription);
+							description.setMaxLines(2);
+							description.setEllipsize(TruncateAt.END);
+						}
 
 						if (result.getImage() != null) {
 							try {
@@ -273,42 +309,17 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 						});
 						relativeLayout.addView(user);
 						relativeLayout.addView(message);
-						//						if (compareView.getChildCount() > 2) {
-						//							compareView.removeViewAt(2);
-						//						}
+						if (kernel != null) {
+							relativeLayout.addView(kernel);
+						}
+						if (osBuild != null) {
+							relativeLayout.addView(osBuild);
+						}
+						if (description != null) {
+							relativeLayout.addView(description);
+						}
 						compareView.addView(relativeLayout);
 					}
-
-					//					TableLayout table = new TableLayout(rootView.getContext());
-					//
-					//					table.setStretchAllColumns(true);
-					//					table.setShrinkAllColumns(true);
-					//
-					//					if (ranking.getSubmissions().size() == 0) {
-					//						TableRow rowHeader = new TableRow(rootView.getContext());
-					//						rowHeader.setGravity(Gravity.CENTER_HORIZONTAL);
-					//						rowHeader.addView(createTextView("No submissions with this hardware yet.", 16, true));
-					//						table.addView(rowHeader);
-					//					} else {
-					//						TableRow tableRowHeader = new TableRow(rootView.getContext());
-					//						tableRowHeader.setGravity(Gravity.CENTER_HORIZONTAL);
-					//						tableRowHeader.addView(createTextView("Score", 16, 10, 2, 3, 2, false));
-					//						tableRowHeader.addView(createTextView("User", 2, 16, 10, 2, 3, 2));
-					//						table.addView(tableRowHeader);
-					//						for (Result result : ranking.getSubmissions()) {
-					//							TableRow row = new TableRow(rootView.getContext());
-					//							row.addView(createTextView(result.score, 14, 10, 2, 3, 2, false));
-					//							row.addView(createTextView(result.user, 2, 14, 10, 2, 3, 2));
-					//							table.addView(row);
-					//
-					//							row = new TableRow(rootView.getContext());
-					//							row.addView(createTextView("cpu:", 14, 10, 2, 3, 2, false));
-					//							row.addView(createTextView(result.hardware, 2, 14, 10, 2, 3, 2));
-					//							table.addView(row);
-					//						}
-					//					}
-					//					Log.i(this.getClass().getSimpleName(), "child count: " + compareView.getChildCount());
-					//					compareView.addView(table);
 				}
 			});
 		}

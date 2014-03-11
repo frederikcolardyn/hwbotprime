@@ -31,6 +31,7 @@ public class SubmitResultTask extends AsyncTask<Void, Void, SubmitResponse> {
     private NetworkStatusAware networkStatusAware;
 
     public SubmitResultTask(NetworkStatusAware networkStatusAware, SubmissionStatusAware submissionStatusAware, byte[] data) {
+        this.networkStatusAware = networkStatusAware;
         this.submissionStatusAware = submissionStatusAware;
         this.data = data;
     }
@@ -67,6 +68,7 @@ public class SubmitResultTask extends AsyncTask<Void, Void, SubmitResponse> {
                 }
             }
         } catch (UnknownHostException e) {
+            Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
             networkStatusAware.showNetworkPopupOnce();
         } catch (HttpHostConnectException e) {
             Log.i(this.getClass().getName(), "Failed to connect to HWBOT server! Are you connected to the internet?");

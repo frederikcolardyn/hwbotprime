@@ -24,6 +24,7 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
     private NetworkStatusAware networkStatusAware;
 
     public RankingLoaderTask(NetworkStatusAware networkStatusAware, SubmissionRankingAware observer, String url) {
+        this.networkStatusAware = networkStatusAware;
         this.observer = observer;
         this.url = url;
     }
@@ -32,8 +33,6 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
     protected SubmissionRanking doInBackground(Void... params) {
         JsonReader reader = null;
         try {
-            // TODO artificial delay
-            Thread.sleep(400);
             URL hwbotRanking = new URL(url);
             BufferedReader in = new BufferedReader(new InputStreamReader(hwbotRanking.openStream()));
             reader = new JsonReader(in);
@@ -41,6 +40,7 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
             observer.notifySubmissionRanking(ranking);
             return ranking;
         } catch (UnknownHostException e) {
+            Log.w(this.getClass().getSimpleName(), "No network access: "+e.getMessage());
             networkStatusAware.showNetworkPopupOnce();
         } catch (Exception e) {
             Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
@@ -128,6 +128,12 @@ public class RankingLoaderTask extends AsyncTask<Void, Void, SubmissionRanking> 
                 result.image = reader.nextString();
             } else if (name.equals("description")) {
                 result.description = reader.nextString();
+            } else if (name.equals("kernel")) {
+                result.kernel = reader.nextString();
+            } else if (name.equals("osBuild")) {
+                result.osBuild = reader.nextString();
+            } else if (name.equals("cpuFreq")) {
+                result.cpuFreq = reader.nextInt();
             } else {
                 reader.skipValue();
             }

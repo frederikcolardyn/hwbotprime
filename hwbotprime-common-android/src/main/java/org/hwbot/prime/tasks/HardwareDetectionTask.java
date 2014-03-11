@@ -31,17 +31,20 @@ public class HardwareDetectionTask extends AsyncTask<Void, Void, DeviceInfo> {
     public DeviceInfo doInBackground(Void... params) {
         JsonReader reader = null;
         try {
-            URL hwbotRanking = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName);
-            BufferedReader in = new BufferedReader(new InputStreamReader(hwbotRanking.openStream()));
+            URL url = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName);
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
             reader = new JsonReader(in);
             DeviceInfo deviceInfo = readDeviceInfo(reader);
             observer.notifyDeviceInfo(deviceInfo);
         } catch (UnknownHostException e) {
+            Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
             networkStatusAware.showNetworkPopupOnce();
+            observer.notifyDeviceInfoFailed(org.hwbot.prime.api.HardwareStatusAware.Status.no_network);
         } catch (Exception e) {
             Log.i(this.getClass().getSimpleName(), "Error: " + e.getMessage());
             e.printStackTrace();
             observer.notifyDeviceInfo(DeviceInfo.dummy);
+            // observer.notifyDeviceInfoFailed(org.hwbot.prime.api.HardwareStatusAware.Status.no_network);
         } finally {
             try {
                 if (reader != null) {

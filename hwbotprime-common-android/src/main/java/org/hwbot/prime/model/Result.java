@@ -10,8 +10,9 @@ public class Result {
                 + "]";
     }
 
-    public String user, team, hardware, score, points, country, image, description;
+    public String user, team, hardware, score, points, country, image, description, kernel, osBuild;
     public Integer id;
+    public Integer cpuFreq;
 
     public String getImage() {
         return image;
@@ -83,6 +84,30 @@ public class Result {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getKernel() {
+        return kernel;
+    }
+
+    public void setKernel(String kernel) {
+        this.kernel = kernel;
+    }
+
+    public String getOsBuild() {
+        return osBuild;
+    }
+
+    public void setOsBuild(String osBuild) {
+        this.osBuild = osBuild;
+    }
+
+    public Integer getCpuFreq() {
+        return cpuFreq;
+    }
+
+    public void setCpuFreq(Integer cpuFreq) {
+        this.cpuFreq = cpuFreq;
     }
 
 }

@@ -4,9 +4,13 @@ import java.util.Locale;
 
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
+import org.hwbot.prime.model.DeviceInfo;
 import org.hwbot.prime.model.PersistentLogin;
+import org.hwbot.prime.service.AndroidHardwareService;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
+
+import com.google.gson.Gson;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -18,6 +22,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -120,8 +125,30 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		username = settings.getString("username", null);
 		TabFragmentAccount.mEmail = username;
 		String token = settings.getString("token", null);
+		String device = settings.getString("device", null);
+		if (device != null) {
+			try {
+				DeviceInfo deviceInfo = new Gson().fromJson(device, DeviceInfo.class);
+				AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
+			} catch (Exception e) {
+				Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
+				e.printStackTrace();
+			}
+		}
 
 		SecurityService.getInstance().loadToken(this, (PersistentLoginAware) this, token);
+	}
+
+	public void storeDeviceInfo(DeviceInfo deviceInfo) {
+		if (deviceInfo != null) {
+			Log.i(this.getClass().getSimpleName(), "Storing device info.");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString("device", new Gson().toJson(deviceInfo));
+
+			// Commit the edits!
+			editor.commit();
+		}
 	}
 
 	private void storeSettings(SharedPreferences settings) {
@@ -340,15 +367,32 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public void showNetworkPopupOnce() {
 		if (isShowNetworkPopup()) {
-			Builder builder = new AlertDialog.Builder(this);
-			builder.setMessage(R.string.no_network);
-			builder.setPositiveButton(R.string.no_network_btn, new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int id) {
-					Log.i(NoNetworkDialog.class.getSimpleName(), "okay...");
-				}
+			this.runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					Log.i(this.getClass().getSimpleName(), "Show network popup.");
+					boolean noLooper = Looper.myLooper() == null;
+					if (noLooper) {
+						Looper.prepare();
+						Looper.loop();
+					}
+					Builder builder = new AlertDialog.Builder(MainActivity.activity);
+					builder.setMessage(R.string.no_network);
+					builder.setPositiveButton(R.string.no_network_btn, new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							Log.i(NoNetworkDialog.class.getSimpleName(), "okay...");
+						}
+					});
+					AlertDialog dialog = builder.create();
+					dialog.show();
+					if (noLooper) {
+						Looper.myLooper().quit();
+					}
+				};
 			});
-			AlertDialog dialog = builder.create();
-			dialog.show();
+		} else {
+			Log.i(this.getClass().getSimpleName(), "Network popup already shown.");
 		}
 	}
 

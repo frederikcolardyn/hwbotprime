@@ -408,4 +408,8 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
     public String getKernel() {
         return getFileContents("/proc/version");
     }
+
+    public String getOsBuild() {
+        return Build.VERSION.RELEASE;
+    }
 }

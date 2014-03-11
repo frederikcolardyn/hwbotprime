@@ -99,6 +99,9 @@ public class DataServiceXml {
         xml.append("<metadata name=\"kernel\">");
         xml.append(hardwareService.getKernel());
         xml.append("</metadata>");
+        xml.append("<metadata name=\"os_build\">");
+        xml.append(hardwareService.getOsBuild());
+        xml.append("</metadata>");
 
         xml.append("</submission>");
         return xml.toString();

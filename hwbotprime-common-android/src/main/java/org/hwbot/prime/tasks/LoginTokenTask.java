@@ -22,6 +22,7 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
     private NetworkStatusAware networkStatusAware;
 
     public LoginTokenTask(NetworkStatusAware networkStatusAware, PersistentLoginAware observer, String token) {
+        this.networkStatusAware = networkStatusAware;
         this.observer = observer;
         this.token = token;
     }
@@ -38,6 +39,7 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
             observer.notifyPersistentLoginOk(loginToken);
             return loginToken;
         } catch (UnknownHostException e) {
+            Log.w(this.getClass().getSimpleName(), "No network access: "+e.getMessage());
             networkStatusAware.showNetworkPopupOnce();
         } catch (Exception e) {
             Log.i(this.getClass().getSimpleName(), "Error: " + e.getMessage());

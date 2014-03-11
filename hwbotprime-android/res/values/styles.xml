@@ -45,7 +45,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:ellipsize">start</item>
+        <item name="android:singleLine">true</item>
     </style>
     
     <style name="NotificationMessage">
@@ -53,7 +53,24 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textStyle">italic</item>
         <item name="android:textSize">12sp</item>
+        <item name="android:ellipsize">marquee</item>
+        <item name="android:textColor">@color/notification_text</item>
+    </style>
+    
+    <style name="NotificationHardware">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">11sp</item>
         <item name="android:ellipsize">start</item>
+        <item name="android:textColor">@color/notification_text</item>
+    </style>
+    
+    <style name="NotificationDescription">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textStyle">italic</item>
         <item name="android:textColor">@color/notification_text</item>
     </style>
 
