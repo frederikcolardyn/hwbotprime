@@ -53,6 +53,7 @@
 	</profiles>
 
 	<modules>
+	    <module>cpuid</module>
 		<module>hwbotprime-algorithm</module>
 		<module>hwbotprime-data</module>
 		<module>hwbotprime-common</module>
