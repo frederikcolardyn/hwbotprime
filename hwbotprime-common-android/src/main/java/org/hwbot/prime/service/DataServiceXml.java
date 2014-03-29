@@ -1,9 +1,11 @@
 package org.hwbot.prime.service;
 
+import java.util.Locale;
 import java.util.Map;
 
+import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.bench.model.Request;
 import org.hwbot.bench.security.EncryptionModule;
-import org.hwbot.prime.model.DeviceInfo;
 import org.hwbot.prime.model.PersistentLogin;
 
 import android.os.Build;
@@ -28,7 +30,7 @@ public class DataServiceXml {
         return service;
     }
 
-    public static String createXml(String version, Number score, DeviceInfo deviceInfo, PersistentLogin credentials, EncryptionModule encryptionModule) {
+    public static String createXml(String version, Number score, DeviceInfoDTO deviceInfo, PersistentLogin credentials, EncryptionModule encryptionModule) {
 
         AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
 
@@ -45,6 +47,14 @@ public class DataServiceXml {
             xml.append("</credentials>");
         }
         xml.append("<score><points>" + score + "</points></score>");
+
+        if (encryptionModule != null) {
+            Request request = new Request("HWBOT Prime", version, String.format(Locale.ENGLISH, "%.2f", score.floatValue()), null);
+            encryptionModule.addChecksum(request);
+            String checksum = request.getApplicationChecksum();
+            xml.append("<applicationChecksum>" + checksum + "</applicationChecksum>");
+        }
+
         xml.append("<hardware>");
         xml.append("<device>");
         if (deviceInfo.getName() != null) {
@@ -102,8 +112,13 @@ public class DataServiceXml {
         xml.append("<metadata name=\"os_build\">");
         xml.append(hardwareService.getOsBuild());
         xml.append("</metadata>");
+        xml.append("<metadata name=\"os_dump\">");
+        xml.append(hardwareService.getOsDebugInfo());
+        xml.append("</metadata>");
 
         xml.append("</submission>");
+
+        // Log.i(DataServiceXml.class.getSimpleName(), xml.toString());
         return xml.toString();
     }
 

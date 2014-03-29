@@ -2,27 +2,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/container_background"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin" >
-    
+
     <LinearLayout
         android:id="@+id/benchBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:orientation="vertical">
+        android:orientation="vertical" >
 
         <Button
             android:id="@+id/benchbutton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:gravity="center_horizontal|center_vertical"
-            android:text="Start"
+            android:height="60dp"
+            android:text="@string/start_btn"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:typeface="normal"
             android:width="@dimen/activity_horizontal_margin" />
 
         <ProgressBar
@@ -30,308 +35,578 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_weight="1"
             android:max="100"
-            android:progress="0"
-            android:layout_weight="1"/>
-   	</LinearLayout>
-	    
-	<ScrollView
+            android:maxHeight="16dp"
+            android:minHeight="16dp"
+            android:progress="0" />
+    </LinearLayout>
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" 
-        android:layout_below="@+id/benchBox">
-        
-	    <LinearLayout
-	            android:layout_width="match_parent"
-	            android:layout_height="wrap_content"
-	            android:orientation="vertical"
-	            android:isScrollContainer="true" 
-	            android:requiresFadingEdge="vertical">
-        
-	        <LinearLayout
-	            android:id="@+id/scoreBox"
-	            android:layout_width="match_parent"
-	            android:layout_height="wrap_content"
-	            android:layout_marginTop="10dp"
-	            android:orientation="vertical" >
-	
-	            <View
-	                android:layout_width="fill_parent"
-	                android:layout_height="2dip"
-	                android:layout_marginBottom="10dp"
-	                android:background="#E2E2E2" />
-	
-	            <TextView
-	                android:id="@+id/monitoring"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:text="Benchmark"
-	                android:textSize="16sp" />
-	
-	            <TableLayout
-	                android:id="@+id/tableLayout1"
-	                android:layout_width="wrap_content"
-	                android:layout_height="wrap_content"
-	                android:stretchColumns="1">
-	
-	                <TableRow
-	                    android:id="@+id/tableRowLastScore"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content">
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Last score"
-	                        android:textStyle="bold"
-	                        android:layout_marginRight="10dp"
-	                        />
-	
-	                    <TextSwitcher
-	                        android:id="@+id/lastScore"
-	                        android:layout_width="match_parent"
-	                        android:layout_height="wrap_content"
-	                        android:paddingLeft="16dp"
-	                        android:layout_gravity="left">
-	                    </TextSwitcher>
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowBestScore"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Best score"
-	                        android:textStyle="bold" 
-	                        android:layout_marginRight="10dp"/>
-	
-	                    <TextSwitcher
-	                        android:id="@+id/bestScore"
-	                        android:layout_width="match_parent"
-	                        android:layout_height="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:paddingLeft="16dp" >
-	                    </TextSwitcher>
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowState"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    android:layout_marginRight="10dp">
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Status"
-	                        android:textStyle="bold"
-	                        android:layout_marginRight="10dp" />
-	
-	                    <TextSwitcher
-	                        android:id="@+id/textSwitcher"
-	                        android:layout_width="match_parent"
-	                        android:layout_height="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:paddingLeft="16dp" >
-	                    </TextSwitcher>
-	                </TableRow>
-	            </TableLayout>
-	        </LinearLayout>
-	
-	        <LinearLayout
-	            android:id="@+id/hardwareBox"
-	            android:layout_width="match_parent"
-	            android:layout_height="wrap_content"
-	            android:layout_below="@+id/scoreBox"
-	            android:layout_marginTop="32dp"
-	            android:orientation="vertical" >
-	
-	            <View
-	                android:layout_width="fill_parent"
-	                android:layout_height="2dip"
-	                android:layout_marginTop="5dp"
-	                android:background="#E2E2E2" />
-	
-	            <TextView
-	                android:id="@+id/monitoring"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:text="Hardware"
-	                android:textSize="16dp" />
-	
-	            <TableLayout
-	                android:id="@+id/tableHardware"
-	                android:layout_width="wrap_content"
-	                android:layout_height="wrap_content"
-	                android:layout_alignParentBottom="true">
-	
-	                <TableRow
-	                    android:id="@+id/tableRowDeviceR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Device"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowDevice"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowProcessorR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Processor"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowProcessor"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowProcessorTemperatureR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="  Temperature"
-	                         />
-	
-	                    <TextSwitcher
-	                        android:id="@+id/temperatureLabel"
-	                        android:layout_width="match_parent"
-	                        android:layout_height="wrap_content"
-	                        android:layout_marginLeft="16dp">
-	                    </TextSwitcher>
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowVideocardR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Videocard"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowVideocard"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowMemoryR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Memory"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowMemory"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowSoCR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Board"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowSoC"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowModelR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="SoC"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowModel"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowBuildR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Build"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowBuild"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	
-	                <TableRow
-	                    android:id="@+id/tableRowKernelR"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content" >
-	
-	                    <TextView
-	                        android:layout_width="wrap_content"
-	                        android:layout_gravity="left"
-	                        android:text="Kernel"
-	                        android:textStyle="bold" />
-	
-	                    <TextView
-	                        android:id="@+id/tableRowKernel"
-	                        android:layout_width="fill_parent"
-	                        android:paddingLeft="16dp"
-	                        android:text="unkown" />
-	                </TableRow>
-	            </TableLayout>
-	        </LinearLayout>
-	    </LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/benchBox" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical" >
+
+            <TextSwitcher
+                android:id="@+id/textSwitcher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:minHeight="18dp" >
+            </TextSwitcher>
+
+            <!-- <LinearLayout -->
+            <!-- android:id="@+id/scoreBox" -->
+            <!-- android:layout_width="match_parent" -->
+            <!-- android:layout_height="wrap_content" -->
+            <!-- android:layout_marginTop="10dp" -->
+            <!-- android:orientation="vertical" > -->
+
+
+            <!--
+                <TextView
+                    android:id="@+id/monitoring"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/benchmark"
+                    android:textAppearance="@style/Header"
+                    android:paddingBottom="3dp" />
+            -->
+
+            <TableLayout
+                android:id="@+id/tableLayout1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/container_leaderboard_rank"
+                android:stretchColumns="1" >
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_gravity="center_horizontal|top"
+                    android:gravity="center_horizontal|top" >
+
+                    <TextView
+                        android:id="@+id/bestPhoneHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:paddingBottom="5dp"
+                        android:paddingTop="5dp"
+                        android:text="@string/benchmark"
+                        android:textAppearance="@style/leaderboardLargeLabel" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_gravity="center_horizontal|top"
+                    android:gravity="center_horizontal|top" 
+                    android:paddingBottom="10dp">
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <!--
+                            <TextView
+                                android:id="@+id/bestPhoneHeader"
+		                        android:layout_width="match_parent"
+		                        android:layout_height="wrap_content"
+		                        android:layout_gravity="center_horizontal"
+		                        android:gravity="center"
+		                        android:paddingBottom="0dp"
+		                        android:text="@string/best_phone"
+		                        android:textAppearance="@style/leaderboardLargeLabel" />
+                        -->
+
+                        <TextSwitcher
+                            android:id="@+id/bestPhoneMe"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent" />
+
+                        <TextView
+                            android:id="@+id/bestPhoneMeId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestPhoneMe"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_phone"
+                            android:textAppearance="@style/leaderboardSmallLabel" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <TextSwitcher
+                            android:id="@+id/bestCoreMe"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent" />
+
+                        <TextView
+                            android:id="@+id/bestCoreMeId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestCoreMe"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_core"
+                            android:textAppearance="@style/leaderboardSmallLabel" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <TextSwitcher
+                            android:id="@+id/bestFamilyMe"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent"/>
+
+                        <TextView
+                            android:id="@+id/bestFamilyMeId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestFamilyMe"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_family"
+                            android:textAppearance="@style/leaderboardSmallLabel"/>
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <TextSwitcher
+                            android:id="@+id/bestOverallMe"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent"/>
+
+                        <TextView
+                            android:id="@+id/bestOverallMeId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestOverallMe"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_overall"
+                            android:textAppearance="@style/leaderboardSmallLabel"/>
+                    </RelativeLayout>
+                </TableRow>
+            </TableLayout>
+
+            <TableLayout
+                android:id="@+id/tableLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:background="@drawable/container_leaderboard_rank"
+                android:stretchColumns="1" >
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_gravity="center_horizontal|top"
+                    android:gravity="center_horizontal|top" >
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:paddingBottom="5dp"
+                        android:paddingTop="5dp"
+                        android:text="@string/benchmark_worldwide"
+                        android:textAppearance="@style/leaderboardLargeLabel" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_gravity="center_horizontal|top"
+                    android:gravity="center_horizontal|top" 
+                    android:paddingBottom="10dp">
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <TextSwitcher
+                            android:id="@+id/bestPhone"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestPhone"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_phone"
+                            android:textAppearance="@style/leaderboardSmallLabel" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <!-- <TextView -->
+                        <!-- android:id="@+id/bestCoreHeader" -->
+                        <!-- android:layout_width="match_parent" -->
+                        <!-- android:layout_height="wrap_content" -->
+                        <!-- android:layout_gravity="center_horizontal" -->
+                        <!-- android:gravity="center" -->
+                        <!-- android:paddingBottom="0dp" -->
+                        <!-- android:text="@string/best_core" -->
+                        <!-- android:textAppearance="@style/leaderboardLargeLabel" /> -->
+
+                        <TextSwitcher
+                            android:id="@+id/bestCore"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestCore"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_core"
+                            android:textAppearance="@style/leaderboardSmallLabel" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <!-- <TextView -->
+                        <!-- android:id="@+id/bestFamilyHeader" -->
+                        <!-- android:layout_width="match_parent" -->
+                        <!-- android:layout_height="wrap_content" -->
+                        <!-- android:layout_gravity="center_horizontal" -->
+                        <!-- android:gravity="center" -->
+                        <!-- android:paddingBottom="0dp" -->
+                        <!-- android:text="@string/best_family" -->
+                        <!-- android:textAppearance="@style/leaderboardLargeLabel" /> -->
+
+                        <TextSwitcher
+                            android:id="@+id/bestFamily"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestFamily"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_family"
+                            android:textAppearance="@style/leaderboardSmallLabel" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_horizontal|top"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center|top" >
+
+                        <!-- <TextView -->
+                        <!-- android:id="@+id/bestOverallHeader" -->
+                        <!-- android:layout_width="match_parent" -->
+                        <!-- android:layout_height="wrap_content" -->
+                        <!-- android:layout_gravity="center_horizontal" -->
+                        <!-- android:gravity="center" -->
+                        <!-- android:paddingBottom="0dp" -->
+                        <!-- android:text="@string/best_overall" -->
+                        <!-- android:textAppearance="@style/leaderboardLargeLabel" /> -->
+
+                        <TextSwitcher
+                            android:id="@+id/bestOverall"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/container_score_parent" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/bestOverall"
+                            android:layout_gravity="center_horizontal|top"
+                            android:gravity="center|top"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp"
+                            android:shadowColor="@color/black_overlay"
+                            android:text="@string/best_overall"
+                            android:textAppearance="@style/leaderboardSmallLabel" />
+                    </RelativeLayout>
+                </TableRow>
+            </TableLayout>
+            <!-- </LinearLayout> -->
+
+            <LinearLayout
+                android:id="@+id/hardwareBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="3dp"
+                    android:text="@string/hardware"
+                    android:textAppearance="@style/Header" />
+
+                <TableLayout
+                    android:id="@+id/tableHardware"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" >
+
+                    <TableRow
+                        android:id="@+id/tableRowDeviceR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/device"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowDevice"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowProcessorR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/processor"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowProcessor"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowProcessorTemperatureR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/temperature"
+                            android:textAppearance="@style/Label" />
+
+                        <TextSwitcher
+                            android:id="@+id/temperatureLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="16dp" >
+                        </TextSwitcher>
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowVideocardR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/videocard"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowVideocard"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowMemoryR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/memory"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowMemory"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowSoCR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/board"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowSoC"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowModelR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/soc"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowModel"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowBuildR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/build"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowBuild"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+
+                    <TableRow
+                        android:id="@+id/tableRowKernelR"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="@string/kernel"
+                            android:textAppearance="@style/Label" />
+
+                        <TextView
+                            android:id="@+id/tableRowKernel"
+                            android:layout_width="fill_parent"
+                            android:paddingLeft="16dp"
+                            android:text="@string/unkown"
+                            android:textAppearance="@style/Value" />
+                    </TableRow>
+                </TableLayout>
+            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
 
 </RelativeLayout>

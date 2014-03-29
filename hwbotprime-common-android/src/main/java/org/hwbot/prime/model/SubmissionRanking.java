@@ -3,9 +3,11 @@ package org.hwbot.prime.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hwbot.api.generic.dto.SubmissionDTO;
+
 public class SubmissionRanking {
 
-    List<Result> submissions = new ArrayList<Result>();
+    List<SubmissionDTO> list = new ArrayList<SubmissionDTO>();
     String applicationName;
     int applicationId;
 
@@ -17,12 +19,12 @@ public class SubmissionRanking {
         this.applicationId = applicationId;
     }
 
-    public List<Result> getSubmissions() {
-        return submissions;
+    public List<SubmissionDTO> getList() {
+        return list;
     }
 
-    public void setSubmissions(List<Result> submissions) {
-        this.submissions = submissions;
+    public void setList(List<SubmissionDTO> submissions) {
+        this.list = submissions;
     }
 
     public String getApplicationName() {
@@ -35,7 +37,7 @@ public class SubmissionRanking {
 
     @Override
     public String toString() {
-        return "SubmissionRanking [" + (submissions != null ? "submissions=" + submissions + ", " : "")
+        return "SubmissionRanking [" + (list != null ? "submissions=" + list + ", " : "")
                 + (applicationName != null ? "applicationName=" + applicationName + ", " : "") + "applicationId=" + applicationId + "]";
     }
 

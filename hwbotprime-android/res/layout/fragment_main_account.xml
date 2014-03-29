@@ -2,7 +2,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/container_background"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -77,7 +76,7 @@
                 android:layout_marginTop="16dp"
                 android:paddingLeft="32dp"
                 android:paddingRight="32dp"
-                android:text="@string/action_sign_in_register" />
+                android:text="@string/action_sign_in_short" />
 
             <View
                 android:layout_width="fill_parent"
@@ -93,7 +92,7 @@
                 android:layout_gravity="right"
                 android:layout_marginTop="16dp"
                 android:background="#4099FF"
-                android:text="Sign in with twitter" />
+                android:text="@string/sign_in_twitter" />
 
             <Button
                 android:id="@+id/facebook_sign_in_button"
@@ -104,7 +103,7 @@
                 android:background="#6D8BC9"
                 android:paddingLeft="32dp"
                 android:paddingRight="32dp"
-                android:text="Sign in with facebook" />
+                android:text="@string/sign_in_facebook" />
 
             <Button
                 android:id="@+id/google_sign_in_button"
@@ -115,15 +114,14 @@
                 android:background="#D34836"
                 android:paddingLeft="32dp"
                 android:paddingRight="32dp"
-                android:text="Sign in with google" />
+                android:text="@string/sign_in_google" />
         </LinearLayout>
     </ScrollView>
 
     <ScrollView
         android:id="@+id/logged_in"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#eae8e8" >
+        android:layout_height="match_parent" >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -133,13 +131,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="League Points"
+                android:text="@string/league_points"
                 android:textStyle="bold" />
 
             <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
+                android:layout_height="wrap_content" >
 
                 <TableRow
                     android:id="@+id/tableRowLeagePoints"
@@ -149,12 +146,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="League Points" />
+                        android:text="@string/league_points" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
 
                 <TableRow
@@ -165,12 +162,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Team Power Points" />
+                        android:text="@string/team_power_points" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
             </TableLayout>
 
@@ -178,18 +175,18 @@
                 android:layout_width="fill_parent"
                 android:layout_height="2dip"
                 android:layout_marginTop="5dp"
-                android:background="#E2E2E2" />
+                android:layout_marginBottom="10dp"
+                android:background="@color/hr" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="League ranking"
+                android:text="@string/league_ranking"
                 android:textStyle="bold" />
 
             <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
+                android:layout_height="wrap_content" >
 
                 <TableRow
                     android:id="@+id/tableRowWorlWideRank"
@@ -199,12 +196,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Worldwide" />
+                        android:text="@string/worlwide" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
 
                 <TableRow
@@ -215,12 +212,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="National" />
+                        android:text="@string/national" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
 
                 <TableRow
@@ -231,12 +228,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Team" />
+                        android:text="@string/team" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
 
                 <TableRow
@@ -247,12 +244,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hardware Masters" />
+                        android:text="@string/hardware_master" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
 
                 <TableRow
@@ -263,12 +260,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Achievements" />
+                        android:text="@string/achievements" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
 
                 <TableRow
@@ -279,12 +276,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Challenges" />
+                        android:text="@string/challenges" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..." />
+                        android:text="@string/loading" />
                 </TableRow>
             </TableLayout>
 
@@ -292,22 +289,21 @@
                 android:layout_width="fill_parent"
                 android:layout_height="2dip"
                 android:layout_marginTop="5dp"
-                android:background="#E2E2E2" />
+                android:layout_marginBottom="10dp"
+                android:background="@color/hr"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Notifications"
+                android:text="@string/notifications"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/notifications"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" 
-                android:orientation="vertical"
-                >
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
             </LinearLayout>
-           
         </LinearLayout>
     </ScrollView>
 

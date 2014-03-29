@@ -63,7 +63,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLogin> {
 	protected void onPostExecute(final PersistentLogin persistentLogin) {
 		this.tabFragmentAccount.mAuthTask = null;
 		this.tabFragmentAccount.showProgress(false);
-		if (persistentLogin != null) {
+		if (persistentLogin != null && persistentLogin.getToken() != null) {
 			SecurityService.getInstance().setCredentials(persistentLogin);
 			Log.i(this.getClass().getSimpleName(), "Logged in " + SecurityService.getInstance().getCredentials().getToken());
 			MainActivity.activity.loggedIn();

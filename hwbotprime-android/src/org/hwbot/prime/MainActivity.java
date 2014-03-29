@@ -2,25 +2,32 @@ package org.hwbot.prime;
 
 import java.util.Locale;
 
+import org.hwbot.api.bench.dto.DeviceInfoWithRecordsDTO;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
-import org.hwbot.prime.model.DeviceInfo;
+import org.hwbot.prime.api.VersionStatusAware;
+import org.hwbot.prime.exception.UnsignedAppException;
+import org.hwbot.prime.model.BenchmarkResult;
 import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.AndroidHardwareService;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
-
-import com.google.gson.Gson;
+import org.hwbot.prime.tasks.HardwareDetectionTask;
+import org.hwbot.prime.tasks.SubmitResultTask;
+import org.hwbot.prime.tasks.VersionCheckTask;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
@@ -31,8 +38,12 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener, PersistentLoginAware, NetworkStatusAware {
+import com.google.gson.Gson;
+
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener, PersistentLoginAware, NetworkStatusAware, VersionStatusAware {
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -49,12 +60,20 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	ViewPager mViewPager;
 
+	// menu reference
+	public static Menu menu;
+
 	// login form
 	public static String username;
 	public static CharSequence password;
 
 	// store
 	public static final String PREFS_NAME = "HWBOTPrimePreferences";
+	public static final String SETTINGS_TOKEN = "token";
+	public static final String SETTINGS_DEVICE = "device";
+	public static final String SETTINGS_BEST_SCORE = "bestScore";
+	public static final String COMPETE_INFO = "compete_info";
+	public static final String MY_INFO = "my_info";
 
 	// needed for bench functionality
 	public static MainActivity activity;
@@ -63,6 +82,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public MainActivity() {
 		MainActivity.activity = this;
+	}
+
+	public static MainActivity getActivity() {
+		return activity;
 	}
 
 	@Override
@@ -75,11 +98,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Intent intent = getIntent();
 		if (intent != null && intent.getData() != null) {
 			Uri uri = intent.getData();
-			String token = uri.getQueryParameter("token");
-			Log.i("INTENT", "got token: " + token);
+			String token = uri.getQueryParameter(SETTINGS_TOKEN);
 			SecurityService.getInstance().loadToken(this, this, token);
-		} else {
-			Log.i("INTENT", "no intent data: " + intent);
 		}
 
 		// Restore preferences
@@ -118,18 +138,26 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// this tab is selected.
 			actionBar.addTab(actionBar.newTab().setText(mSectionsPagerAdapter.getPageTitle(i)).setTabListener(this));
 		}
+
+		// battery
+		//		if (this.batteryInfoReceiver != null) {
+		//			this.registerReceiver(batteryInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+		//		}
+
+		// version check
+		new VersionCheckTask(this, this).execute((Void) null);
 	}
 
 	private void restoreSettings(SharedPreferences settings) {
 		Log.i(this.getClass().getSimpleName(), "Restoring settings.");
 		username = settings.getString("username", null);
 		TabFragmentAccount.mEmail = username;
-		String token = settings.getString("token", null);
-		String device = settings.getString("device", null);
+		String token = settings.getString(SETTINGS_TOKEN, null);
+		String device = settings.getString(SETTINGS_DEVICE, null);
 		if (device != null) {
 			try {
-				DeviceInfo deviceInfo = new Gson().fromJson(device, DeviceInfo.class);
-				AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
+				DeviceInfoWithRecordsDTO deviceInfo = new Gson().fromJson(device, DeviceInfoWithRecordsDTO.class);
+				AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo.getDevice());
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
 				e.printStackTrace();
@@ -139,12 +167,28 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SecurityService.getInstance().loadToken(this, (PersistentLoginAware) this, token);
 	}
 
-	public void storeDeviceInfo(DeviceInfo deviceInfo) {
+	public DeviceInfoWithRecordsDTO loadDeviceInfo() {
+		Log.i(this.getClass().getSimpleName(), "Loading device info.");
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		String info = settings.getString(SETTINGS_DEVICE, null);
+		if (info != null) {
+			DeviceInfoWithRecordsDTO fromJson = new Gson().fromJson(info, DeviceInfoWithRecordsDTO.class);
+			if (fromJson != null && fromJson.getDevice() == null) {
+				// invalid
+				fromJson = null;
+			}
+			return fromJson;
+		} else {
+			return null;
+		}
+	}
+
+	public void storeDeviceInfo(DeviceInfoWithRecordsDTO deviceInfo) {
 		if (deviceInfo != null) {
-			Log.i(this.getClass().getSimpleName(), "Storing device info.");
+			Log.i(this.getClass().getSimpleName(), "Storing device info with records.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
-			editor.putString("device", new Gson().toJson(deviceInfo));
+			editor.putString(SETTINGS_DEVICE, new Gson().toJson(deviceInfo));
 
 			// Commit the edits!
 			editor.commit();
@@ -155,8 +199,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.i(this.getClass().getSimpleName(), "Storing settings.");
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putString("username", username);
-		if (SecurityService.getInstance().getCredentials() != null) {
-			editor.putString("token", SecurityService.getInstance().getCredentials().getToken());
+		if (SecurityService.getInstance().isLoggedIn()) {
+			editor.putString(SETTINGS_TOKEN, SecurityService.getInstance().getCredentials().getToken());
 		}
 
 		// Commit the edits!
@@ -167,6 +211,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		MainActivity.menu = menu;
+		menu.getItem(1).setVisible(SecurityService.getInstance().isLoggedIn());
 		return true;
 	}
 
@@ -205,7 +251,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
 		Log.i(this.getClass().getSimpleName(), "Tab reselected: " + tab.getText() + " #" + tab.getPosition());
-		prepareTab(tab);
+		// prepareTab(tab);
 	}
 
 	/**
@@ -299,39 +345,104 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SecurityService.getInstance().setCredentials(null);
 	}
 
-	public void resetBestScore() {
+	public void resetSettings() {
 		Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
-		edit.remove("bestScore");
+		edit.remove(SETTINGS_BEST_SCORE);
+		edit.remove(SETTINGS_DEVICE);
+		edit.remove(COMPETE_INFO);
 		edit.commit();
+
+		HardwareDetectionTask hardwareDetectionTask = new HardwareDetectionTask(MainActivity.activity, TabFragmentBench.getInstance());
+		hardwareDetectionTask.execute(Build.MODEL);
 	}
 
 	public void resetToken() {
 		Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
-		edit.remove("token");
+		edit.remove(SETTINGS_TOKEN);
 		edit.commit();
 	}
 
-	public boolean updateBestScore(Number score) {
-		float bestScore = getBestScore();
-		if (score.floatValue() > bestScore) {
-			Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
-			edit.putFloat("bestScore", score.floatValue());
-			edit.commit();
-			return true;
+	public boolean updateBestScore() throws UnsignedAppException {
+		BenchmarkResult bestScore = getBestScore();
+		if (bench.getScore() != null && bestScore == null || bestScore.getScore() < bench.getScore().floatValue()) {
+			try {
+				byte[] dataFile = bench.getDataFile();
+				BenchmarkResult benchmarkResult = new BenchmarkResult();
+				benchmarkResult.setDate(System.currentTimeMillis());
+				benchmarkResult.setEncryptedXml(dataFile);
+				benchmarkResult.setMaxCpuFrequency(AndroidHardwareService.getInstance().getMaxRecordedProcessorSpeed());
+				benchmarkResult.setScore(bench.getScore().floatValue());
+
+				Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
+				edit.putString(SETTINGS_BEST_SCORE, new Gson().toJson(benchmarkResult));
+				edit.commit();
+				Log.i(this.getClass().getSimpleName(), "Updated best score to " + bench.getScore());
+				return true;
+			} catch (Exception e) {
+				Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
+				throw new UnsignedAppException();
+			}
 		} else {
 			return false;
 		}
 	}
 
-	public float getBestScore() {
+	public boolean markBestScoreSubmitted() {
+		BenchmarkResult bestScore = getBestScore();
+		if (bestScore != null) {
+
+			if (!bestScore.isSubmitted()) {
+				bestScore.setSubmitted(true);
+				Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
+				edit.putString(SETTINGS_BEST_SCORE, new Gson().toJson(bestScore));
+				edit.commit();
+				return true;
+			} else {
+				Log.w(this.getClass().getSimpleName(), "Best score was already submitted!");
+				return false;
+			}
+
+		} else {
+			return false;
+		}
+	}
+
+	public BenchmarkResult getBestScore() {
+		BenchmarkResult benchmarkResult = null;
+		try {
+			SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+			String bestScoreJson = sharedPreferences.getString(SETTINGS_BEST_SCORE, null);
+			if (bestScoreJson != null) {
+				benchmarkResult = new Gson().fromJson(bestScoreJson, BenchmarkResult.class);
+			}
+		} catch (Exception e) {
+			Log.w(this.getClass().getSimpleName(), "Best score can not be restored: " + e.getMessage());
+			Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
+			edit.remove(SETTINGS_BEST_SCORE);
+			edit.commit();
+		}
+		return benchmarkResult;
+	}
+
+	public void setOfflineMode(boolean offlineMode) {
 		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-		float bestScore = sharedPreferences.getFloat("bestScore", 0f);
-		return bestScore;
+		Editor edit = sharedPreferences.edit();
+		edit.putBoolean("offline_mode", offlineMode);
+		edit.commit();
+		Log.w(this.getClass().getSimpleName(), "Saved offline mode: " + offlineMode);
+	}
+
+	public boolean isOfflineMode() {
+		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+		boolean offlineMode = sharedPreferences.getBoolean("offline_mode", false);
+		Log.w(this.getClass().getSimpleName(), "Loaded offline mode: " + offlineMode);
+		return offlineMode;
 	}
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		Log.i(this.getClass().getSimpleName(), "Preparing options menu.");
+		Log.i(this.getClass().getSimpleName(), "Preparing options menu, logged in " + SecurityService.getInstance().isLoggedIn());
+		menu.getItem(1).setVisible(SecurityService.getInstance().isLoggedIn());
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -344,11 +455,63 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			return true;
 		case R.id.action_reset:
 			Log.i(this.getClass().getSimpleName(), "Reset best score.");
-			resetBestScore();
+			resetSettings();
+			return true;
+		case R.id.offlinemode:
+			Log.i(this.getClass().getSimpleName(), "Offline mode " + item.getClass().getSimpleName());
+			updateOfflineMode();
+			return true;
+		case R.id.action_settings:
+			new AboutDialog().show(getSupportFragmentManager(), "about");
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	private void updateOfflineMode() {
+		MenuItem menuItem = (MenuItem) MainActivity.this.findViewById(R.id.offlinemode);
+		Log.i(this.getClass().getSimpleName(), "Offline mode: " + menuItem);
+
+		//		CheckBox checkBox = (CheckBox) rootView.findViewById(R.id.offlineModeButton);
+		menuItem.setChecked(MainActivity.this.isOfflineMode());
+		//		// register click
+		menuItem.setOnMenuItemClickListener(offlineModeListener);
+	}
+
+	MenuItem.OnMenuItemClickListener offlineModeListener = new MenuItem.OnMenuItemClickListener() {
+		@Override
+		public boolean onMenuItemClick(MenuItem item) {
+			try {
+				boolean isChecked = item.isChecked();
+				MainActivity.this.setOfflineMode(isChecked);
+				if (!isChecked) {
+					BenchmarkResult bestScore2 = MainActivity.this.getBestScore();
+					if (bestScore2 != null && !bestScore2.isSubmitted()) {
+						TabFragmentBench fragment = TabFragmentBench.getInstance();
+						if (fragment != null) {
+							fragment.statusLabel.setText("Uploading best score...");
+							MainActivity.this.markBestScoreSubmitted();
+							new SubmitResultTask(MainActivity.this, fragment, bestScore2.getEncryptedXml()).execute((Void) null);
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
+			}
+			return true;
+		}
+	};
+
+	/**
+	 * offline due to network
+	 */
+	public void setOffline() {
+		MainActivity.this.setOfflineMode(true);
+		Log.i(this.getClass().getSimpleName(), "Offline mode: " + MainActivity.this.findViewById(R.id.offlinemode));
+		CheckBox checkBox = (CheckBox) MainActivity.this.findViewById(R.id.offlinemode);
+		checkBox.setChecked(true);
 	}
 
 	private void logout() {
@@ -377,11 +540,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 						Looper.prepare();
 						Looper.loop();
 					}
-					Builder builder = new AlertDialog.Builder(MainActivity.activity);
+					Builder builder = new AlertDialog.Builder(MainActivity.this);
 					builder.setMessage(R.string.no_network);
+					builder.setTitle(R.string.no_network_title);
 					builder.setPositiveButton(R.string.no_network_btn, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							Log.i(NoNetworkDialog.class.getSimpleName(), "okay...");
+							Log.i(NoNetworkDialog.class.getSimpleName(), "Okay...");
 						}
 					});
 					AlertDialog dialog = builder.create();
@@ -403,5 +567,75 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public void showNewVersionPopup(final String version, final String url, final boolean updateRequired) {
+		this.runOnUiThread(new Runnable() {
+
+			@Override
+			public void run() {
+				Log.i(this.getClass().getSimpleName(), "A new version is available, update " + (updateRequired ? "REQUIRED." : "NOT required."));
+				boolean noLooper = Looper.myLooper() == null;
+				if (noLooper) {
+					Looper.prepare();
+					Looper.loop();
+				}
+				Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setTitle(R.string.new_version_title);
+				Context baseContext = MainActivity.this.getBaseContext();
+				if (updateRequired) {
+					builder.setMessage(baseContext.getString(R.string.new_version_required_text, BenchService.getInstance().version, version));
+				} else {
+					builder.setMessage(baseContext.getString(R.string.new_version_recommended_text, BenchService.getInstance().version, version));
+				}
+				builder.setPositiveButton(R.string.new_version_upgrade, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						Log.i(NoNetworkDialog.class.getSimpleName(), "Opening " + url + " for update.");
+						Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+						MainActivity.this.startActivity(intent);
+					}
+				});
+				builder.setNegativeButton(R.string.new_version_cancel, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						Log.i(NoNetworkDialog.class.getSimpleName(), "Do not update...");
+					}
+				});
+				AlertDialog dialog = builder.create();
+				dialog.show();
+				if (noLooper) {
+					Looper.myLooper().quit();
+				}
+			};
+		});
+	}
+
+	public void hideCompeteInfo(View view) {
+		markSeen(COMPETE_INFO);
+		MainActivity.activity.findViewById(R.id.competeBox).setVisibility(View.GONE);
+	}
+
+	public void goToSignIn(View view) {
+		markSeen(COMPETE_INFO);
+		MainActivity.activity.findViewById(R.id.competeBox).setVisibility(View.GONE);
+		getActionBar().setSelectedNavigationItem(2);
+	}
+
+	public void markSeen(String key) {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putBoolean(key, true);
+
+		// Commit the edits!
+		editor.commit();
+	}
+
+	public boolean isSeen(String key) {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		return settings.getBoolean(key, false);
+	}
+
+	public Drawable getAnonymousIcon() {
+		return getResources().getDrawable(R.drawable.ic_action_person);
 	}
 }

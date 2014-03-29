@@ -45,7 +45,8 @@ public class SubmitResultTask extends AsyncTask<Void, Void, SubmitResponse> {
         HttpClient httpclient = new DefaultHttpClient(httpParameters);
         try {
             // Create a response handler
-            HttpPost req = new HttpPost(BenchService.SERVER + "/submit/api?client=hwbot_prime&clientVersion=0.8.3&mode=remote");
+            HttpPost req = new HttpPost(BenchService.SERVER + "/submit/api?client=hwbot_prime&clientVersion=" + BenchService.getInstance().version
+                    + "&mode=remote");
             MultipartEntity mpEntity = new MultipartEntity();
             mpEntity.addPart("data", new ByteArrayBody(data, "data"));
             req.setEntity(mpEntity);

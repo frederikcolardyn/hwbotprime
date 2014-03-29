@@ -1,36 +1,46 @@
 package org.hwbot.prime;
 
+import static org.hwbot.prime.util.AndroidUtil.dpToPx;
+
+import java.util.Locale;
+
+import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.api.generic.dto.SubmissionDTO;
+import org.hwbot.prime.api.CommentObserver;
 import org.hwbot.prime.api.SubmissionRankingAware;
-import org.hwbot.prime.model.DeviceInfo;
-import org.hwbot.prime.model.Result;
+import org.hwbot.prime.api.VoteObserver;
 import org.hwbot.prime.model.SubmissionRanking;
 import org.hwbot.prime.service.AndroidHardwareService;
 import org.hwbot.prime.service.BenchService;
+import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.tasks.ImageLoaderTask;
 import org.hwbot.prime.tasks.RankingLoaderTask;
+import org.hwbot.prime.tasks.SubmitVoteTask;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Html;
 import android.text.TextUtils.TruncateAt;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TableRow;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import android.widget.ViewSwitcher.ViewFactory;
 
-public class TabFragmentCompare extends Fragment implements SubmissionRankingAware {
+public class TabFragmentCompare extends Fragment implements SubmissionRankingAware, VoteObserver, CommentObserver {
 
 	protected ToggleButton compareProcessorButton;
 	protected ToggleButton compareCoreButton;
@@ -38,6 +48,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 	protected LinearLayout compareView;
 	protected View rootView;
 	protected TabFragmentCompare tabFragment;
+	protected TextSwitcher rankLabel, hardwareLabel;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,90 +62,99 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		compareCoreButton = (ToggleButton) rootView.findViewById(R.id.toggleButtonCompareCore);
 		compareFamilyButton = (ToggleButton) rootView.findViewById(R.id.toggleButtonCompareFamily);
 		compareView = (LinearLayout) rootView.findViewById(R.id.compareView);
+		rankLabel = (TextSwitcher) rootView.findViewById(R.id.leaderboardRank);
+		hardwareLabel = (TextSwitcher) rootView.findViewById(R.id.leaderboardHardware);
 
 		compareProcessorButton.setOnClickListener(compareProcessorListener);
 		compareCoreButton.setOnClickListener(compareCoreListener);
 		compareFamilyButton.setOnClickListener(compareFamilyListener);
 
+		ViewFactory ViewFactory = new ViewFactory() {
+			public View makeView() {
+				TextView myText = new TextView(MainActivity.activity, null, R.style.leaderboardLargeLabel);
+				myText.setEllipsize(TruncateAt.START);
+				myText.setGravity(Gravity.CENTER_HORIZONTAL);
+				myText.setTextAppearance(MainActivity.activity.getApplicationContext(), R.style.leaderboardLargeLabel);
+				return myText;
+			}
+		};
+		rankLabel.setFactory(ViewFactory);
+		hardwareLabel.setFactory(ViewFactory);
+		rankLabel.setText(getResources().getString(R.string.not_available));
+		hardwareLabel.setText(getResources().getString(R.string.not_available));
+
 		loadActiveRanking();
+
+		boolean competeInfoSeen = MainActivity.getActivity().isSeen(MainActivity.COMPETE_INFO);
+		if (competeInfoSeen) {
+			rootView.findViewById(R.id.competeBox).setVisibility(View.GONE);
+		}
 
 		return rootView;
 	}
 
-	private View createHr(Context context) {
-		View hr = new View(context);
-		LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 1);
-		hr.setLayoutParams(params);
-		hr.setBackgroundColor(0xffcccccc);
-		hr.setPadding(20, 10, 20, 10);
-		return hr;
-	}
-
 	public void loadProcessorRanking() {
-		DeviceInfo deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
+		DeviceInfoDTO deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
 		Context context = rootView.getContext();
 		if (deviceInfo == null || deviceInfo.getProcessorId() == null) {
 			TextView textView = new TextView(context);
 			textView.setText("Sorry, unkown hardware can not be compared. The HWBOT crew has been notified to add your device.");
 			compareView.addView(textView);
 		} else {
-			TextView rankingTitle = new TextView(context);
-			rankingTitle.setText(deviceInfo.getProcessor());
-			rankingTitle.setTextSize(18);
+			hardwareLabel.setText(deviceInfo.getProcessor());
+			// android ui bug, call it twice or textswitcher does not resize
+			hardwareLabel.setText(deviceInfo.getProcessor());
 
 			compareView.removeAllViews();
-			compareView.addView(rankingTitle);
-			compareView.addView(createHr(context));
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
-					+ "/external/v3?type=submissionranking&limit=50&params=app=hwbot_prime&target=&cpuId=" + deviceInfo.getProcessorId());
+					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&hardwareType=processor&target=android&hardwareId="
+					+ deviceInfo.getProcessorId());
 			rankingLoaderTask.execute((Void) null);
 		}
 	}
 
 	public void loadProcessorCoreRanking() {
-		DeviceInfo deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
+		DeviceInfoDTO deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
 		Context context = rootView.getContext();
 		if (deviceInfo == null || deviceInfo.getProcessorCoreId() == null) {
-			TextView textView = new TextView(rootView.getContext());
+			TextView textView = new TextView(context);
 			textView.setText("Sorry, unkown hardware can not be compared. The HWBOT crew has been notified to add your device.");
 			compareView.addView(textView);
 		} else {
-			TextView rankingTitle = new TextView(context);
-			rankingTitle.setText(deviceInfo.getProcessorCore());
-			rankingTitle.setTextSize(18);
+			hardwareLabel.setText(deviceInfo.getProcessorCore());
+			// android ui bug, call it twice or textswitcher does not resize
+			hardwareLabel.setText(deviceInfo.getProcessorCore());
 
 			compareView.removeAllViews();
-			compareView.addView(rankingTitle);
-			compareView.addView(createHr(context));
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
-					+ "/external/v3?type=submissionranking&limit=50&params=app=hwbot_prime&target=&cpuCoreId=" + deviceInfo.getProcessorCoreId());
+					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
+					+ deviceInfo.getProcessorId() + "&coreId=" + deviceInfo.getProcessorCoreId());
 			rankingLoaderTask.execute((Void) null);
 		}
 	}
 
 	public void loadProcessorFamilyRanking() {
-		DeviceInfo deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
+		DeviceInfoDTO deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
 		Context context = rootView.getContext();
 		if (deviceInfo == null || deviceInfo.getProcessorCoreId() == null) {
-			TextView textView = new TextView(rootView.getContext());
+			TextView textView = new TextView(context);
 			textView.setText("Sorry, unkown hardware can not be compared. The HWBOT crew has been notified to add your device.");
 			compareView.addView(textView);
 		} else {
-			TextView rankingTitle = new TextView(context);
-			rankingTitle.setText(deviceInfo.getProcessorFamily());
-			rankingTitle.setTextSize(18);
+			hardwareLabel.setText(deviceInfo.getProcessorFamily());
+			// android ui bug, call it twice or textswitcher does not resize
+			hardwareLabel.setText(deviceInfo.getProcessorFamily());
 
 			compareView.removeAllViews();
-			compareView.addView(rankingTitle);
-			compareView.addView(createHr(context));
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
-					+ "/external/v3?type=submissionranking&limit=50&params=app=hwbot_prime&target=&cpuFamilyId=" + deviceInfo.getProcessorFamilyId());
+					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
+					+ deviceInfo.getProcessorId() + "&familyId=" + deviceInfo.getProcessorFamilyId());
 			rankingLoaderTask.execute((Void) null);
 		}
 	}
@@ -209,6 +229,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		}
 	};
 
+	@SuppressLint("NewApi")
 	@Override
 	public void notifySubmissionRanking(final SubmissionRanking ranking) {
 		// Log.i(this.getClass().getSimpleName(), "Submission ranking: " + ranking);
@@ -217,109 +238,366 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					Context context = rootView.getContext();
-					Log.i(this.getClass().getSimpleName(), "List: " + ranking.getSubmissions().size());
-					for (final Result result : ranking.getSubmissions()) {
-						RelativeLayout relativeLayout = new RelativeLayout(context);
-						RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
-								RelativeLayout.LayoutParams.WRAP_CONTENT);
-						layoutParams.bottomMargin = 20;
-						layoutParams.leftMargin = 1;
-						relativeLayout.setLayoutParams(layoutParams);
-						relativeLayout.setBackgroundResource(R.drawable.container_dropshadow);
+					final Context context = rootView.getContext();
+					Log.i(this.getClass().getSimpleName(), "List: " + ranking.getList().size());
 
-						int paddingTop = 0;
-
-						TextView user = new TextView(context);
-						user.setText(result.getScore() + " - " + result.getUser());
-						user.setPadding(155, paddingTop += 10, 5, 5);
-						user.setTextAppearance(context, R.style.NotificationUser);
-
-						TextView message = new TextView(context);
-						message.setText(result.getHardware()
-								+ (result.getCpuFreq() != null && result.getCpuFreq() > 0 ? " @ " + result.getCpuFreq() + " MHz" : ""));
-						message.setPadding(155, paddingTop += 30, 5, 5);
-						message.setTextAppearance(context, R.style.NotificationHardware);
-						message.setHorizontallyScrolling(true);
-						message.setSingleLine();
-						message.setEllipsize(TruncateAt.END);
-						message.setMaxLines(1);
-
-						TextView osBuild = null;
-						if (result.getOsBuild() != null) {
-							osBuild = new TextView(context);
-							osBuild.setText("Android " + result.getOsBuild());
-							osBuild.setPadding(155, paddingTop += 30, 5, 5);
-							osBuild.setTextAppearance(context, R.style.NotificationHardware);
+					final ViewFactory textSwitcherViewFactory = new ViewFactory() {
+						public View makeView() {
+							TextView myText = new TextView(MainActivity.activity, null, R.style.leaderboardTextAction);
+							//							myText.setEllipsize(TruncateAt.START);
+							//							myText.setGravity(Gravity.CENTER_HORIZONTAL);
+							myText.setTextAppearance(MainActivity.activity.getApplicationContext(), R.style.leaderboardTextAction);
+							return myText;
 						}
+					};
 
-						TextView kernel = null;
-						if (result.getKernel() != null) {
-							kernel = new TextView(context);
-							kernel.setText("Kernel" + result.getKernel());
-							kernel.setPadding(155, paddingTop += 30, 5, 5);
-							kernel.setTextAppearance(context, R.style.NotificationHardware);
-							kernel.setMaxLines(2);
-							kernel.setEllipsize(TruncateAt.END);
-						}
+					String userName = (SecurityService.getInstance().isLoggedIn() ? SecurityService.getInstance().getCredentials().getUserName() : null);
+					int rank = 1;
+					for (final SubmissionDTO result : ranking.getList()) {
+						final boolean isMe = (userName != null && userName.equals(result.getUser()));
+						final int style = isMe ? R.style.leaderboardTextMe : R.style.leaderboardText;
+						final int backgroundResource = rank % 2 == 0 ? R.drawable.container_leaderboard_light : R.drawable.container_leaderboard_dark;
+						final int row = rank;
 
-						TextView description = null;
-						if (result.getDescription() != null) {
-							description = new TextView(context);
-							description.setText("\"" + result.getDescription() + "\"");
-							description.setPadding(155, paddingTop += 40, 5, 5);
-							description.setTextAppearance(context, R.style.NotificationDescription);
-							description.setMaxLines(2);
-							description.setEllipsize(TruncateAt.END);
-						}
+						RelativeLayout recordSummary = new RelativeLayout(context, null, style);
+						recordSummary.setBackgroundResource(backgroundResource);
+						final LinearLayout.LayoutParams recordLayout = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+								LinearLayout.LayoutParams.WRAP_CONTENT);
+						recordLayout.bottomMargin = dpToPx(0);
+						recordSummary.setLayoutParams(recordLayout);
+						recordSummary.setClickable(true);
+						recordSummary.setOnClickListener(new View.OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								Log.i(this.getClass().getSimpleName(), "Clicked on " + result);
+
+								if (v.getTag() == null) {
+									RelativeLayout recordDetails = new RelativeLayout(context, null, R.style.leaderboardText);
+									recordDetails.setBackgroundResource(backgroundResource);
+									recordDetails.setLayoutParams(recordLayout);
+
+									TextView processor = new TextView(context);
+									processor.setText(Html.fromHtml("<strong>CPU:</strong> " + result.getHardware()
+											+ (result.getCpuFreq() != null && result.getCpuFreq() > 0 ? " @ " + result.getCpuFreq() + " MHz" : "")));
+									//									processor.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+									processor.setTextAppearance(context, R.style.leaderboardTextSmall);
+									processor.setEllipsize(TruncateAt.END);
+									processor.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_LEFT, 35, 0, 5, 5));
+									processor.setId(23 * row);
+
+									recordDetails.addView(processor);
+
+									TextView osBuild = null;
+									if (result.getOsBuild() != null) {
+										osBuild = new TextView(context);
+										osBuild.setText(Html.fromHtml("<strong>Android:</strong> " + result.getOsBuild()));
+										//										osBuild.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+										osBuild.setTextAppearance(context, R.style.leaderboardTextSmall);
+										osBuild.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 5));
+										osBuild.setId(29 * row);
+										recordDetails.addView(osBuild);
+									}
+
+									TextView kernel = null;
+									if (result.getKernel() != null) {
+										kernel = new TextView(context);
+										kernel.setText(Html.fromHtml("<strong>Kernel:</strong> " + result.getKernel()));
+										//										kernel.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+										kernel.setTextAppearance(context, R.style.leaderboardTextSmall);
+										kernel.setMaxLines(2);
+										kernel.setEllipsize(TruncateAt.END);
+										kernel.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 5));
+										kernel.setId(31 * row);
+										recordDetails.addView(kernel);
+									}
+
+									TextView description = null;
+									if (result.getDescription() != null) {
+										description = new TextView(context);
+										description.setText("\"" + result.getDescription() + "\"");
+										// description.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+										description.setTextAppearance(context, R.style.leaderboardTextSmall);
+										description.setMaxLines(2);
+										description.setEllipsize(TruncateAt.END);
+										description.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 5));
+										description.setId(37 * row);
+										recordDetails.addView(description);
+									}
+
+									LinearLayout actions = new LinearLayout(context);
+
+									RelativeLayout.LayoutParams actionLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+											RelativeLayout.LayoutParams.WRAP_CONTENT);
+									actionLayout.addRule(RelativeLayout.BELOW, recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId());
+									actionLayout.leftMargin = dpToPx(10);
+									actionLayout.rightMargin = dpToPx(5);
+									actionLayout.bottomMargin = dpToPx(2);
+									actions.setLayoutParams(actionLayout);
+									actions.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+
+									final TextSwitcher comments = new TextSwitcher(context);
+									comments.setFactory(textSwitcherViewFactory);
+									comments.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+											LinearLayout.LayoutParams.WRAP_CONTENT));
+									comments.setPadding(dpToPx(5), dpToPx(0), dpToPx(5), dpToPx(0));
+									comments.setText(String.valueOf(result.getComments()));
+									actions.addView(comments);
+
+									final ImageView chatIcon = new ImageView(context);
+									chatIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_chat));
+									chatIcon.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+											LinearLayout.LayoutParams.WRAP_CONTENT));
+									if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+										// only for gingerbread and newer versions
+										chatIcon.setBackground(getResources().getDrawable(R.drawable.container_icon));
+									}
+									chatIcon.setOnClickListener(new View.OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											Log.i(this.getClass().getSimpleName(), "click me");
+											v.setAlpha(0.4f);
+											CommentDialog commentDialog = new CommentDialog();
+											commentDialog.setResult(result);
+											commentDialog.setChatIcon(chatIcon);
+											commentDialog.setTextSwitcher(comments);
+											commentDialog.setCommentObserver(TabFragmentCompare.this);
+											commentDialog.show(getFragmentManager(), "comments");
+										}
+									});
+									actions.addView(chatIcon);
+
+									final TextSwitcher likes = new TextSwitcher(context);
+									likes.setFactory(textSwitcherViewFactory);
+									likes.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+											LinearLayout.LayoutParams.WRAP_CONTENT));
+									likes.setPadding(dpToPx(5), dpToPx(0), dpToPx(0), dpToPx(0));
+									likes.setText(String.valueOf(result.getLikes()));
+									actions.addView(likes);
+
+									ImageView likeIcon = new ImageView(context);
+									likeIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_favorite));
+									likeIcon.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+											LinearLayout.LayoutParams.WRAP_CONTENT));
+									if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+										// only for gingerbread and newer versions
+										likeIcon.setBackground(getResources().getDrawable(R.drawable.container_icon));
+									}
+									likeIcon.setOnClickListener(new View.OnClickListener() {
+										@Override
+										public void onClick(View icon) {
+											Log.i(this.getClass().getSimpleName(), "like me");
+											icon.setAlpha(0.4f);
+											new SubmitVoteTask(result.getId(), "submission", icon, likes, TabFragmentCompare.this).execute((Void) null);
+										}
+									});
+									actions.addView(likeIcon);
+
+									recordDetails.addView(actions);
+
+									v.setTag(true);
+									compareView.addView(recordDetails, compareView.indexOfChild(v) + 1);
+								} else {
+									v.setTag(null);
+									compareView.removeViewAt(compareView.indexOfChild(v) + 1);
+								}
+
+							}
+						});
+
+						TextView rankBox = new TextView(context, null, style);
+						rankBox.setGravity(Gravity.CENTER);
+						rankBox.setText(String.valueOf(rank));
+						rankBox.setTextAppearance(context, style);
+						rankBox.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_LEFT, 15, 10, 10, 10));
+						rankBox.setId(13 * rank);
+
+						ImageView avatar = new ImageView(context);
+						RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(dpToPx(24), dpToPx(24));
+						rankBoxLayout.addRule(RelativeLayout.RIGHT_OF, rankBox.getId());
+						rankBoxLayout.leftMargin = dpToPx(0);
+						rankBoxLayout.topMargin = dpToPx(10);
+						rankBoxLayout.rightMargin = dpToPx(5);
+						rankBoxLayout.bottomMargin = dpToPx(10);
+						avatar.setLayoutParams(rankBoxLayout);
+						avatar.setId(17 * rank);
 
 						if (result.getImage() != null) {
 							try {
-								// cache drawables?
 								String url;
 								if (result.getImage().startsWith("http")) {
 									url = result.getImage();
 								} else {
 									url = BenchService.SERVER + result.getImage();
 								}
-								ImageView imageView = new ImageView(context);
-								imageView.setMaxHeight(150);
-								imageView.setMaxWidth(150);
-								imageView.setMinimumHeight(150);
-								imageView.setMinimumWidth(150);
-								imageView.setScaleType(ScaleType.FIT_XY);
-								// imageView.setAdjustViewBounds(true);
-								imageView.setTag(url);
-								imageView.setPadding(10, 5, 5, 5);
-								relativeLayout.addView(imageView);
-								new ImageLoaderTask().execute(imageView);
+								Log.i(this.getClass().getSimpleName(), "Result.getImage(): " + url);
+								avatar.setScaleType(ScaleType.FIT_XY);
+								avatar.setTag(url);
+								new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 							} catch (Exception e) {
 								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 								e.printStackTrace();
+								avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 							}
+						} else {
+							avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 						}
-						relativeLayout.setHapticFeedbackEnabled(true);
-						relativeLayout.setClickable(true);
-						relativeLayout.setOnClickListener(new OnClickListener() {
-							@Override
-							public void onClick(View v) {
-								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/submission/" + result.getId()));
-								MainActivity.activity.startActivity(intent);
-							}
-						});
-						relativeLayout.addView(user);
-						relativeLayout.addView(message);
-						if (kernel != null) {
-							relativeLayout.addView(kernel);
-						}
-						if (osBuild != null) {
-							relativeLayout.addView(osBuild);
-						}
-						if (description != null) {
-							relativeLayout.addView(description);
-						}
-						compareView.addView(relativeLayout);
+
+						TextView user = new TextView(context, null, style);
+						user.setGravity(Gravity.CENTER);
+						user.setText(result.getUser());
+						user.setTextAppearance(context, style);
+						LayoutParams userLayout = relativeToParent(RelativeLayout.RIGHT_OF, rankBox.getId(), 35, 10, 10, 10);
+						user.setLayoutParams(userLayout);
+						user.setId(19 * rank);
+
+						TextView score = new TextView(context, null, style);
+						score.setGravity(Gravity.CENTER);
+						score.setText(result.getScore().toUpperCase(Locale.ENGLISH));
+						score.setTextAppearance(context, style);
+						score.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_RIGHT, 15, 10, 10, 10));
+
+						//						ImageView searchIcon = new ImageView(context, null, R.style.ResultBoxDetails);
+						//						searchIcon.setImageDrawable(MainActivity.activity.getResources().getDrawable(R.drawable.ic_action_about));
+						//						searchIcon.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(40), dpToPx(80)));
+						//						searchIcon.setPadding(dpToPx(0), dpToPx(10), dpToPx(10), dpToPx(0));
+						//						searchIcon.setDrawingCacheEnabled(true);
+						//
+						//
+						//						TextView message = new TextView(context);
+						//						message.setText(Html.fromHtml("<strong>CPU:</strong> " + result.getHardware()
+						//								+ (result.getCpuFreq() != null && result.getCpuFreq() > 0 ? " @ " + result.getCpuFreq() + " MHz" : "")));
+						//						message.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+						//						message.setTextAppearance(context, style);
+						//						// message.setHorizontallyScrolling(true);
+						//						// message.setSingleLine();
+						//						message.setEllipsize(TruncateAt.END);
+						//						// message.setMaxLines(1);
+						//
+						//						TextView osBuild = null;
+						//						if (result.getOsBuild() != null) {
+						//							osBuild = new TextView(context);
+						//							osBuild.setText(Html.fromHtml("<strong>Android:</strong> " + result.getOsBuild()));
+						//							osBuild.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+						//							osBuild.setTextAppearance(context, style);
+						//						}
+						//
+						//						TextView kernel = null;
+						//						if (result.getKernel() != null) {
+						//							kernel = new TextView(context);
+						//							kernel.setText(Html.fromHtml("<strong>Kernel:</strong> " + result.getKernel()));
+						//							kernel.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+						//							kernel.setTextAppearance(context, style);
+						//							kernel.setMaxLines(2);
+						//							kernel.setEllipsize(TruncateAt.END);
+						//						}
+						//
+						//						TextView description = null;
+						//						if (result.getDescription() != null) {
+						//							description = new TextView(context);
+						//							description.setText("\"" + result.getDescription() + "\"");
+						//							description.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+						//							description.setTextAppearance(context, style);
+						//							description.setMaxLines(2);
+						//							description.setEllipsize(TruncateAt.END);
+						//						}
+						//
+						//						LinearLayout layoutUser = new LinearLayout(context);
+						//						layoutUser.setOrientation(LinearLayout.HORIZONTAL);
+						//
+						//						if (result.getCountry() != null) {
+						//							try {
+						//								// cache drawables?
+						//								// int topMargin = 17;
+						//								ImageView imageView = new ImageView(context, null, R.style.ResultBoxFlag);
+						//								// LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(34 + topMargin, 22);
+						//								// params.topMargin = topMargin;
+						//								// imageView.setLayoutParams(params);
+						//								imageView.setDrawingCacheEnabled(true);
+						//								layoutUser.addView(imageView);
+						//
+						//								try {
+						//									// InputStream ims = MainActivity.activity.getAssets().open(countryFile);
+						//									String drawableName = "org.hwbot.prime:drawable/country_" + result.getCountry().toLowerCase(Locale.ENGLISH);
+						//									int resId = getResources().getIdentifier(drawableName, null, null);
+						//									if (resId == 0) {
+						//										Log.w(this.getClass().getSimpleName(), "No drawable by name " + drawableName);
+						//									}
+						//									Drawable d = getResources().getDrawable(resId);
+						//									//									Drawable d = Drawable.createFromPath("country_" + result.getCountry().toLowerCase(Locale.ENGLISH) + ".png");
+						//									imageView.setImageDrawable(d);
+						//									Log.d(this.getClass().getSimpleName(), "Loading local file " + result.getCountry());
+						//								} catch (Exception ex) {
+						//									String countryFile = "img/country/" + result.getCountry().toLowerCase(Locale.ENGLISH) + ".png";
+						//									String url = BenchService.SERVER + "/" + countryFile;
+						//									Log.d(this.getClass().getSimpleName(), "Loading remote url " + url);
+						//									imageView.setTag(url);
+						//									new ImageLoaderTask().execute(imageView);
+						//								}
+						//							} catch (Exception e) {
+						//								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+						//								e.printStackTrace();
+						//							}
+						//						} else {
+						//							Log.i(this.getClass().getSimpleName(), "No country image.");
+						//						}
+						//						layoutUser.addView(user);
+						//
+						//						searchIcon.setOnClickListener(new OnClickListener() {
+						//							@Override
+						//							public void onClick(View v) {
+						//								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/submission/" + result.getId()));
+						//								MainActivity.activity.startActivity(intent);
+						//							}
+						//						});
+						recordSummary.addView(rankBox);
+						recordSummary.addView(avatar);
+						recordSummary.addView(user);
+						recordSummary.addView(score);
+						//						if (kernel != null) {
+						//							layoutHorizontal.addView(kernel);
+						//						}
+						//						if (osBuild != null) {
+						//							layoutHorizontal.addView(osBuild);
+						//						}
+						//						if (description != null) {
+						//							layoutHorizontal.addView(description);
+						//						}
+						//						layoutHorizontal.addView(searchIcon);
+
+						compareView.addView(recordSummary);
+
+						rank++;
 					}
+				}
+
+				public RelativeLayout.LayoutParams relativeTo(int align, Integer... margins) {
+					RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+							RelativeLayout.LayoutParams.WRAP_CONTENT);
+					rankBoxLayout.addRule(align);
+					if (margins != null && margins.length == 4) {
+						rankBoxLayout.leftMargin = dpToPx(margins[0]);
+						rankBoxLayout.topMargin = dpToPx(margins[1]);
+						rankBoxLayout.rightMargin = dpToPx(margins[2]);
+						rankBoxLayout.bottomMargin = dpToPx(margins[3]);
+					}
+					return rankBoxLayout;
+				}
+
+				public RelativeLayout.LayoutParams relativeToParent(int align, int parentId, Integer... margins) {
+					RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+							RelativeLayout.LayoutParams.WRAP_CONTENT);
+					rankBoxLayout.addRule(align, parentId);
+					if (margins != null && margins.length == 4) {
+						rankBoxLayout.leftMargin = dpToPx(margins[0]);
+						rankBoxLayout.topMargin = dpToPx(margins[1]);
+						rankBoxLayout.rightMargin = dpToPx(margins[2]);
+						rankBoxLayout.bottomMargin = dpToPx(margins[3]);
+					}
+					return rankBoxLayout;
 				}
 			});
 		}
@@ -362,6 +640,54 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			if (compareFamilyButton.isChecked()) {
 			}
 		}
+	}
+
+	@Override
+	public void notifyVoteFailed(final View view) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(0.2f);
+			}
+		});
+	}
+
+	@Override
+	public void notifyCommentFailed(final View view) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(0.2f);
+				view.setClickable(false);
+			}
+		});
+	}
+
+	@Override
+	public void notifyCommentSucceeded(final View view, final TextSwitcher textSwitcher) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(1.0f);
+				TextView currentView = (TextView) textSwitcher.getCurrentView();
+				int currentComments = Integer.parseInt(String.valueOf(currentView.getText()));
+				textSwitcher.setText(String.valueOf(++currentComments));
+			}
+		});
+	}
+
+	@Override
+	public void notifyVoteSucceeded(final View view, final TextSwitcher textSwitcher) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(1.0f);
+				view.setClickable(false);
+				TextView currentView = (TextView) textSwitcher.getCurrentView();
+				int currentVotes = Integer.parseInt(String.valueOf(currentView.getText()));
+				textSwitcher.setText(String.valueOf(++currentVotes));
+			}
+		});
 	}
 
 }

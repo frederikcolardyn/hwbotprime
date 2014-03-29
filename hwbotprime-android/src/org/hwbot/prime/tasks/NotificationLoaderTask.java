@@ -1,16 +1,20 @@
 package org.hwbot.prime.tasks;
 
+import static org.hwbot.prime.util.AndroidUtil.dpToPx;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hwbot.prime.MainActivity;
 import org.hwbot.prime.R;
 import org.hwbot.prime.TabFragmentAccount;
+import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 
@@ -24,9 +28,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.ImageView.ScaleType;
-import android.widget.RelativeLayout.LayoutParams;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /**
@@ -50,14 +54,20 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 	protected List<NotificationDTO> doInBackground(String... params) {
 		JsonReader reader = null;
 		try {
-			URL url = new URL(BenchService.SERVER + "/api/notification?userId=" + SecurityService.getInstance().getCredentials().getUserId()
-					+ (params.length > 0 && params[0] != null ? "&from=" + params[0] : ""));
-			Log.i(this.getClass().getSimpleName(), "Loading notifications from: " + url);
-			BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-			reader = new JsonReader(in);
-			List<NotificationDTO> notifications = NotificationLoaderTask.readNotifications(reader);
-			Log.i(this.getClass().getSimpleName(), "Loaded " + notifications.size() + " notifications.");
-			return notifications;
+			PersistentLogin credentials = SecurityService.getInstance().getCredentials();
+			if (credentials != null && credentials.getUserId() != null) {
+				URL url = new URL(BenchService.SERVER + "/api/notification?userId=" + credentials.getUserId()
+						+ (params.length > 0 && params[0] != null ? "&from=" + params[0] : ""));
+				Log.i(this.getClass().getSimpleName(), "Loading notifications from: " + url);
+				BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+				reader = new JsonReader(in);
+				reader.setLenient(true);
+				List<NotificationDTO> notifications = NotificationLoaderTask.readNotifications(reader);
+				Log.i(this.getClass().getSimpleName(), "Loaded " + notifications.size() + " notifications.");
+				return notifications;
+			} else {
+				return Collections.emptyList();
+			}
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
@@ -138,20 +148,20 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 
 			for (final NotificationDTO notificationDTO : notifications) {
 				RelativeLayout relativeLayout = new RelativeLayout(context);
-				LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-				layoutParams.bottomMargin = 20;
-				layoutParams.leftMargin = 1;
-				relativeLayout.setLayoutParams(layoutParams);
+				LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+						LinearLayout.LayoutParams.WRAP_CONTENT);
+				layoutParams.bottomMargin = dpToPx(6);
 				relativeLayout.setBackgroundResource(R.drawable.container_dropshadow);
+				relativeLayout.setLayoutParams(layoutParams);
 
 				TextView user = new TextView(context);
 				user.setText(notificationDTO.getUser());
-				user.setPadding(170, 5, 5, 5);
+				user.setPadding(dpToPx(105), dpToPx(5), dpToPx(5), dpToPx(5));
 				user.setTextAppearance(context, R.style.NotificationUser);
 
 				TextView message = new TextView(context);
 				message.setText(notificationDTO.getMessage());
-				message.setPadding(170, 40, 5, 5);
+				message.setPadding(dpToPx(105), dpToPx(30), dpToPx(5), dpToPx(5));
 				message.setTextAppearance(context, R.style.NotificationMessage);
 
 				if (notificationDTO.getImage() != null) {
@@ -160,15 +170,17 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 						String url = BenchService.SERVER + notificationDTO.getImage();
 						Log.i(this.getClass().getSimpleName(), "notificationDTO.getImage(): " + url);
 						ImageView imageView = new ImageView(context);
-						imageView.setMaxHeight(150);
-						imageView.setMaxWidth(150);
-						imageView.setMinimumHeight(150);
-						imageView.setMinimumWidth(150);
+						imageView.setMaxHeight(dpToPx(100));
+						imageView.setMaxWidth(dpToPx(100));
+						imageView.setAdjustViewBounds(true);
+						imageView.setMinimumHeight(dpToPx(100));
+						imageView.setMinimumWidth(dpToPx(100));
 						imageView.setScaleType(ScaleType.FIT_XY);
 						imageView.setTag(url);
-						imageView.setPadding(10, 5, 5, 5);
+						imageView.setPadding(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3));
+						imageView.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(100), dpToPx(100)));
 						relativeLayout.addView(imageView);
-						new ImageLoaderTask().execute(imageView);
+						new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(imageView);
 					} catch (Exception e) {
 						Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 						e.printStackTrace();

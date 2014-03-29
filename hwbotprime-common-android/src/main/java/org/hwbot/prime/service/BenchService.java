@@ -27,9 +27,8 @@ import android.widget.TextView;
 
 public class BenchService implements Runnable {
 
-    // private String version = this.getClass().getPackage().getImplementationVersion();
-    // TODO hwbotprime client version version
-    private String version = "0.8.3";
+    public String version = "0.8.3";
+    public static String HWBOT_APP_CLIENT_DEV_VERSION = "dev";
     protected int availableProcessors;
 
     protected BenchmarkStatusAware benchUI;
@@ -50,11 +49,15 @@ public class BenchService implements Runnable {
     // public static String SERVER = "http://192.168.0.249:9090";
     public static String SERVER = "http://uat.hwbot.org";
     public static String SERVER_MOBILE = "http://uat.hwbot.org";
+    public static String HWBOT_PRIME_APP_NAME = "HWBOT Prime";
 
     private BenchService() {
         hardwareService = AndroidHardwareService.getInstance();
         securityService = SecurityService.getInstance();
         dataServiceXml = DataServiceXml.getInstance();
+        if (version == null) {
+            version = HWBOT_APP_CLIENT_DEV_VERSION;
+        }
     }
 
     public static BenchService getInstance() {
@@ -233,6 +236,11 @@ public class BenchService implements Runnable {
 
     public void setScore(Number score) {
         this.score = score;
+    }
+
+    public String getVersion() {
+        Log.i("version", version);
+        return version;
     }
 
 }

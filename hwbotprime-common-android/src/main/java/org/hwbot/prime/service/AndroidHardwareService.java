@@ -16,13 +16,14 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.hwbot.api.bench.dto.DeviceInfoDTO;
 import org.hwbot.bench.model.Device;
 import org.hwbot.bench.model.Hardware;
 import org.hwbot.bench.model.Memory;
 import org.hwbot.bench.model.Processor;
 import org.hwbot.bench.prime.HardwareService;
-import org.hwbot.prime.model.DeviceInfo;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -34,7 +35,7 @@ import android.widget.TextSwitcher;
 public class AndroidHardwareService implements HardwareService, SensorEventListener, Runnable {
 
     protected static AndroidHardwareService service;
-    protected DeviceInfo deviceInfo;
+    protected DeviceInfoDTO deviceInfo;
 
     public static String OS = System.getProperty("os.name").toLowerCase();
     private float temperature;
@@ -80,7 +81,7 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
         return this.maxProcessorFrequency;
     }
 
-    public String execRuntime(String[] strings) {
+    public String execRuntime(String... strings) {
 
         Process proc = null;
         int inBuffer, errBuffer;
@@ -294,11 +295,11 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
     // mSensorManager.unregisterListener(this);
     // }
 
-    public void setDeviceInfo(DeviceInfo deviceInfo) {
+    public void setDeviceInfo(DeviceInfoDTO deviceInfo) {
         this.deviceInfo = deviceInfo;
     }
 
-    public DeviceInfo getDeviceInfo() {
+    public DeviceInfoDTO getDeviceInfo() {
         return deviceInfo;
     }
 
@@ -392,9 +393,16 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
                 String fileContents = getFileContents("/sys/class/thermal/thermal_zone0/temp");
                 if (NumberUtils.isDigits(fileContents)) {
                     int celcius = Integer.parseInt(fileContents);
-                    this.idleTemperature = Math.min(this.idleTemperature, celcius);
-                    this.loadTemperature = Math.max(this.loadTemperature, celcius);
-                    this.temperatureLabel.setText(celcius + " ºC");
+                    if (celcius > 150) {
+                        celcius /= 1000;
+                    }
+                    if (celcius < -200 || celcius > 150) {
+                        this.temperatureLabel.setText("out of range: " + celcius + " ºC");
+                    } else {
+                        this.idleTemperature = Math.min(this.idleTemperature, celcius);
+                        this.loadTemperature = Math.max(this.loadTemperature, celcius);
+                        this.temperatureLabel.setText(celcius + " ºC");
+                    }
                 } else {
                     this.temperatureLabel.setText("not available");
                 }
@@ -411,5 +419,38 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
 
     public String getOsBuild() {
         return Build.VERSION.RELEASE;
+    }
+
+    public String getOsDebugInfo() {
+        return execRuntime("getprop");
+    }
+
+    public String getHardwareFromCpuInfo() {
+        RandomAccessFile reader = null;
+        String info = null;
+        try {
+            reader = new RandomAccessFile(new File("/proc/cpuinfo"), "r");
+            String line = null;
+            do {
+                line = reader.readLine();
+                if (line != null && line.startsWith("Hardware")) {
+                    String hardware = StringUtils.substringAfter(line, ":").trim();
+                    Log.i(this.getClass().getSimpleName(), "Hardware: " + hardware);
+                    info = hardware;
+                    break;
+                }
+            } while (line != null);
+        } catch (IOException ex) {
+            // Log.w("io error", ex.getMessage());
+            // ex.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return info != null ? info : "unknown";
     }
 }

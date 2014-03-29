@@ -5,7 +5,7 @@
         Base application theme, dependent on API level. This theme is replaced
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
-    <style name="AppBaseTheme" parent="android:Theme.Light">
+    <style name="AppBaseTheme" parent="android:Theme.Holo">
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to
@@ -41,10 +41,13 @@
         <item name="android:padding">16dp</item>
     </style>
     
+    <!-- notifications -->
     <style name="NotificationUser">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/user_text</item>
         <item name="android:singleLine">true</item>
     </style>
     
@@ -52,7 +55,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textStyle">italic</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:ellipsize">marquee</item>
         <item name="android:textColor">@color/notification_text</item>
     </style>
@@ -60,7 +63,7 @@
     <style name="NotificationHardware">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:ellipsize">start</item>
         <item name="android:textColor">@color/notification_text</item>
     </style>
@@ -68,10 +71,147 @@
     <style name="NotificationDescription">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">10sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:ellipsize">start</item>
         <item name="android:textStyle">italic</item>
         <item name="android:textColor">@color/notification_text</item>
     </style>
-
+    
+    <!-- labels and values -->
+    <style name="Label">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+    <style name="Header">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/header_text</item>
+    </style>
+    <style name="Value">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+    <style name="ValueChanging">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textColor">@color/text_changing</item>
+    </style>
+    <style name="HR">
+    </style>
+    
+    <!-- views -->
+    <style name="ScrollView">
+    </style>
+    
+    <!-- result -->
+    <style name="ResultBoxHorizontal">
+        
+    </style>
+    <style name="ResultBoxVertical">
+    </style>
+    <style name="ResultBoxInfo">
+    </style>
+    <style name="ResultBoxScore">
+        <item name="android:textColor">@color/score_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">22sp</item>
+    </style>
+    <style name="ResultBoxFlag">
+        <item name="android:width">32dp</item>
+        <item name="android:height">22dp</item>
+    	<item name="android:padding">5dp</item>
+<!--     	<item name="android:scaleType">fitCenter</item> -->
+    </style>
+    <style name="ResultBoxDetails">
+<!--         <item name="android:width">32dp</item> -->
+<!--         <item name="android:height">22dp</item> -->
+    	<item name="android:padding">5dp</item>
+<!--     	<item name="android:scaleType">fitCenter</item> -->
+    </style>
+    <style name="ResultBoxUser">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/user_text</item>
+    </style>
+    <style name="ResultBoxHardware">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textColor">@color/notification_text</item>
+    </style>
+    <style name="ResultBoxTemperature">
+    </style>
+    <style name="ResultBoxNote">
+    </style>
+    
+    <!-- scorebox -->
+    <style name="ScoreBoxLabel">
+        <item name="android:maxLines">1</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/score_box_header</item>
+    </style>
+    <style name="ValueScore">
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textColor">@color/text_changing</item>
+    </style>
+    <style name="LabelScore">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textColor">@color/text_dull</item>
+    </style>
+    
+    <!-- input -->
+    <style name="CheckboxSmall">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    
+    <style name="infobox">
+        <item name="android:padding">5dp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_infobox</item>
+    </style>
+    <style name="leaderboardText">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/leaderboard_text</item>
+    </style>
+    <style name="leaderboardTextSmall">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/leaderboard_text</item>
+    </style>
+    <style name="leaderboardTextAction">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/leaderboard_text</item>
+    </style>
+    <style name="leaderboardTextMe" parent="leaderboardText">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="leaderboardSmallLabel">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/leaderboard_small</item>
+    </style>
+    <style name="leaderboardLargeLabel">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/leaderboard_large</item>
+    </style>
+    
 </resources>

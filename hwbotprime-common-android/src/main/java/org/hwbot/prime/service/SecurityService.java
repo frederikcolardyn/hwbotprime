@@ -65,7 +65,11 @@ public class SecurityService {
     }
 
     public void setCredentials(PersistentLogin credentials) {
-        this.credentials = credentials;
+        if (credentials.getUserId() == null) {
+            Log.e(this.getClass().getSimpleName(), "Empty credentials, not user id is required.");
+        } else {
+            this.credentials = credentials;
+        }
     }
 
     public EncryptionModule getEncryptionModule() {
@@ -92,6 +96,14 @@ public class SecurityService {
         if (StringUtils.isNotEmpty(token)) {
             org.hwbot.bench.prime.Log.info(this.getClass().getSimpleName(), "Loading credentials for token " + token);
             new LoginTokenTask(networkStatusAware, persistentLoginAware, token).execute((Void) null);
+        }
+    }
+
+    public boolean isLoggedIn() {
+        if (getCredentials() == null || getCredentials().getUserId() == null) {
+            return false;
+        } else {
+            return true;
         }
     }
 

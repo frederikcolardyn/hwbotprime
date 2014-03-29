@@ -18,8 +18,6 @@ import android.os.AsyncTask;
 import android.util.JsonReader;
 import android.util.Log;
 import android.view.ViewGroup;
-import android.widget.TableLayout;
-import android.widget.TableLayout.LayoutParams;
 import android.widget.TableRow;
 import android.widget.TextView;
 
@@ -44,14 +42,19 @@ public class UserStatsLoaderTask extends AsyncTask<Void, Void, UserStatsDTO> {
 	protected UserStatsDTO doInBackground(Void... params) {
 		JsonReader reader = null;
 		try {
-			URL url = new URL(BenchService.SERVER + "/api/user/stats?userId=" + SecurityService.getInstance().getCredentials().getUserId()
-					+ (params.length > 0 && params[0] != null ? "&from=" + params[0] : ""));
-			Log.i(this.getClass().getSimpleName(), "Loading notifications from: " + url);
-			BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-			reader = new JsonReader(in);
-			UserStatsDTO userStatsDTO = readUserStatsDTO(reader);
-			Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
-			return userStatsDTO;
+			if (SecurityService.getInstance().isLoggedIn()) {
+				Log.i(this.getClass().getSimpleName(), "Credentials: " + SecurityService.getInstance().getCredentials());
+				URL url = new URL(BenchService.SERVER + "/api/user/stats?userId=" + SecurityService.getInstance().getCredentials().getUserId()
+						+ (params.length > 0 && params[0] != null ? "&from=" + params[0] : ""));
+				Log.i(this.getClass().getSimpleName(), "Loading user stats from: " + url);
+				BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+				reader = new JsonReader(in);
+				UserStatsDTO userStatsDTO = readUserStatsDTO(reader);
+				Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
+				return userStatsDTO;
+			} else {
+				return null;
+			}
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
@@ -124,18 +127,15 @@ public class UserStatsLoaderTask extends AsyncTask<Void, Void, UserStatsDTO> {
 
 			setRowValue(context, R.id.tableRowAchievements, dto.getAchievements() + "/" + dto.getAchievementsTotal() + " achieved");
 			setRowValue(context, R.id.tableRowChallenges, dto.getChallengesWon() + "/" + dto.getChallengesTotal() + " won");
-			setRowValue(context, R.id.tableRowWorlWideRank, "#" + dto.getLeagueRank());
-			setRowValue(context, R.id.tableRowNationalRank, "#" + dto.getLeagueNationalRank());
-			setRowValue(context, R.id.tableRowTeamRank, "#" + dto.getLeagueTeamRank());
-			setRowValue(context, R.id.tableRowHardwareMasters, "#" + dto.getHardwareMastersRank());
+			setRowValue(context, R.id.tableRowWorlWideRank, (dto.getLeagueRank() != null ? "#" + dto.getLeagueRank() : "not ranked"));
+			setRowValue(context, R.id.tableRowNationalRank, (dto.getLeagueNationalRank() != null ? "#" + dto.getLeagueNationalRank() : "not ranked"));
+			setRowValue(context, R.id.tableRowTeamRank, "#" + (dto.getLeagueTeamRank() != null ? "#" + dto.getLeagueTeamRank() : "not ranked"));
+			setRowValue(context, R.id.tableRowHardwareMasters, (dto.getHardwareMastersRank() != null ? "#" + dto.getHardwareMastersRank() : "not ranked"));
 
-			setRowValue(context, R.id.tableRowTeamPowerPoints, String.format(Locale.ENGLISH, "%.2f points", dto.getTeamPowerPoints()));
-			setRowValue(context, R.id.tableRowLeagePoints, String.format(Locale.ENGLISH, "%.2f points", dto.getLeaguePoints()));
-
-			// String.format(Locale.ENGLISH, "%.0f", text)
-
-			// int notificationTextColor = context.getResources().getColor(R.color.notification_text);
-
+			setRowValue(context, R.id.tableRowTeamPowerPoints,
+					String.format(Locale.ENGLISH, "%.2f points", dto.getTeamPowerPoints() != null ? dto.getTeamPowerPoints() : 0f));
+			setRowValue(context, R.id.tableRowLeagePoints,
+					String.format(Locale.ENGLISH, "%.2f points", dto.getLeaguePoints() != null ? dto.getLeaguePoints() : 0f));
 		} else {
 			Log.e(this.getClass().getSimpleName(), "Can not show notifications: " + tabFragmentAccount.getView());
 		}

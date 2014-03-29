@@ -104,7 +104,7 @@ public class TabFragmentAccount extends Fragment {
 	}
 
 	public void prepareView() {
-		if (SecurityService.getInstance().getCredentials() != null) {
+		if (SecurityService.getInstance().isLoggedIn()) {
 			prepareViewAsLoggedIn();
 		} else {
 			prepareViewAsLoggedOut();
