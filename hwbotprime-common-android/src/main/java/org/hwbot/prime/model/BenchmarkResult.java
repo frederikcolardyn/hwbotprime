@@ -19,6 +19,12 @@ public class BenchmarkResult implements Serializable {
     private Integer maxCpuFrequency;
     private boolean submitted;
 
+    @Override
+    public String toString() {
+        return "BenchmarkResult [score=" + score + ", date=" + date + ", " + (maxCpuFrequency != null ? "maxCpuFrequency=" + maxCpuFrequency + ", " : "")
+                + "submitted=" + submitted + "]";
+    }
+
     public byte[] getEncryptedXml() {
         return encryptedXml;
     }

@@ -8,7 +8,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
-import org.hwbot.api.bench.dto.DeviceInfoWithRecordsDTO;
 import org.hwbot.prime.api.HardwareStatusAware;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.service.BenchService;
@@ -42,18 +41,12 @@ public class HardwareDetectionTask extends AsyncTask<String, Void, DeviceInfoDTO
         deviceName = param[0];
         Reader reader = null;
         try {
-            URL url = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName);
-            if (SecurityService.getInstance().isLoggedIn()) {
-                url = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName + "?userId="
-                        + SecurityService.getInstance().getCredentials().getUserId());
-            } else {
-                url = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName);
-            }
+            URL url = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName + "/info");
             Log.i(this.getClass().getSimpleName(), "Loading device info from: " + url);
             reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            DeviceInfoWithRecordsDTO deviceInfoWithRecordsDTO = new Gson().fromJson(reader, DeviceInfoWithRecordsDTO.class);
+            DeviceInfoDTO deviceInfoWithRecordsDTO = new Gson().fromJson(reader, DeviceInfoDTO.class);
 
-            if (deviceInfoWithRecordsDTO == null || deviceInfoWithRecordsDTO.getDevice() == null || deviceInfoWithRecordsDTO.getDevice().getId() == null) {
+            if (deviceInfoWithRecordsDTO == null || deviceInfoWithRecordsDTO.getId() == null) {
                 observer.notifyDeviceInfoFailed(org.hwbot.prime.api.HardwareStatusAware.Status.unknown_device);
             } else {
                 observer.notifyDeviceInfo(deviceInfoWithRecordsDTO);

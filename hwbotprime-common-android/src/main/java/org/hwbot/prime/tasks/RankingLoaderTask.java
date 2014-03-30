@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.List;
 
-import org.hwbot.api.generic.dto.JsonpApiResponse;
-import org.hwbot.api.generic.dto.SubmissionDTO;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.SubmissionRankingAware;
 import org.hwbot.prime.model.SubmissionRanking;

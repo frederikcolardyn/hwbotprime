@@ -53,44 +53,20 @@
             android:gravity="center_horizontal"
             android:orientation="vertical" >
 
-            <TextSwitcher
-                android:id="@+id/textSwitcher"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:minHeight="18dp" >
-            </TextSwitcher>
-
-            <!-- <LinearLayout -->
-            <!-- android:id="@+id/scoreBox" -->
-            <!-- android:layout_width="match_parent" -->
-            <!-- android:layout_height="wrap_content" -->
-            <!-- android:layout_marginTop="10dp" -->
-            <!-- android:orientation="vertical" > -->
-
-
-            <!--
-                <TextView
-                    android:id="@+id/monitoring"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/benchmark"
-                    android:textAppearance="@style/Header"
-                    android:paddingBottom="3dp" />
-            -->
-
             <TableLayout
-                android:id="@+id/tableLayout1"
+                android:id="@+id/myRecords"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/container_leaderboard_rank"
-                android:stretchColumns="1" >
+                android:stretchColumns="1"
+                android:visibility="gone" >
 
                 <TableRow
                     android:layout_width="match_parent"
                     android:layout_gravity="center_horizontal|top"
-                    android:gravity="center_horizontal|top" >
+                    android:gravity="center_horizontal|top"
+                    >
 
                     <TextView
                         android:id="@+id/bestPhoneHeader"

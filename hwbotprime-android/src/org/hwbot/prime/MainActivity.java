@@ -2,7 +2,7 @@ package org.hwbot.prime;
 
 import java.util.Locale;
 
-import org.hwbot.api.bench.dto.DeviceInfoWithRecordsDTO;
+import org.hwbot.api.bench.dto.DeviceInfoDTO;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.api.VersionStatusAware;
@@ -13,6 +13,7 @@ import org.hwbot.prime.service.AndroidHardwareService;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.tasks.HardwareDetectionTask;
+import org.hwbot.prime.tasks.HardwareRecordsTask;
 import org.hwbot.prime.tasks.SubmitResultTask;
 import org.hwbot.prime.tasks.VersionCheckTask;
 
@@ -156,8 +157,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		String device = settings.getString(SETTINGS_DEVICE, null);
 		if (device != null) {
 			try {
-				DeviceInfoWithRecordsDTO deviceInfo = new Gson().fromJson(device, DeviceInfoWithRecordsDTO.class);
-				AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo.getDevice());
+				DeviceInfoDTO deviceInfo = new Gson().fromJson(device, DeviceInfoDTO.class);
+				if (deviceInfo != null) {
+					AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
+				}
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
 				e.printStackTrace();
@@ -167,23 +170,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SecurityService.getInstance().loadToken(this, (PersistentLoginAware) this, token);
 	}
 
-	public DeviceInfoWithRecordsDTO loadDeviceInfo() {
+	public DeviceInfoDTO loadDeviceInfo() {
 		Log.i(this.getClass().getSimpleName(), "Loading device info.");
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String info = settings.getString(SETTINGS_DEVICE, null);
 		if (info != null) {
-			DeviceInfoWithRecordsDTO fromJson = new Gson().fromJson(info, DeviceInfoWithRecordsDTO.class);
-			if (fromJson != null && fromJson.getDevice() == null) {
-				// invalid
-				fromJson = null;
-			}
+			DeviceInfoDTO fromJson = new Gson().fromJson(info, DeviceInfoDTO.class);
 			return fromJson;
 		} else {
 			return null;
 		}
 	}
 
-	public void storeDeviceInfo(DeviceInfoWithRecordsDTO deviceInfo) {
+	public void storeDeviceInfo(DeviceInfoDTO deviceInfo) {
 		if (deviceInfo != null) {
 			Log.i(this.getClass().getSimpleName(), "Storing device info with records.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -336,6 +335,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.i(this.getClass().getSimpleName(), "Login OK: " + credentials);
 		// notification?
 		SecurityService.getInstance().setCredentials(credentials);
+		// reload stats
+		DeviceInfoDTO deviceInfo = loadDeviceInfo();
+		if (deviceInfo != null && deviceInfo.getId() != null) {
+			new HardwareRecordsTask(this, TabFragmentBench.getInstance(), deviceInfo.getId(), credentials.getUserId()).execute((Void) null);
+		}
 	}
 
 	@Override
@@ -490,7 +494,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					if (bestScore2 != null && !bestScore2.isSubmitted()) {
 						TabFragmentBench fragment = TabFragmentBench.getInstance();
 						if (fragment != null) {
-							fragment.statusLabel.setText("Uploading best score...");
+							fragment.toast("Uploading best score...");
 							MainActivity.this.markBestScoreSubmitted();
 							new SubmitResultTask(MainActivity.this, fragment, bestScore2.getEncryptedXml()).execute((Void) null);
 						}

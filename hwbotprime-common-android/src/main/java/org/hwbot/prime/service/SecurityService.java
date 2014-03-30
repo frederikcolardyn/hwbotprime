@@ -65,11 +65,10 @@ public class SecurityService {
     }
 
     public void setCredentials(PersistentLogin credentials) {
-        if (credentials.getUserId() == null) {
-            Log.e(this.getClass().getSimpleName(), "Empty credentials, not user id is required.");
-        } else {
-            this.credentials = credentials;
+        if (credentials != null && credentials.getUserId() == null) {
+            Log.e(this.getClass().getSimpleName(), "Empty credentials, user id is required.");
         }
+        this.credentials = credentials;
     }
 
     public EncryptionModule getEncryptionModule() {
