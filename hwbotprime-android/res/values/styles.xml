@@ -42,40 +42,7 @@
     </style>
     
     <!-- notifications -->
-    <style name="NotificationUser">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:textColor">@color/user_text</item>
-        <item name="android:singleLine">true</item>
-    </style>
     
-    <style name="NotificationMessage">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textStyle">italic</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:ellipsize">marquee</item>
-        <item name="android:textColor">@color/notification_text</item>
-    </style>
-    
-    <style name="NotificationHardware">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:ellipsize">start</item>
-        <item name="android:textColor">@color/notification_text</item>
-    </style>
-    
-    <style name="NotificationDescription">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:ellipsize">start</item>
-        <item name="android:textStyle">italic</item>
-        <item name="android:textColor">@color/notification_text</item>
-    </style>
     
     <!-- labels and values -->
     <style name="Label">
@@ -166,6 +133,13 @@
         <item name="android:ellipsize">start</item>
         <item name="android:textColor">@color/text_changing</item>
     </style>
+    <style name="ValueScoreBig">
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:textColor">@color/text_changing</item>
+    </style>
     <style name="LabelScore">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -196,6 +170,15 @@
     <style name="leaderboardTextSmall">
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/leaderboard_text</item>
+    </style>
+    <style name="leaderboardTextTiny">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/leaderboard_text</item>
+    </style>
+    <style name="leaderboardTextHuge">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/leaderboard_large</item>
     </style>
     <style name="leaderboardTextAction">
         <item name="android:textSize">14sp</item>

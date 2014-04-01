@@ -3,12 +3,12 @@ package org.hwbot.prime;
 import java.util.Locale;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.api.VersionStatusAware;
 import org.hwbot.prime.exception.UnsignedAppException;
 import org.hwbot.prime.model.BenchmarkResult;
-import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.AndroidHardwareService;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
@@ -91,9 +91,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-
-		Log.i("CREATE", "main activity");
-
 		super.onCreate(savedInstanceState);
 
 		Intent intent = getIntent();
@@ -139,12 +136,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// this tab is selected.
 			actionBar.addTab(actionBar.newTab().setText(mSectionsPagerAdapter.getPageTitle(i)).setTabListener(this));
 		}
-
-		// battery
-		//		if (this.batteryInfoReceiver != null) {
-		//			this.registerReceiver(batteryInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-		//		}
-
 		// version check
 		new VersionCheckTask(this, this).execute((Void) null);
 	}
@@ -231,7 +222,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			break;
 		case 1:
 			TabFragmentCompare tabFragmentCompare = (TabFragmentCompare) mSectionsPagerAdapter.getItem(tab.getPosition());
-			tabFragmentCompare.loadActiveRanking();
+			tabFragmentCompare.prepareView();
 			break;
 		case 2:
 			TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(tab.getPosition());
@@ -257,11 +248,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
 	 * one of the sections/tabs/pages.
 	 */
-	public class SectionsPagerAdapter extends FragmentPagerAdapter {
+	static public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-		TabFragmentBench tabFragmentBench;
-		TabFragmentCompare tabFragmentCompare;
-		TabFragmentAccount tabFragmentLoggedAccount;
+		static TabFragmentBench tabFragmentBench;
+		static TabFragmentCompare tabFragmentCompare;
+		static TabFragmentAccount tabFragmentLoggedAccount;
 
 		public SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -311,11 +302,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			Locale l = Locale.getDefault();
 			switch (position) {
 			case 0:
-				return getString(R.string.title_section1).toUpperCase(l);
+				return getActivity().getString(R.string.title_section1).toUpperCase(l);
 			case 1:
-				return getString(R.string.title_section2).toUpperCase(l);
+				return getActivity().getString(R.string.title_section2).toUpperCase(l);
 			case 2:
-				return getString(R.string.title_section3).toUpperCase(l);
+				return getActivity().getString(R.string.title_section3).toUpperCase(l);
 			}
 			return null;
 		}
@@ -331,15 +322,16 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	@Override
-	public void notifyPersistentLoginOk(PersistentLogin credentials) {
+	public void notifyPersistentLoginOk(PersistentLoginDTO credentials) {
 		Log.i(this.getClass().getSimpleName(), "Login OK: " + credentials);
 		// notification?
 		SecurityService.getInstance().setCredentials(credentials);
-		// reload stats
+		// reload hardware stats
 		DeviceInfoDTO deviceInfo = loadDeviceInfo();
 		if (deviceInfo != null && deviceInfo.getId() != null) {
 			new HardwareRecordsTask(this, TabFragmentBench.getInstance(), deviceInfo.getId(), credentials.getUserId()).execute((Void) null);
 		}
+		TabFragmentBench.getInstance().updateShowPersonalRecords();
 	}
 
 	@Override
@@ -368,6 +360,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public boolean updateBestScore() throws UnsignedAppException {
 		BenchmarkResult bestScore = getBestScore();
+		Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
 		if (bench.getScore() != null && bestScore == null || bestScore.getScore() < bench.getScore().floatValue()) {
 			try {
 				byte[] dataFile = bench.getDataFile();
@@ -380,7 +373,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
 				edit.putString(SETTINGS_BEST_SCORE, new Gson().toJson(benchmarkResult));
 				edit.commit();
-				Log.i(this.getClass().getSimpleName(), "Updated best score to " + bench.getScore());
+				Log.i(this.getClass().getSimpleName(), "Updated best score to " + benchmarkResult);
 				return true;
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
@@ -474,13 +467,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	private void updateOfflineMode() {
-		MenuItem menuItem = (MenuItem) MainActivity.this.findViewById(R.id.offlinemode);
+		MenuItem menuItem = (MenuItem) MainActivity.menu.findItem(R.id.offlinemode);
 		Log.i(this.getClass().getSimpleName(), "Offline mode: " + menuItem);
-
-		//		CheckBox checkBox = (CheckBox) rootView.findViewById(R.id.offlineModeButton);
-		menuItem.setChecked(MainActivity.this.isOfflineMode());
-		//		// register click
-		menuItem.setOnMenuItemClickListener(offlineModeListener);
+		if (menuItem != null) {
+			//		CheckBox checkBox = (CheckBox) rootView.findViewById(R.id.offlineModeButton);
+			menuItem.setChecked(this.isOfflineMode());
+			//		// register click
+			menuItem.setOnMenuItemClickListener(offlineModeListener);
+		}
 	}
 
 	MenuItem.OnMenuItemClickListener offlineModeListener = new MenuItem.OnMenuItemClickListener() {

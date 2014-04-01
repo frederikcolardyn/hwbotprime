@@ -1,10 +1,10 @@
 package org.hwbot.prime.service;
 
-import org.hwbot.prime.model.PersistentLogin;
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 
 public class AuthenticationService {
 
-    protected PersistentLogin credentials;
+    protected PersistentLoginDTO credentials;
     protected static AuthenticationService service;
 
     private AuthenticationService() {
@@ -17,11 +17,11 @@ public class AuthenticationService {
         return service;
     }
 
-    public PersistentLogin getCredentials() {
+    public PersistentLoginDTO getCredentials() {
         return credentials;
     }
 
-    public void setCredentials(PersistentLogin credentials) {
+    public void setCredentials(PersistentLoginDTO credentials) {
         this.credentials = credentials;
     }
 

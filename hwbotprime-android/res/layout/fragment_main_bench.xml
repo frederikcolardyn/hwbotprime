@@ -52,6 +52,24 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:orientation="vertical" >
+            
+            <RelativeLayout
+		        android:id="@+id/unkownHardwareBox"
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content"
+		        android:background="@drawable/container_info"
+		        android:padding="10dp"
+		        android:visibility="gone" >
+		        
+		        <TextView
+		            android:id="@+id/hardwareWarning"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:text="@string/hardware_warning_info"
+		            android:drawableLeft="@drawable/ic_action_error"
+		            android:textAppearance="@style/infobox" />
+		        
+		    </RelativeLayout>
 
             <TableLayout
                 android:id="@+id/myRecords"
@@ -217,7 +235,7 @@
             </TableLayout>
 
             <TableLayout
-                android:id="@+id/tableLayout2"
+                android:id="@+id/worldRecords"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="13dp"
@@ -283,16 +301,6 @@
                         android:focusable="true"
                         android:gravity="center|top" >
 
-                        <!-- <TextView -->
-                        <!-- android:id="@+id/bestCoreHeader" -->
-                        <!-- android:layout_width="match_parent" -->
-                        <!-- android:layout_height="wrap_content" -->
-                        <!-- android:layout_gravity="center_horizontal" -->
-                        <!-- android:gravity="center" -->
-                        <!-- android:paddingBottom="0dp" -->
-                        <!-- android:text="@string/best_core" -->
-                        <!-- android:textAppearance="@style/leaderboardLargeLabel" /> -->
-
                         <TextSwitcher
                             android:id="@+id/bestCore"
                             android:layout_width="match_parent"
@@ -320,16 +328,6 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center|top" >
-
-                        <!-- <TextView -->
-                        <!-- android:id="@+id/bestFamilyHeader" -->
-                        <!-- android:layout_width="match_parent" -->
-                        <!-- android:layout_height="wrap_content" -->
-                        <!-- android:layout_gravity="center_horizontal" -->
-                        <!-- android:gravity="center" -->
-                        <!-- android:paddingBottom="0dp" -->
-                        <!-- android:text="@string/best_family" -->
-                        <!-- android:textAppearance="@style/leaderboardLargeLabel" /> -->
 
                         <TextSwitcher
                             android:id="@+id/bestFamily"
@@ -359,16 +357,6 @@
                         android:focusable="true"
                         android:gravity="center|top" >
 
-                        <!-- <TextView -->
-                        <!-- android:id="@+id/bestOverallHeader" -->
-                        <!-- android:layout_width="match_parent" -->
-                        <!-- android:layout_height="wrap_content" -->
-                        <!-- android:layout_gravity="center_horizontal" -->
-                        <!-- android:gravity="center" -->
-                        <!-- android:paddingBottom="0dp" -->
-                        <!-- android:text="@string/best_overall" -->
-                        <!-- android:textAppearance="@style/leaderboardLargeLabel" /> -->
-
                         <TextSwitcher
                             android:id="@+id/bestOverall"
                             android:layout_width="match_parent"
@@ -389,7 +377,6 @@
                     </RelativeLayout>
                 </TableRow>
             </TableLayout>
-            <!-- </LinearLayout> -->
 
             <LinearLayout
                 android:id="@+id/hardwareBox"

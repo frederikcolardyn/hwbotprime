@@ -4,9 +4,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.bench.model.Request;
 import org.hwbot.bench.security.EncryptionModule;
-import org.hwbot.prime.model.PersistentLogin;
 
 import android.os.Build;
 
@@ -30,7 +30,7 @@ public class DataServiceXml {
         return service;
     }
 
-    public static String createXml(String version, Number score, DeviceInfoDTO deviceInfo, PersistentLogin credentials, EncryptionModule encryptionModule) {
+    public static String createXml(String version, Number score, DeviceInfoDTO deviceInfo, PersistentLoginDTO credentials, EncryptionModule encryptionModule) {
 
         AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
 

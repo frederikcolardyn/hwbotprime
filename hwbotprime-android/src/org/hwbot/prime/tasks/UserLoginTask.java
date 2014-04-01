@@ -5,21 +5,22 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.prime.MainActivity;
 import org.hwbot.prime.TabFragmentAccount;
-import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 
 import android.os.AsyncTask;
-import android.util.JsonReader;
 import android.util.Log;
+
+import com.google.gson.Gson;
 
 /**
  * Represents an asynchronous login/registration task used to authenticate
  * the user.
  */
-public class UserLoginTask extends AsyncTask<Void, Void, PersistentLogin> {
+public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 	/**
 	 * 
 	 */
@@ -33,22 +34,22 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLogin> {
 	}
 
 	@Override
-	protected PersistentLogin doInBackground(Void... params) {
+	protected PersistentLoginDTO doInBackground(Void... params) {
 		URL login;
+		BufferedReader reader = null;
 		try {
 			login = new URL(BenchService.SERVER + "/api/login?username=" + this.tabFragmentAccount.mEmail + "&password=" + this.tabFragmentAccount.mPassword);
-			BufferedReader in = new BufferedReader(new InputStreamReader(login.openStream()));
-			JsonReader reader = null;
+			reader = new BufferedReader(new InputStreamReader(login.openStream()));
 			try {
-				reader = new JsonReader(in);
-				PersistentLogin loginToken = LoginTokenTask.readLoginToken(reader);
+				PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
 				return loginToken;
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Login not succesful: " + e.getMessage());
 				e.printStackTrace();
 			} finally {
-				reader.close();
-				in.close();
+				if (reader != null) {
+					reader.close();
+				}
 			}
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
@@ -60,7 +61,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLogin> {
 	}
 
 	@Override
-	protected void onPostExecute(final PersistentLogin persistentLogin) {
+	protected void onPostExecute(final PersistentLoginDTO persistentLogin) {
 		this.tabFragmentAccount.mAuthTask = null;
 		this.tabFragmentAccount.showProgress(false);
 		if (persistentLogin != null && persistentLogin.getToken() != null) {

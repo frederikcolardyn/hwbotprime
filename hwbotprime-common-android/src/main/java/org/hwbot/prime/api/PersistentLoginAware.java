@@ -1,10 +1,10 @@
 package org.hwbot.prime.api;
 
-import org.hwbot.prime.model.PersistentLogin;
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 
 public interface PersistentLoginAware {
 
-	void notifyPersistentLoginOk(PersistentLogin persistentLogin);
+	void notifyPersistentLoginOk(PersistentLoginDTO persistentLogin);
 
 	void notifyPersistentLoginFailed(String message);
 

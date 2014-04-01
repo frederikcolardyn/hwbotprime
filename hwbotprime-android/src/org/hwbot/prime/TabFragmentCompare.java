@@ -47,7 +47,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 	protected ToggleButton compareFamilyButton;
 	protected LinearLayout compareView;
 	protected View rootView;
-	protected TabFragmentCompare tabFragment;
+	protected static TabFragmentCompare tabFragment;
 	protected TextSwitcher rankLabel, hardwareLabel;
 
 	@Override
@@ -57,6 +57,8 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		tabFragment = this;
 
 		rootView = inflater.inflate(R.layout.fragment_main_compare, container, false);
+
+		showLeaderboardIfDeviceInfoPresent();
 
 		compareProcessorButton = (ToggleButton) rootView.findViewById(R.id.toggleButtonCompareProcessor);
 		compareCoreButton = (ToggleButton) rootView.findViewById(R.id.toggleButtonCompareCore);
@@ -86,19 +88,33 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		loadActiveRanking();
 
 		boolean competeInfoSeen = MainActivity.getActivity().isSeen(MainActivity.COMPETE_INFO);
-		if (competeInfoSeen) {
+		if (competeInfoSeen || SecurityService.getInstance().isLoggedIn()) {
 			rootView.findViewById(R.id.competeBox).setVisibility(View.GONE);
 		}
 
 		return rootView;
 	}
 
+	public void showLeaderboardIfDeviceInfoPresent() {
+		// check hardware available or not
+		if (AndroidHardwareService.getInstance().getDeviceInfo() != null) {
+			Log.i(this.getClass().getSimpleName(), "Device info present.");
+			rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.VISIBLE);
+			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.GONE);
+		} else {
+			Log.i(this.getClass().getSimpleName(), "Device info present not present.");
+			rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.GONE);
+			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.VISIBLE);
+		}
+	}
+
 	public void loadProcessorRanking() {
 		DeviceInfoDTO deviceInfo = AndroidHardwareService.getInstance().getDeviceInfo();
 		Context context = rootView.getContext();
 		if (deviceInfo == null || deviceInfo.getProcessorId() == null) {
+			compareView.removeAllViews();
 			TextView textView = new TextView(context);
-			textView.setText("Sorry, unkown hardware can not be compared. The HWBOT crew has been notified to add your device.");
+			textView.setText(getResources().getString(R.string.not_available));
 			compareView.addView(textView);
 		} else {
 			hardwareLabel.setText(deviceInfo.getProcessor());
@@ -244,8 +260,6 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 					final ViewFactory textSwitcherViewFactory = new ViewFactory() {
 						public View makeView() {
 							TextView myText = new TextView(MainActivity.activity, null, R.style.leaderboardTextAction);
-							//							myText.setEllipsize(TruncateAt.START);
-							//							myText.setGravity(Gravity.CENTER_HORIZONTAL);
 							myText.setTextAppearance(MainActivity.activity.getApplicationContext(), R.style.leaderboardTextAction);
 							return myText;
 						}
@@ -361,7 +375,8 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 											Log.i(this.getClass().getSimpleName(), "click me");
 											v.setAlpha(0.4f);
 											CommentDialog commentDialog = new CommentDialog();
-											commentDialog.setResult(result);
+											commentDialog.setTarget("submission");
+											commentDialog.setTargetId(String.valueOf(result.getId()));
 											commentDialog.setChatIcon(chatIcon);
 											commentDialog.setTextSwitcher(comments);
 											commentDialog.setCommentObserver(TabFragmentCompare.this);
@@ -391,7 +406,8 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 										public void onClick(View icon) {
 											Log.i(this.getClass().getSimpleName(), "like me");
 											icon.setAlpha(0.4f);
-											new SubmitVoteTask(result.getId(), "submission", icon, likes, TabFragmentCompare.this).execute((Void) null);
+											new SubmitVoteTask(String.valueOf(result.getId()), "submission", icon, likes, TabFragmentCompare.this)
+													.execute((Void) null);
 										}
 									});
 									actions.addView(likeIcon);
@@ -688,6 +704,15 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				textSwitcher.setText(String.valueOf(++currentVotes));
 			}
 		});
+	}
+
+	public static TabFragmentCompare getInstance() {
+		return tabFragment;
+	}
+
+	public void prepareView() {
+		showLeaderboardIfDeviceInfoPresent();
+		loadActiveRanking();
 	}
 
 }

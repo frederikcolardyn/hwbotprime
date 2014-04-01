@@ -39,7 +39,7 @@
 	<string name="sign_in_facebook">Sign in with facebook</string>
 	<string name="sign_in_twitter">Sign in with twitter</string>
 	<string name="loading">Loading...</string>
-	<string name="team_power_points">Team Power Points</string>
+	<string name="team_power_points">Team Points</string>
 	<string name="league_ranking">League ranking</string>
 	<string name="worlwide">Worldwide</string>
 	<string name="national">National</string>
@@ -47,7 +47,7 @@
 	<string name="hardware_master">Hardware Masters</string>
 	<string name="achievements">Achievements</string>
 	<string name="challenges">Challenges</string>
-	<string name="notifications">Notifications</string>
+	<string name="notifications">Wall</string>
 	
 	<string name="best_phone">THIS PHONE</string>
 	<string name="best_core">SAME CPU</string>
@@ -82,4 +82,14 @@
 	<string name="comment_cancel_btn">Close</string>
 	<string name="comment_not_loggedin_btn">Close - log in to comment</string>
 	<string name="no_comments">No comments.</string>
+	
+	<string name="warning">Warning</string>
+	<string name="hardware_warning_title">Unknown phone</string>
+    <string name="hardware_warning_info">This phone is not yet supported. A request to add the phone has been made. Check back soon!</string>
+    
+    <string name="leaderboard_warning_info">The leaderboards are not yet available for this phone. Check back later!</string>
+    <string name="avatar">avatar</string>
+    <string name="no_team">no team</string>
+    <string name="no_league">not part of any league</string>
+    
 </resources>

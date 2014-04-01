@@ -6,11 +6,11 @@ import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.bench.prime.PrimeEncryptionModule;
 import org.hwbot.bench.security.EncryptionModule;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
-import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.tasks.LoginTokenTask;
 
 import android.util.Log;
@@ -19,7 +19,7 @@ public class SecurityService {
 
     protected static SecurityService service;
     protected static EncryptionModule encryptionModule;
-    private PersistentLogin credentials;
+    private PersistentLoginDTO credentials;
     private String checksum, checksumbase;
     private char[] checksumChars;
 
@@ -30,7 +30,6 @@ public class SecurityService {
         } catch (Exception e) {
             // no encryption
             Log.e(this.getClass().getSimpleName(), "No encryption module found.");
-            // e.printStackTrace();
         }
     }
 
@@ -60,11 +59,11 @@ public class SecurityService {
         return Hex.encodeHexString(md.digest(string));
     }
 
-    public PersistentLogin getCredentials() {
+    public PersistentLoginDTO getCredentials() {
         return credentials;
     }
 
-    public void setCredentials(PersistentLogin credentials) {
+    public void setCredentials(PersistentLoginDTO credentials) {
         if (credentials != null && credentials.getUserId() == null) {
             Log.e(this.getClass().getSimpleName(), "Empty credentials, user id is required.");
         }

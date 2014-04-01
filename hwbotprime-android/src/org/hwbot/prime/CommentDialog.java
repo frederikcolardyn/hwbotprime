@@ -1,5 +1,8 @@
 package org.hwbot.prime;
 
+import java.util.List;
+
+import org.hwbot.api.bench.dto.NotificationDTO;
 import org.hwbot.api.generic.dto.SubmissionDTO;
 import org.hwbot.prime.api.CommentObserver;
 import org.hwbot.prime.service.SecurityService;
@@ -20,18 +23,40 @@ import android.widget.TextSwitcher;
 
 public class CommentDialog extends DialogFragment {
 
-	private SubmissionDTO result;
+	private String targetId;
+	private String target;
 	private View chatIcon;
 	private TextSwitcher textSwitcher;
 	private CommentObserver commentObserver;
+	private List<NotificationDTO> notificationDTOs;
 
 	@Override
 	public void setArguments(Bundle args) {
 		super.setArguments(args);
 	}
 
-	public void setResult(SubmissionDTO result) {
-		this.result = result;
+	public List<NotificationDTO> getNotificationDTOs() {
+		return notificationDTOs;
+	}
+
+	public void setNotificationDTOs(List<NotificationDTO> notificationDTOs) {
+		this.notificationDTOs = notificationDTOs;
+	}
+
+	public String getTargetId() {
+		return targetId;
+	}
+
+	public void setTargetId(String targetId) {
+		this.targetId = targetId;
+	}
+
+	public String getTarget() {
+		return target;
+	}
+
+	public void setTarget(String target) {
+		this.target = target;
 	}
 
 	public void setChatIcon(View chatIcon) {
@@ -63,13 +88,13 @@ public class CommentDialog extends DialogFragment {
 				public void onClick(DialogInterface dialog, int id) {
 					EditText editText = (EditText) view.findViewById(R.id.commentInput);
 					String text = editText.getText().toString();
-					Log.i(this.getClass().getSimpleName(), "Posting comment: " + text + " for result " + result);
+					Log.i(this.getClass().getSimpleName(), "Posting comment: " + text + " for target " + target + " / " + targetId);
 
 					chatIcon.setAlpha(1.0f);
 
 					// can we do network in this thread?
 					if (org.apache.commons.lang.StringUtils.isNotEmpty(text)) {
-						new SubmitCommentTask(text, result.getId(), "submission", chatIcon, textSwitcher, commentObserver).execute((Void) null);
+						new SubmitCommentTask(text, targetId, target, chatIcon, textSwitcher, commentObserver).execute((Void) null);
 					}
 				}
 			}).setNegativeButton(R.string.comment_cancel_btn, new DialogInterface.OnClickListener() {
@@ -87,7 +112,7 @@ public class CommentDialog extends DialogFragment {
 			});
 		}
 
-		new CommentLoaderTask(commentBox, "result_" + result.getId()).execute((Void) null);
+		new CommentLoaderTask(commentBox, target + "_" + targetId).execute((Void) null);
 
 		return builder.create();
 	}

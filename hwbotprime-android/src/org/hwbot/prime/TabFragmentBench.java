@@ -6,6 +6,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
 import org.hwbot.api.bench.dto.DeviceRecordDTO;
 import org.hwbot.api.bench.dto.DeviceRecordDTO.RecordType;
@@ -64,8 +66,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-		Log.i("CREATE", "bench tab");
+		Log.i(this.getClass().getSimpleName(), "creating tab fragment bench.");
 		rootView = inflater.inflate(R.layout.fragment_main_bench, container, false);
 		View benchbutton = rootView.findViewById(R.id.benchbutton);
 		benchbutton.requestFocus();
@@ -97,10 +98,6 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			bestPhone = (TextSwitcher) rootView.findViewById(R.id.bestPhone);
 			bestPhoneMe = (TextSwitcher) rootView.findViewById(R.id.bestPhoneMe);
 
-			//			View findViewById = rootView.findViewById(R.id.lastScore);
-			//			lastScore = (TextSwitcher) findViewById;
-			// bestScore = (TextSwitcher) rootView.findViewById(R.id.bestScore);
-			// Set the ViewFactory of the TextSwitcher that will create TextView object when asked
 			ViewFactory viewFactory = new ViewFactory() {
 				public View makeView() {
 					TextView myText = new TextView(MainActivity.activity, null, R.style.ValueChanging);
@@ -112,16 +109,6 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			};
 
 			ViewFactory scoreViewFactory = new ViewFactory() {
-				public View makeView() {
-					TextView myText = new TextView(MainActivity.activity, null, R.style.ValueScore);
-					myText.setEllipsize(TruncateAt.START);
-					myText.setGravity(Gravity.CENTER_HORIZONTAL);
-					myText.setTextAppearance(MainActivity.activity.getApplicationContext(), R.style.ValueScore);
-					return myText;
-				}
-			};
-
-			ViewFactory scoreViewFactoryMe = new ViewFactory() {
 				public View makeView() {
 					TextView myText = new TextView(MainActivity.activity, null, R.style.ValueScore);
 					myText.setEllipsize(TruncateAt.START);
@@ -153,9 +140,18 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			bestOverallMe.setInAnimation(in);
 			bestOverallMe.setOutAnimation(out);
 
-			updateScores(null);
+			setScore(bestPhone, (Float) null);
+			setScore(bestCore, (Float) null);
+			setScore(bestFamily, (Float) null);
+			setScore(bestOverall, (Float) null);
+			setScore(bestPhoneMe, (Float) null);
+			setScore(bestCoreMe, (Float) null);
+			setScore(bestFamilyMe, (Float) null);
+			setScore(bestOverallMe, (Float) null);
+
 			// updateOfflineMode();
 			updateDeviceInfo();
+			updateShowPersonalRecords();
 
 			// cpu load bars
 			AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
@@ -183,6 +179,16 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			restartMonitorCpuFrequency();
 		}
 		return rootView;
+	}
+
+	public void updateShowPersonalRecords() {
+		if (SecurityService.getInstance().isLoggedIn()) {
+			Log.i(this.getClass().getSimpleName(), "Show my records.");
+			rootView.findViewById(R.id.myRecords).setVisibility(View.VISIBLE);
+		} else {
+			Log.i(this.getClass().getSimpleName(), "Do not show personal records.");
+			rootView.findViewById(R.id.myRecords).setVisibility(View.GONE);
+		}
 	}
 
 	private void updateDeviceInfo() {
@@ -237,7 +243,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void notifyBenchmarkFinished(final Number score) {
-		Log.i(this.getClass().getSimpleName(), "Score " + score + " on parent " + MainActivity.activity);
+		Log.i(this.getClass().getSimpleName(), "New score: " + score);
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
@@ -254,13 +260,13 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 							if (MainActivity.activity.isOfflineMode()) {
 								toast("Personal record! Disable offline mode to compare.");
 							} else {
-								if (SecurityService.getInstance().getCredentials() != null) {
-									toast("Personal record! Adding to leaderboard.");
-								} else {
-									toast("Personal record! Log in to compete on leaderboard.");
-								}
 								if (AndroidHardwareService.getInstance().getDeviceInfo() != null
 										&& AndroidHardwareService.getInstance().getDeviceInfo().getProcessorId() != null) {
+									if (SecurityService.getInstance().isLoggedIn()) {
+										toast("Personal record! Adding to leaderboard.");
+									} else {
+										toast("Personal record! Log in to compete on leaderboard.");
+									}
 									try {
 										new SubmitResultTask(MainActivity.activity, submissionStatusAware, BenchService.getInstance().getDataFile())
 												.execute((Void) null);
@@ -268,9 +274,11 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 										Log.e(this.getClass().getSimpleName(), "Failed to submit " + e.getMessage());
 										e.printStackTrace();
 									}
+								} else {
+									toast("Personal record!");
 								}
 							}
-							updateScores(null);
+							updateScoreIfBetter(score.floatValue());
 						}
 					} catch (UnsignedAppException e1) {
 						toast("Done! Use production version to compete in leaderboard.");
@@ -283,12 +291,15 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 		}
 	}
 
-	public void updateScores(Map<RecordType, DeviceRecordDTO> hwbotPrimeRecords) {
-		setScore(bestPhone, (Float) null);
-		setScore(bestCore, (Float) null);
-		setScore(bestFamily, (Float) null);
-		setScore(bestOverall, (Float) null);
+	public void updateScoreIfBetter(Float score) {
+		Log.i(this.getClass().getSimpleName(), "Updating score if better: " + score);
+		setScoreIfBetter(bestPhoneMe, score);
+		setScoreIfBetter(bestCoreMe, score);
+		setScoreIfBetter(bestFamilyMe, score);
+		setScoreIfBetter(bestOverallMe, score);
+	}
 
+	public void updateScores(Map<RecordType, DeviceRecordDTO> hwbotPrimeRecords) {
 		if (hwbotPrimeRecords != null) {
 			setScore(bestPhone, hwbotPrimeRecords.get(RecordType.best_device));
 			setScore(bestCore, hwbotPrimeRecords.get(RecordType.best_cpu_core));
@@ -300,14 +311,9 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	public void updatePersonalScores(Map<RecordType, DeviceRecordDTO> hwbotPrimeRecordsPersonal) {
 		BenchmarkResult bestScore = MainActivity.getActivity().getBestScore();
 		Float score = (bestScore != null && bestScore.getScore() > 0) ? bestScore.getScore() : null;
-		setScore(bestPhoneMe, score);
-		setScore(bestCoreMe, (Float) null);
-		setScore(bestFamilyMe, (Float) null);
-		setScore(bestOverallMe, (Float) null);
 
 		if (hwbotPrimeRecordsPersonal != null && !hwbotPrimeRecordsPersonal.isEmpty()) {
 			Log.i(this.getClass().getSimpleName(), "My records: " + hwbotPrimeRecordsPersonal + " keys: " + hwbotPrimeRecordsPersonal.keySet());
-			rootView.findViewById(R.id.myRecords).setVisibility(View.VISIBLE);
 			if (hwbotPrimeRecordsPersonal.get(RecordType.best_device) != null) {
 				if (score == null || score < hwbotPrimeRecordsPersonal.get(RecordType.best_device).getScore()) {
 					setScore(bestPhoneMe, hwbotPrimeRecordsPersonal.get(RecordType.best_device));
@@ -316,8 +322,6 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			setScore(bestCoreMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_core));
 			setScore(bestFamilyMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_family));
 			setScore(bestOverallMe, hwbotPrimeRecordsPersonal.get(RecordType.best_overall_soc));
-		} else {
-			rootView.findViewById(R.id.myRecords).setVisibility(View.GONE);
 		}
 	}
 
@@ -338,13 +342,28 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 		}
 	}
 
+	private void setScoreIfBetter(TextSwitcher switcher, Float score) {
+		if (score != null) {
+			TextView current = (TextView) switcher.getCurrentView();
+			String value = StringUtils.remove("" + current.getText(), " PPS");
+			if (getResources().getString(R.string.not_available).equals(value)) {
+				setScore(switcher, score);
+			} else if (NumberUtils.isNumber(value)) {
+				if (Float.parseFloat(value) < score) {
+					setScore(switcher, score);
+				}
+			} else {
+				setScore(switcher, score);
+			}
+
+		}
+	}
+
 	private void setScore(TextSwitcher switcher, Float score) {
 		if (score == null) {
-			Log.i(this.getClass().getSimpleName(), "switcher n/a");
 			switcher.setText(getResources().getString(R.string.not_available));
 		} else {
 			String format = String.format(Locale.ENGLISH, "%.0f PPS", score);
-			Log.i(this.getClass().getSimpleName(), "switcher value: " + format);
 			switcher.setText(format);
 		}
 	}
@@ -368,7 +387,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void notifyDeviceInfoFailed(final Status status) {
-		Log.w(this.getClass().getSimpleName(), "Failed to load device info: " + status);
+		Log.i(this.getClass().getSimpleName(), "Failed to load device info: " + status);
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
@@ -377,6 +396,8 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 					if (storedDeviceInfo != null) {
 						toast("Can't contact HWBOT, using cached info.");
 						notifyDeviceInfo(storedDeviceInfo);
+						rootView.findViewById(R.id.myRecords).setVisibility(View.VISIBLE);
+						rootView.findViewById(R.id.worldRecords).setVisibility(View.VISIBLE);
 					} else {
 						switch (status) {
 						case service_down:
@@ -388,8 +409,10 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 						case unknown_device:
 							toast("We don't know this phone yet, functionality will be limited.");
 							HardwareDetectionTask hardwareDetectionTask = new HardwareDetectionTask(MainActivity.getActivity(), TabFragmentBench.this);
-							hardwareDetectionTask.execute(Build.MANUFACTURER + " | " + Build.MODEL + " | " + Build.PRODUCT + " | "
-									+ AndroidHardwareService.getInstance().getHardwareFromCpuInfo());
+							hardwareDetectionTask.execute(getDeviceIdentification());
+
+							rootView.findViewById(R.id.myRecords).setVisibility(View.GONE);
+							rootView.findViewById(R.id.worldRecords).setVisibility(View.GONE);
 
 							AndroidUtil.setTextInView(rootView, R.id.tableRowDevice, "unknown");
 							AndroidUtil.setTextInView(rootView, R.id.tableRowProcessor, "unknown");
@@ -473,9 +496,21 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	public void presentDeviceInfo(final DeviceInfoDTO deviceInfo) {
 		if (deviceInfo != null && deviceInfo.getId() != null) {
-			toast("Hardware detected. Benchmark to analyze.");
+
+			rootView.findViewById(R.id.myRecords).setVisibility(View.VISIBLE);
+			rootView.findViewById(R.id.worldRecords).setVisibility(View.VISIBLE);
+
+			if (TabFragmentCompare.getInstance() != null) {
+				TabFragmentCompare.getInstance().showLeaderboardIfDeviceInfoPresent();
+			}
+
+			// toast("Hardware detected. Benchmark to analyze.");
 			if (deviceInfo.getId() != null) {
 				new HardwareRecordsTask(MainActivity.getActivity(), TabFragmentBench.getInstance(), deviceInfo.getId(), null).execute((Void) null);
+				if (SecurityService.getInstance().isLoggedIn()) {
+					new HardwareRecordsTask(MainActivity.getActivity(), TabFragmentBench.getInstance(), deviceInfo.getId(), SecurityService.getInstance()
+							.getCredentials().getUserId()).execute((Void) null);
+				}
 			}
 
 			AndroidUtil.setTextInView(rootView, R.id.tableRowDevice,
@@ -509,17 +544,10 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					BenchmarkResult bestScore = MainActivity.getActivity().getBestScore();
-					Float score = (bestScore != null && bestScore.getScore() > 0) ? bestScore.getScore() : null;
 					Map<RecordType, DeviceRecordDTO> hwbotPrimeRecordsPersonal = records.getRecords();
 					if (hwbotPrimeRecordsPersonal != null && !hwbotPrimeRecordsPersonal.isEmpty()) {
 						Log.i(this.getClass().getSimpleName(), "Updating personal: " + hwbotPrimeRecordsPersonal);
-						rootView.findViewById(R.id.myRecords).setVisibility(View.VISIBLE);
-						if (hwbotPrimeRecordsPersonal.get(RecordType.best_device) != null) {
-							if (score == null || score < hwbotPrimeRecordsPersonal.get(RecordType.best_device).getScore()) {
-								setScore(bestPhoneMe, hwbotPrimeRecordsPersonal.get(RecordType.best_device));
-							}
-						}
+						setScore(bestPhoneMe, hwbotPrimeRecordsPersonal.get(RecordType.best_device));
 						setScore(bestCoreMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_core));
 						setScore(bestFamilyMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_family));
 						setScore(bestOverallMe, hwbotPrimeRecordsPersonal.get(RecordType.best_overall_soc));
@@ -560,5 +588,15 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				}
 			});
 		}
+	}
+
+	@Override
+	public void onViewStateRestored(Bundle savedInstanceState) {
+		Log.i(this.getClass().getSimpleName(), "View state restored.");
+		super.onViewStateRestored(savedInstanceState);
+	}
+
+	public String getDeviceIdentification() {
+		return Build.MANUFACTURER + " - " + Build.MODEL + " - " + Build.PRODUCT + " -- " + AndroidHardwareService.getInstance().getHardwareFromCpuInfo();
 	}
 }

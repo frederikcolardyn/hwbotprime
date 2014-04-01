@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
 import org.hwbot.prime.api.HardwareStatusAware;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.service.BenchService;
-import org.hwbot.prime.service.SecurityService;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -41,11 +41,11 @@ public class HardwareDetectionTask extends AsyncTask<String, Void, DeviceInfoDTO
         deviceName = param[0];
         Reader reader = null;
         try {
-            URL url = new URL(BenchService.SERVER + "/api/hardware/device/" + deviceName + "/info");
+            URL url = new URL(BenchService.SERVER + "/api/hardware/device/info?name=" + URLEncoder.encode(deviceName, "utf8"));
             Log.i(this.getClass().getSimpleName(), "Loading device info from: " + url);
             reader = new BufferedReader(new InputStreamReader(url.openStream()));
             DeviceInfoDTO deviceInfoWithRecordsDTO = new Gson().fromJson(reader, DeviceInfoDTO.class);
-
+            Log.i(this.getClass().getSimpleName(), "Got device: " + deviceInfoWithRecordsDTO);
             if (deviceInfoWithRecordsDTO == null || deviceInfoWithRecordsDTO.getId() == null) {
                 observer.notifyDeviceInfoFailed(org.hwbot.prime.api.HardwareStatusAware.Status.unknown_device);
             } else {

@@ -6,16 +6,17 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
-import org.hwbot.prime.model.PersistentLogin;
 import org.hwbot.prime.service.BenchService;
 
 import android.os.AsyncTask;
-import android.util.JsonReader;
 import android.util.Log;
 
-public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
+import com.google.gson.Gson;
+
+public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 
     private String token;
     private PersistentLoginAware observer;
@@ -28,18 +29,17 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
     }
 
     @Override
-    protected PersistentLogin doInBackground(Void... params) {
-        JsonReader reader = null;
+    protected PersistentLoginDTO doInBackground(Void... params) {
+        BufferedReader reader = null;
         try {
             URL hwbotRanking = new URL(BenchService.SERVER + "/api/authenticate?token=" + token);
-            BufferedReader in = new BufferedReader(new InputStreamReader(hwbotRanking.openStream()));
-            reader = new JsonReader(in);
-            PersistentLogin loginToken = readLoginToken(reader);
+            reader = new BufferedReader(new InputStreamReader(hwbotRanking.openStream()));
+            PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
             Log.i(this.getClass().getSimpleName(), "Token: " + loginToken);
             observer.notifyPersistentLoginOk(loginToken);
             return loginToken;
         } catch (UnknownHostException e) {
-            Log.w(this.getClass().getSimpleName(), "No network access: "+e.getMessage());
+            Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
             networkStatusAware.showNetworkPopupOnce();
         } catch (Exception e) {
             Log.i(this.getClass().getSimpleName(), "Error: " + e.getMessage());
@@ -55,41 +55,6 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLogin> {
             }
         }
         return null;
-    }
-
-    public static PersistentLogin readLoginToken(JsonReader reader) {
-        PersistentLogin login = new PersistentLogin();
-        try {
-            reader.beginObject();
-            while (reader.hasNext()) {
-                String name = reader.nextName();
-                if (name.equals("userName")) {
-                    login.setUserName(reader.nextString());
-                } else if (name.equals("teamName")) {
-                    login.setTeamName(reader.nextString());
-                } else if (name.equals("countryName")) {
-                    login.setCountryName(reader.nextString());
-                } else if (name.equals("token")) {
-                    login.setToken(reader.nextString());
-                } else if (name.equals("dateUntil")) {
-                    login.setDateUntil(reader.nextLong());
-                } else if (name.equals("userId")) {
-                    login.setUserId(reader.nextInt());
-                } else if (name.equals("teamId")) {
-                    login.setTeamId(reader.nextInt());
-                } else if (name.equals("countryId")) {
-                    login.setCountryId(reader.nextInt());
-                } else {
-                    reader.skipValue();
-                }
-            }
-            reader.endObject();
-        } catch (IOException e) {
-            Log.e(LoginTokenTask.class.getName(), "error loading rankings: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return login;
     }
 
 }

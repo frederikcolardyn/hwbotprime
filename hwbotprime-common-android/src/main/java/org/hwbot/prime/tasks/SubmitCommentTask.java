@@ -27,13 +27,13 @@ import com.google.gson.Gson;
 public class SubmitCommentTask extends AsyncTask<Void, Void, Void> {
 
     private String comment;
-    private Integer targetId;
+    private String targetId;
     private String target;
     private final View icon;
     private final CommentObserver observer;
     private TextSwitcher count;
 
-    public SubmitCommentTask(String comment, Integer targetId, String target, View icon, TextSwitcher count, CommentObserver observer) {
+    public SubmitCommentTask(String comment, String targetId, String target, View icon, TextSwitcher count, CommentObserver observer) {
         super();
         this.comment = comment;
         this.targetId = targetId;

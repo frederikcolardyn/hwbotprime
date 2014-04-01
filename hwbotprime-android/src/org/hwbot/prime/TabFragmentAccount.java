@@ -1,7 +1,12 @@
 package org.hwbot.prime;
 
+import org.apache.commons.lang.StringUtils;
+import org.hwbot.api.bench.dto.PersistentLoginDTO;
+import org.hwbot.prime.api.CommentObserver;
+import org.hwbot.prime.api.VoteObserver;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
+import org.hwbot.prime.tasks.ImageLoaderTask;
 import org.hwbot.prime.tasks.NotificationLoaderTask;
 import org.hwbot.prime.tasks.UserLoginTask;
 import org.hwbot.prime.tasks.UserStatsLoaderTask;
@@ -11,17 +16,25 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.text.TextUtils.TruncateAt;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.ScrollView;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
+import android.widget.ViewSwitcher.ViewFactory;
 
-public class TabFragmentAccount extends Fragment {
+public class TabFragmentAccount extends Fragment implements VoteObserver, CommentObserver {
 
 	/**
 	 * The default email to populate the email field with.
@@ -45,8 +58,11 @@ public class TabFragmentAccount extends Fragment {
 	public TextView mLoginStatusMessageView;
 	public static View rootView;
 
+	public TextSwitcher leaguePoints, teamPoints, worldWideRank, nationalRank, teamRank;
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		Log.i(this.getClass().getSimpleName(), "Creating account tab.");
 		// Set up the login form.
 		rootView = inflater.inflate(R.layout.fragment_main_account, container, false);
 		mEmail = MainActivity.activity.getIntent().getStringExtra(EXTRA_EMAIL);
@@ -100,6 +116,32 @@ public class TabFragmentAccount extends Fragment {
 			}
 		});
 
+		leaguePoints = (TextSwitcher) rootView.findViewById(R.id.tableRowLeagePoints);
+		teamPoints = (TextSwitcher) rootView.findViewById(R.id.tableRowTeamPowerPoints);
+		worldWideRank = (TextSwitcher) rootView.findViewById(R.id.tableRowWorlWideRank);
+		nationalRank = (TextSwitcher) rootView.findViewById(R.id.tableRowNationalRank);
+		teamRank = (TextSwitcher) rootView.findViewById(R.id.tableRowTeamRank);
+
+		ViewFactory ViewFactory = new ViewFactory() {
+			public View makeView() {
+				TextView myText = new TextView(MainActivity.activity, null, R.style.ValueScoreBig);
+				myText.setEllipsize(TruncateAt.START);
+				myText.setGravity(Gravity.CENTER_HORIZONTAL);
+				myText.setTextAppearance(MainActivity.activity.getApplicationContext(), R.style.ValueScoreBig);
+				return myText;
+			}
+		};
+		leaguePoints.setFactory(ViewFactory);
+		teamPoints.setFactory(ViewFactory);
+		worldWideRank.setFactory(ViewFactory);
+		nationalRank.setFactory(ViewFactory);
+		teamRank.setFactory(ViewFactory);
+
+		leaguePoints.setText(getResources().getString(R.string.not_available));
+		teamPoints.setText(getResources().getString(R.string.not_available));
+		worldWideRank.setText(getResources().getString(R.string.not_available));
+		nationalRank.setText(getResources().getString(R.string.not_available));
+		teamRank.setText(getResources().getString(R.string.not_available));
 		return rootView;
 	}
 
@@ -131,7 +173,54 @@ public class TabFragmentAccount extends Fragment {
 			loggedInView.setVisibility(ScrollView.VISIBLE);
 			loginView.setVisibility(ScrollView.INVISIBLE);
 			loginView.setVisibility(ScrollView.GONE);
-			
+
+			PersistentLoginDTO credentials = SecurityService.getInstance().getCredentials();
+
+			LinearLayout personalInfoBox = (LinearLayout) rootView.findViewById(R.id.personalInfoBox);
+			personalInfoBox.removeAllViews();
+
+			TextView user = new TextView(rootView.getContext());
+			user.setText(credentials.getUserName());
+			user.setTextAppearance(rootView.getContext(), R.style.leaderboardTextHuge);
+			user.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+			TextView team = new TextView(rootView.getContext());
+			team.setText((StringUtils.isEmpty(credentials.getTeamName()) ? getResources().getString(R.string.no_team) : credentials.getTeamName()));
+			team.setTextAppearance(rootView.getContext(), R.style.leaderboardText);
+			team.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+			TextView league = new TextView(rootView.getContext());
+			league.setText((StringUtils.isEmpty(credentials.getLeague()) ? getResources().getString(R.string.no_league) : credentials.getLeague()));
+			league.setTextAppearance(rootView.getContext(), R.style.leaderboardText);
+			league.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+			personalInfoBox.addView(user);
+			personalInfoBox.addView(team);
+			personalInfoBox.addView(league);
+
+			ImageView avatar = (ImageView) rootView.findViewById(R.id.avatarIcon);
+			if (StringUtils.isNotEmpty(credentials.getAvatar())) {
+				try {
+					String url;
+					if (credentials.getAvatar().startsWith("http")) {
+						url = credentials.getAvatar();
+					} else {
+						url = BenchService.SERVER + credentials.getAvatar();
+					}
+					avatar.setScaleType(ScaleType.FIT_XY);
+					avatar.setTag(url);
+					new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
+				} catch (Exception e) {
+					Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+					e.printStackTrace();
+					avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
+				}
+			} else {
+				// avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
+			}
+
+			ViewGroup notificationContainer = (ViewGroup) TabFragmentAccount.rootView.findViewById(R.id.notifications);
+			notificationContainer.removeAllViews();
 			NotificationLoaderTask notificationLoaderTask = new NotificationLoaderTask(this);
 			notificationLoaderTask.execute((String) null);
 			UserStatsLoaderTask userStatsLoaderTask = new UserStatsLoaderTask(this);
@@ -222,6 +311,54 @@ public class TabFragmentAccount extends Fragment {
 	public void showProgress(final boolean show) {
 		mLoginStatusView.setVisibility(show ? View.VISIBLE : View.GONE);
 		mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+	}
+
+	@Override
+	public void notifyVoteFailed(final View view) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(0.2f);
+			}
+		});
+	}
+
+	@Override
+	public void notifyCommentFailed(final View view) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(0.2f);
+				view.setClickable(false);
+			}
+		});
+	}
+
+	@Override
+	public void notifyCommentSucceeded(final View view, final TextSwitcher textSwitcher) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(1.0f);
+				TextView currentView = (TextView) textSwitcher.getCurrentView();
+				int currentComments = Integer.parseInt(String.valueOf(currentView.getText()));
+				textSwitcher.setText(String.valueOf(++currentComments));
+			}
+		});
+	}
+
+	@Override
+	public void notifyVoteSucceeded(final View view, final TextSwitcher textSwitcher) {
+		MainActivity.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				view.setAlpha(1.0f);
+				view.setClickable(false);
+				TextView currentView = (TextView) textSwitcher.getCurrentView();
+				int currentVotes = Integer.parseInt(String.valueOf(currentView.getText()));
+				textSwitcher.setText(String.valueOf(++currentVotes));
+			}
+		});
 	}
 
 }

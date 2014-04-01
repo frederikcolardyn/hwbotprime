@@ -24,13 +24,13 @@ import com.google.gson.Gson;
 
 public class SubmitVoteTask extends AsyncTask<Void, Void, Void> {
 
-    private Integer targetId;
+    private String targetId;
     private String target;
     private final View icon;
     private final VoteObserver observer;
     private final TextSwitcher count;
 
-    public SubmitVoteTask(Integer targetId, String target, View icon, TextSwitcher count, VoteObserver observer) {
+    public SubmitVoteTask(String targetId, String target, View icon, TextSwitcher count, VoteObserver observer) {
         super();
         this.targetId = targetId;
         this.target = target;
