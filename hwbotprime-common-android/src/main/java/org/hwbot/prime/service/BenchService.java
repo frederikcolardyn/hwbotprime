@@ -48,8 +48,8 @@ public class BenchService implements Runnable {
     protected static DataServiceXml dataServiceXml;
 
     // public static String SERVER = "http://192.168.0.249:9090";
-    public static String SERVER = "http://uat.hwbot.org";
-    public static String SERVER_MOBILE = "http://uat.hwbot.org";
+    public static String SERVER = "http://hwbot.org";
+    public static String SERVER_MOBILE = "http://m.hwbot.org";
     public static String HWBOT_PRIME_APP_NAME = "HWBOT Prime";
 
     private BenchService() {

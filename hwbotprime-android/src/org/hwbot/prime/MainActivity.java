@@ -6,6 +6,7 @@ import org.hwbot.api.bench.dto.DeviceInfoDTO;
 import org.hwbot.api.bench.dto.DeviceRecordsDTO;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.api.bench.dto.UserStatsDTO;
+import org.hwbot.api.bench.dto.DeviceRecordDTO.RecordType;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.api.VersionStatusAware;
@@ -97,6 +98,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Restore preferences
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		restoreSettings(settings);
 
 		Intent intent = getIntent();
 		if (intent != null && intent.getData() != null) {
@@ -104,10 +109,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			String token = uri.getQueryParameter(SETTINGS_TOKEN);
 			SecurityService.getInstance().loadToken(this, this, token);
 		}
-
-		// Restore preferences
-		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-		restoreSettings(settings);
 
 		setContentView(R.layout.activity_main);
 
@@ -255,9 +256,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	static public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-		static TabFragmentBench tabFragmentBench;
-		static TabFragmentCompare tabFragmentCompare;
-		static TabFragmentAccount tabFragmentLoggedAccount;
+		TabFragmentBench tabFragmentBench;
+		TabFragmentCompare tabFragmentCompare;
+		TabFragmentAccount tabFragmentLoggedAccount;
 
 		public SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -381,7 +382,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				// Log.i(this.getClass().getSimpleName(), "Updated best score to " + benchmarkResult);
 				return true;
 			} catch (Exception e) {
-				// Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
+				Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
 				throw new UnsignedAppException();
 			}
 		} else {
@@ -486,6 +487,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		@Override
 		public boolean onMenuItemClick(MenuItem item) {
 			try {
+				if (item.isChecked()) {
+					item.setChecked(false);
+				} else {
+					item.setChecked(true);
+				}
 				boolean isChecked = item.isChecked();
 				MainActivity.this.setOfflineMode(isChecked);
 				if (!isChecked) {
@@ -667,7 +673,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public void storePersonalRecords(DeviceRecordsDTO dto) {
-		if (dto != null) {
+		if (dto != null && !dto.getRecords().isEmpty() && dto.getRecords().get(RecordType.best_device) != null) {
 			// Log.i(this.getClass().getSimpleName(), "Storing device personal records stats.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
@@ -679,7 +685,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public void storeRecords(DeviceRecordsDTO dto) {
-		if (dto != null) {
+		if (dto != null && !dto.getRecords().isEmpty() && dto.getRecords().get(RecordType.best_device) != null) {
 			// Log.i(this.getClass().getSimpleName(), "Storing device records stats.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();

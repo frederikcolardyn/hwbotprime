@@ -553,9 +553,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void notifyDevicePersonalRecords(final DeviceRecordsDTO records) {
-
 		if (MainActivity.getActivity() != null) {
-			MainActivity.getActivity().storePersonalRecords(records);
 			MainActivity.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
@@ -566,6 +564,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 						setScore(bestCoreMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_core));
 						setScore(bestFamilyMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_family));
 						setScore(bestOverallMe, hwbotPrimeRecordsPersonal.get(RecordType.best_overall_soc));
+						MainActivity.getActivity().storePersonalRecords(records);
 					} else {
 						rootView.findViewById(R.id.myRecords).setVisibility(View.GONE);
 					}
@@ -588,6 +587,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 						setScore(bestFamily, hwbotPrimeRecords.get(RecordType.best_cpu_family));
 						setScore(bestOverall, hwbotPrimeRecords.get(RecordType.best_overall_soc));
 					}
+					MainActivity.getActivity().storeRecords(records);
 				}
 			});
 		}

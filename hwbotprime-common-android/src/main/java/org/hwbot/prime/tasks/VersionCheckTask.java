@@ -33,7 +33,7 @@ public class VersionCheckTask extends AsyncTask<Void, Void, Void> {
     public Void doInBackground(Void... params) {
         JsonReader reader = null;
         try {
-            URL url = new URL(BenchService.SERVER + "/version/api?client=" + URLEncoder.encode(BenchService.HWBOT_PRIME_APP_NAME + "&os=android", "utf8"));
+            URL url = new URL(BenchService.SERVER + "/version/api?client=" + URLEncoder.encode(BenchService.HWBOT_PRIME_APP_NAME, "utf8") + "&os=android");
             BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
 
             VersionApiResponse apiResponse = new Gson().fromJson(in, VersionApiResponse.class);
