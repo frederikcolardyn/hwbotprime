@@ -60,9 +60,9 @@ public class CommentLoaderTask extends AsyncTask<Void, Void, Void> {
 									LinearLayout.LayoutParams.WRAP_CONTENT);
 							authorLayout.topMargin = AndroidUtil.dpToPx(20);
 							authorLayout.bottomMargin = AndroidUtil.dpToPx(20);
-							authorLayout.leftMargin = AndroidUtil.dpToPx(20);
 							authorLayout.gravity = Gravity.CENTER;
 							noComments.setLayoutParams(authorLayout);
+							noComments.setGravity(Gravity.CENTER);
 							commentBox.addView(noComments);
 						}
 

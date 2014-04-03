@@ -69,33 +69,12 @@ public class UserStatsLoaderTask extends AsyncTask<Void, Void, UserStatsDTO> {
 
 	@Override
 	protected void onPostExecute(UserStatsDTO dto) {
+		
+		// store
+		MainActivity.getActivity().storeUserStats(dto);
+		
 		if (TabFragmentAccount.rootView != null) {
-			TextSwitcher leaguePoints, teamPoints, worldWideRank, nationalRank, teamRank;
-			leaguePoints = (TextSwitcher) TabFragmentAccount.rootView.findViewById(R.id.tableRowLeagePoints);
-			teamPoints = (TextSwitcher) TabFragmentAccount.rootView.findViewById(R.id.tableRowTeamPowerPoints);
-			worldWideRank = (TextSwitcher) TabFragmentAccount.rootView.findViewById(R.id.tableRowWorlWideRank);
-			nationalRank = (TextSwitcher) TabFragmentAccount.rootView.findViewById(R.id.tableRowNationalRank);
-			teamRank = (TextSwitcher) TabFragmentAccount.rootView.findViewById(R.id.tableRowTeamRank);
-
-			if (dto != null) {
-				Log.i(this.getClass().getSimpleName(), "Updating user stats: " + dto);
-				teamPoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getTeamPowerPoints() != null ? dto.getTeamPowerPoints() : 0f));
-				leaguePoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getLeaguePoints() != null ? dto.getLeaguePoints() : 0f));
-				worldWideRank.setText((dto.getLeagueRank() != null ? "#" + dto.getLeagueRank() : "not ranked"));
-				nationalRank.setText((dto.getLeagueNationalRank() != null ? "#" + dto.getLeagueNationalRank() : "not ranked"));
-				teamRank.setText((dto.getLeagueTeamRank() != null ? "#" + dto.getLeagueTeamRank() : "not ranked"));
-
-				//			setRowValue(context, R.id.tableRowAchievements, dto.getAchievements() + "/" + dto.getAchievementsTotal() + " achieved");
-				//			setRowValue(context, R.id.tableRowChallenges, dto.getChallengesWon() + "/" + dto.getChallengesTotal() + " won");
-				//setRowValue(context, R.id.tableRowHardwareMasters, (dto.getHardwareMastersRank() != null ? "#" + dto.getHardwareMastersRank() : "not ranked"));
-			} else {
-				Resources resources = TabFragmentAccount.rootView.getResources();
-				leaguePoints.setText(resources.getString(R.string.not_available));
-				teamPoints.setText(resources.getString(R.string.not_available));
-				worldWideRank.setText(resources.getString(R.string.not_available));
-				nationalRank.setText(resources.getString(R.string.not_available));
-				teamRank.setText(resources.getString(R.string.not_available));
-			}
+			TabFragmentAccount.getInstance().updateUserStats(dto);
 		}
 	}
 

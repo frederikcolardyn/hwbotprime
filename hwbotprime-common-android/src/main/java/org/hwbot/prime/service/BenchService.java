@@ -21,13 +21,14 @@ import org.hwbot.prime.ui.android.AndroidProgressBar;
 import org.hwbot.prime.ui.android.BenchConsole;
 import org.hwbot.prime.ui.android.ViewConsole;
 
+import android.content.Context;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class BenchService implements Runnable {
 
-    public String version = "0.8.3";
+    public String version = "1.0.0";
     public static String HWBOT_APP_CLIENT_DEV_VERSION = "dev";
     protected int availableProcessors;
 
@@ -191,14 +192,14 @@ public class BenchService implements Runnable {
         return new PrimeBenchmark(configuration, Runtime.getRuntime().availableProcessors(), this.progressBar);
     }
 
-    public byte[] getDataFile() {
+    public byte[] getDataFile(Context ctx) {
         byte[] bytes = null;
         // processor speed ignored, not reliable enough...
         // verifyMemoryUnaltered();
         // String xml = createXml(version, processor, processorSpeed, score, deviceName, socName, deviceVendor);
         EncryptionModule encryptionModule = securityService.getEncryptionModule();
         String xml = DataServiceXml.createXml(version, score, hardwareService.getDeviceInfo(), securityService.getCredentials(), encryptionModule);
-        bytes = securityService.encrypt(xml);
+        bytes = securityService.encrypt(xml, ctx);
         return bytes;
     }
 

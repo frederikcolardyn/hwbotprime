@@ -1,10 +1,15 @@
 package org.hwbot.prime;
 
 import static org.hwbot.prime.util.AndroidUtil.dpToPx;
+import static org.hwbot.prime.util.AndroidUtil.relativeTo;
+import static org.hwbot.prime.util.AndroidUtil.relativeToParent;
 
 import java.util.Locale;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.api.bench.dto.DeviceRecordDTO;
+import org.hwbot.api.bench.dto.DeviceRecordDTO.RecordType;
+import org.hwbot.api.bench.dto.DeviceRecordsDTO;
 import org.hwbot.api.generic.dto.SubmissionDTO;
 import org.hwbot.prime.api.CommentObserver;
 import org.hwbot.prime.api.SubmissionRankingAware;
@@ -19,7 +24,9 @@ import org.hwbot.prime.tasks.SubmitVoteTask;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Html;
@@ -29,11 +36,13 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TableRow;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
@@ -121,6 +130,17 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			// android ui bug, call it twice or textswitcher does not resize
 			hardwareLabel.setText(deviceInfo.getProcessor());
 
+			DeviceRecordsDTO personalDeviceRecords = MainActivity.getActivity().loadPersonalRecords();
+			if (personalDeviceRecords != null) {
+				DeviceRecordDTO deviceRecordDTO = personalDeviceRecords.getRecords().get(RecordType.best_device);
+				if (deviceRecordDTO == null || deviceRecordDTO.getScore() == null) {
+					rankLabel.setText(getResources().getString(R.string.not_available));
+				} else {
+					String format = String.format(Locale.ENGLISH, "%.0f PPS", deviceRecordDTO.getScore());
+					rankLabel.setText(format);
+				}
+			}
+
 			compareView.removeAllViews();
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
@@ -143,6 +163,17 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			// android ui bug, call it twice or textswitcher does not resize
 			hardwareLabel.setText(deviceInfo.getProcessorCore());
 
+			DeviceRecordsDTO personalDeviceRecords = MainActivity.getActivity().loadPersonalRecords();
+			if (personalDeviceRecords != null) {
+				DeviceRecordDTO deviceRecordDTO = personalDeviceRecords.getRecords().get(RecordType.best_cpu_core);
+				if (deviceRecordDTO == null || deviceRecordDTO.getScore() == null) {
+					rankLabel.setText(getResources().getString(R.string.not_available));
+				} else {
+					String format = String.format(Locale.ENGLISH, "%.0f PPS", deviceRecordDTO.getScore());
+					rankLabel.setText(format);
+				}
+			}
+
 			compareView.removeAllViews();
 
 			Log.i(this.getClass().getName(), "Loading ranking...");
@@ -164,6 +195,17 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			hardwareLabel.setText(deviceInfo.getProcessorFamily());
 			// android ui bug, call it twice or textswitcher does not resize
 			hardwareLabel.setText(deviceInfo.getProcessorFamily());
+
+			DeviceRecordsDTO personalDeviceRecords = MainActivity.getActivity().loadPersonalRecords();
+			if (personalDeviceRecords != null) {
+				DeviceRecordDTO deviceRecordDTO = personalDeviceRecords.getRecords().get(RecordType.best_cpu_family);
+				if (deviceRecordDTO == null || deviceRecordDTO.getScore() == null) {
+					rankLabel.setText(getResources().getString(R.string.not_available));
+				} else {
+					String format = String.format(Locale.ENGLISH, "%.0f PPS", deviceRecordDTO.getScore());
+					rankLabel.setText(format);
+				}
+			}
 
 			compareView.removeAllViews();
 
@@ -280,6 +322,66 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 						recordLayout.bottomMargin = dpToPx(0);
 						recordSummary.setLayoutParams(recordLayout);
 						recordSummary.setClickable(true);
+
+						TextView rankBox = new TextView(context, null, style);
+						rankBox.setGravity(Gravity.CENTER);
+						rankBox.setText(String.valueOf(rank));
+						rankBox.setTextAppearance(context, style);
+						rankBox.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_LEFT, 8, 10, 8, 10));
+						rankBox.setId(13 * rank);
+
+						ImageView avatar = new ImageView(context);
+						RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(dpToPx(24), dpToPx(24));
+						rankBoxLayout.addRule(RelativeLayout.RIGHT_OF, rankBox.getId());
+						rankBoxLayout.leftMargin = dpToPx(0);
+						rankBoxLayout.topMargin = dpToPx(10);
+						rankBoxLayout.rightMargin = dpToPx(5);
+						rankBoxLayout.bottomMargin = dpToPx(10);
+						avatar.setLayoutParams(rankBoxLayout);
+						avatar.setId(17 * rank);
+
+						if (result.getImage() != null) {
+							try {
+								String url;
+								if (result.getImage().startsWith("http")) {
+									url = result.getImage();
+								} else {
+									url = BenchService.SERVER + result.getImage();
+								}
+								Log.i(this.getClass().getSimpleName(), "Result.getImage(): " + url);
+								avatar.setScaleType(ScaleType.FIT_XY);
+								avatar.setTag(url);
+								new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
+							} catch (Exception e) {
+								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+								e.printStackTrace();
+								avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
+							}
+						} else {
+							avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
+						}
+
+						final TextView user = new TextView(context, null, style);
+						user.setGravity(Gravity.CENTER);
+						user.setText(result.getUser());
+						user.setTextAppearance(context, style);
+						user.setLayoutParams(relativeToParent(RelativeLayout.RIGHT_OF, rankBox.getId(), 30, 10, 10, 10));
+						user.setId(19 * rank);
+
+						final ImageView expandIcon = new ImageView(context);
+						expandIcon.setImageDrawable(MainActivity.activity.getResources().getDrawable(R.drawable.ic_action_expand));
+						// expandIcon.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(40), dpToPx(80)));
+						expandIcon.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_RIGHT, 0, 6, 0, 0));
+						expandIcon.setPadding(dpToPx(0), dpToPx(0), dpToPx(0), dpToPx(0));
+						expandIcon.setDrawingCacheEnabled(true);
+						expandIcon.setId(23 * rank);
+
+						final TextView score = new TextView(context, null, style);
+						score.setGravity(Gravity.CENTER);
+						score.setText(result.getScore().toUpperCase(Locale.ENGLISH));
+						score.setTextAppearance(context, style);
+						score.setLayoutParams(relativeToParent(RelativeLayout.LEFT_OF, expandIcon.getId(), 0, 10, 0, 10));
+
 						recordSummary.setOnClickListener(new View.OnClickListener() {
 
 							@Override
@@ -412,11 +514,45 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 									});
 									actions.addView(likeIcon);
 
+									ImageView infoIcon = new ImageView(context);
+									infoIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_about));
+									infoIcon.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+											LinearLayout.LayoutParams.WRAP_CONTENT));
+									if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+										// only for gingerbread and newer versions
+										infoIcon.setBackground(getResources().getDrawable(R.drawable.container_icon));
+									}
+									infoIcon.setOnClickListener(new View.OnClickListener() {
+										@Override
+										public void onClick(View icon) {
+											Log.i(this.getClass().getSimpleName(), "info me");
+											Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/submission/"
+													+ result.getId()));
+											MainActivity.activity.startActivity(intent);
+										}
+									});
+									actions.addView(infoIcon);
+
 									recordDetails.addView(actions);
 
 									v.setTag(true);
+
+									RotateAnimation anim = new RotateAnimation(0f, 180f, 30f, 30f);
+									anim.setInterpolator(new DecelerateInterpolator());
+									anim.setRepeatCount(0);
+									anim.setDuration(150);
+									anim.setFillAfter(true);
+									expandIcon.startAnimation(anim);
+
 									compareView.addView(recordDetails, compareView.indexOfChild(v) + 1);
 								} else {
+									RotateAnimation anim = new RotateAnimation(180f, 0f, 30f, 30f);
+									anim.setInterpolator(new AccelerateInterpolator());
+									anim.setRepeatCount(0);
+									anim.setDuration(150);
+									anim.setFillAfter(true);
+									expandIcon.startAnimation(anim);
+
 									v.setTag(null);
 									compareView.removeViewAt(compareView.indexOfChild(v) + 1);
 								}
@@ -424,165 +560,11 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 							}
 						});
 
-						TextView rankBox = new TextView(context, null, style);
-						rankBox.setGravity(Gravity.CENTER);
-						rankBox.setText(String.valueOf(rank));
-						rankBox.setTextAppearance(context, style);
-						rankBox.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_LEFT, 15, 10, 10, 10));
-						rankBox.setId(13 * rank);
-
-						ImageView avatar = new ImageView(context);
-						RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(dpToPx(24), dpToPx(24));
-						rankBoxLayout.addRule(RelativeLayout.RIGHT_OF, rankBox.getId());
-						rankBoxLayout.leftMargin = dpToPx(0);
-						rankBoxLayout.topMargin = dpToPx(10);
-						rankBoxLayout.rightMargin = dpToPx(5);
-						rankBoxLayout.bottomMargin = dpToPx(10);
-						avatar.setLayoutParams(rankBoxLayout);
-						avatar.setId(17 * rank);
-
-						if (result.getImage() != null) {
-							try {
-								String url;
-								if (result.getImage().startsWith("http")) {
-									url = result.getImage();
-								} else {
-									url = BenchService.SERVER + result.getImage();
-								}
-								Log.i(this.getClass().getSimpleName(), "Result.getImage(): " + url);
-								avatar.setScaleType(ScaleType.FIT_XY);
-								avatar.setTag(url);
-								new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
-							} catch (Exception e) {
-								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
-								e.printStackTrace();
-								avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
-							}
-						} else {
-							avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
-						}
-
-						TextView user = new TextView(context, null, style);
-						user.setGravity(Gravity.CENTER);
-						user.setText(result.getUser());
-						user.setTextAppearance(context, style);
-						LayoutParams userLayout = relativeToParent(RelativeLayout.RIGHT_OF, rankBox.getId(), 35, 10, 10, 10);
-						user.setLayoutParams(userLayout);
-						user.setId(19 * rank);
-
-						TextView score = new TextView(context, null, style);
-						score.setGravity(Gravity.CENTER);
-						score.setText(result.getScore().toUpperCase(Locale.ENGLISH));
-						score.setTextAppearance(context, style);
-						score.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_RIGHT, 15, 10, 10, 10));
-
-						//						ImageView searchIcon = new ImageView(context, null, R.style.ResultBoxDetails);
-						//						searchIcon.setImageDrawable(MainActivity.activity.getResources().getDrawable(R.drawable.ic_action_about));
-						//						searchIcon.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(40), dpToPx(80)));
-						//						searchIcon.setPadding(dpToPx(0), dpToPx(10), dpToPx(10), dpToPx(0));
-						//						searchIcon.setDrawingCacheEnabled(true);
-						//
-						//
-						//						TextView message = new TextView(context);
-						//						message.setText(Html.fromHtml("<strong>CPU:</strong> " + result.getHardware()
-						//								+ (result.getCpuFreq() != null && result.getCpuFreq() > 0 ? " @ " + result.getCpuFreq() + " MHz" : "")));
-						//						message.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
-						//						message.setTextAppearance(context, style);
-						//						// message.setHorizontallyScrolling(true);
-						//						// message.setSingleLine();
-						//						message.setEllipsize(TruncateAt.END);
-						//						// message.setMaxLines(1);
-						//
-						//						TextView osBuild = null;
-						//						if (result.getOsBuild() != null) {
-						//							osBuild = new TextView(context);
-						//							osBuild.setText(Html.fromHtml("<strong>Android:</strong> " + result.getOsBuild()));
-						//							osBuild.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
-						//							osBuild.setTextAppearance(context, style);
-						//						}
-						//
-						//						TextView kernel = null;
-						//						if (result.getKernel() != null) {
-						//							kernel = new TextView(context);
-						//							kernel.setText(Html.fromHtml("<strong>Kernel:</strong> " + result.getKernel()));
-						//							kernel.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
-						//							kernel.setTextAppearance(context, style);
-						//							kernel.setMaxLines(2);
-						//							kernel.setEllipsize(TruncateAt.END);
-						//						}
-						//
-						//						TextView description = null;
-						//						if (result.getDescription() != null) {
-						//							description = new TextView(context);
-						//							description.setText("\"" + result.getDescription() + "\"");
-						//							description.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
-						//							description.setTextAppearance(context, style);
-						//							description.setMaxLines(2);
-						//							description.setEllipsize(TruncateAt.END);
-						//						}
-						//
-						//						LinearLayout layoutUser = new LinearLayout(context);
-						//						layoutUser.setOrientation(LinearLayout.HORIZONTAL);
-						//
-						//						if (result.getCountry() != null) {
-						//							try {
-						//								// cache drawables?
-						//								// int topMargin = 17;
-						//								ImageView imageView = new ImageView(context, null, R.style.ResultBoxFlag);
-						//								// LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(34 + topMargin, 22);
-						//								// params.topMargin = topMargin;
-						//								// imageView.setLayoutParams(params);
-						//								imageView.setDrawingCacheEnabled(true);
-						//								layoutUser.addView(imageView);
-						//
-						//								try {
-						//									// InputStream ims = MainActivity.activity.getAssets().open(countryFile);
-						//									String drawableName = "org.hwbot.prime:drawable/country_" + result.getCountry().toLowerCase(Locale.ENGLISH);
-						//									int resId = getResources().getIdentifier(drawableName, null, null);
-						//									if (resId == 0) {
-						//										Log.w(this.getClass().getSimpleName(), "No drawable by name " + drawableName);
-						//									}
-						//									Drawable d = getResources().getDrawable(resId);
-						//									//									Drawable d = Drawable.createFromPath("country_" + result.getCountry().toLowerCase(Locale.ENGLISH) + ".png");
-						//									imageView.setImageDrawable(d);
-						//									Log.d(this.getClass().getSimpleName(), "Loading local file " + result.getCountry());
-						//								} catch (Exception ex) {
-						//									String countryFile = "img/country/" + result.getCountry().toLowerCase(Locale.ENGLISH) + ".png";
-						//									String url = BenchService.SERVER + "/" + countryFile;
-						//									Log.d(this.getClass().getSimpleName(), "Loading remote url " + url);
-						//									imageView.setTag(url);
-						//									new ImageLoaderTask().execute(imageView);
-						//								}
-						//							} catch (Exception e) {
-						//								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
-						//								e.printStackTrace();
-						//							}
-						//						} else {
-						//							Log.i(this.getClass().getSimpleName(), "No country image.");
-						//						}
-						//						layoutUser.addView(user);
-						//
-						//						searchIcon.setOnClickListener(new OnClickListener() {
-						//							@Override
-						//							public void onClick(View v) {
-						//								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/submission/" + result.getId()));
-						//								MainActivity.activity.startActivity(intent);
-						//							}
-						//						});
 						recordSummary.addView(rankBox);
 						recordSummary.addView(avatar);
 						recordSummary.addView(user);
+						recordSummary.addView(expandIcon);
 						recordSummary.addView(score);
-						//						if (kernel != null) {
-						//							layoutHorizontal.addView(kernel);
-						//						}
-						//						if (osBuild != null) {
-						//							layoutHorizontal.addView(osBuild);
-						//						}
-						//						if (description != null) {
-						//							layoutHorizontal.addView(description);
-						//						}
-						//						layoutHorizontal.addView(searchIcon);
 
 						compareView.addView(recordSummary);
 
@@ -590,31 +572,6 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 					}
 				}
 
-				public RelativeLayout.LayoutParams relativeTo(int align, Integer... margins) {
-					RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-							RelativeLayout.LayoutParams.WRAP_CONTENT);
-					rankBoxLayout.addRule(align);
-					if (margins != null && margins.length == 4) {
-						rankBoxLayout.leftMargin = dpToPx(margins[0]);
-						rankBoxLayout.topMargin = dpToPx(margins[1]);
-						rankBoxLayout.rightMargin = dpToPx(margins[2]);
-						rankBoxLayout.bottomMargin = dpToPx(margins[3]);
-					}
-					return rankBoxLayout;
-				}
-
-				public RelativeLayout.LayoutParams relativeToParent(int align, int parentId, Integer... margins) {
-					RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-							RelativeLayout.LayoutParams.WRAP_CONTENT);
-					rankBoxLayout.addRule(align, parentId);
-					if (margins != null && margins.length == 4) {
-						rankBoxLayout.leftMargin = dpToPx(margins[0]);
-						rankBoxLayout.topMargin = dpToPx(margins[1]);
-						rankBoxLayout.rightMargin = dpToPx(margins[2]);
-						rankBoxLayout.bottomMargin = dpToPx(margins[3]);
-					}
-					return rankBoxLayout;
-				}
 			});
 		}
 

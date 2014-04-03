@@ -6,6 +6,6 @@ public interface EncryptionModule {
 
     public void addChecksum(Request request);
 
-    public byte[] encrypt(byte[] bytes);
+    public byte[] encrypt(byte[] bytes, Object arg);
 
 }

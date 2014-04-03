@@ -1,11 +1,14 @@
 package org.hwbot.prime.util;
 
+import static org.hwbot.prime.util.AndroidUtil.dpToPx;
+
 import org.hwbot.prime.MainActivity;
 
 import android.text.Spanned;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class AndroidUtil {
@@ -41,6 +44,32 @@ public class AndroidUtil {
 				view.setText(String.valueOf(text));
 			}
 		}
+	}
+	
+	public static RelativeLayout.LayoutParams relativeTo(int align, Integer... margins) {
+		RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+				RelativeLayout.LayoutParams.WRAP_CONTENT);
+		rankBoxLayout.addRule(align);
+		if (margins != null && margins.length == 4) {
+			rankBoxLayout.leftMargin = dpToPx(margins[0]);
+			rankBoxLayout.topMargin = dpToPx(margins[1]);
+			rankBoxLayout.rightMargin = dpToPx(margins[2]);
+			rankBoxLayout.bottomMargin = dpToPx(margins[3]);
+		}
+		return rankBoxLayout;
+	}
+
+	public static RelativeLayout.LayoutParams relativeToParent(int align, int parentId, Integer... margins) {
+		RelativeLayout.LayoutParams rankBoxLayout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+				RelativeLayout.LayoutParams.WRAP_CONTENT);
+		rankBoxLayout.addRule(align, parentId);
+		if (margins != null && margins.length == 4) {
+			rankBoxLayout.leftMargin = dpToPx(margins[0]);
+			rankBoxLayout.topMargin = dpToPx(margins[1]);
+			rankBoxLayout.rightMargin = dpToPx(margins[2]);
+			rankBoxLayout.bottomMargin = dpToPx(margins[3]);
+		}
+		return rankBoxLayout;
 	}
 
 }

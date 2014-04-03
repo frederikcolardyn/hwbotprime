@@ -3,7 +3,9 @@ package org.hwbot.prime;
 import java.util.Locale;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.api.bench.dto.DeviceRecordsDTO;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
+import org.hwbot.api.bench.dto.UserStatsDTO;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.api.VersionStatusAware;
@@ -72,6 +74,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static final String PREFS_NAME = "HWBOTPrimePreferences";
 	public static final String SETTINGS_TOKEN = "token";
 	public static final String SETTINGS_DEVICE = "device";
+	public static final String SETTINGS_STATS = "stats";
+	public static final String SETTINGS_RECORDS = "deviceRecords";
+	public static final String SETTINGS_RECORDS_PERSONAL = "deviceRecordsPersonal";
 	public static final String SETTINGS_BEST_SCORE = "bestScore";
 	public static final String COMPETE_INFO = "compete_info";
 	public static final String MY_INFO = "my_info";
@@ -363,7 +368,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
 		if (bench.getScore() != null && bestScore == null || bestScore.getScore() < bench.getScore().floatValue()) {
 			try {
-				byte[] dataFile = bench.getDataFile();
+				byte[] dataFile = bench.getDataFile(this.getApplicationContext());
 				BenchmarkResult benchmarkResult = new BenchmarkResult();
 				benchmarkResult.setDate(System.currentTimeMillis());
 				benchmarkResult.setEncryptedXml(dataFile);
@@ -635,5 +640,77 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public Drawable getAnonymousIcon() {
 		return getResources().getDrawable(R.drawable.ic_action_person);
+	}
+
+	public void storeUserStats(UserStatsDTO dto) {
+		if (dto != null) {
+			Log.i(this.getClass().getSimpleName(), "Storing user stats.");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(SETTINGS_STATS, new Gson().toJson(dto));
+
+			// Commit the edits!
+			editor.commit();
+		}
+	}
+
+	public UserStatsDTO loadUserStats() {
+		Log.i(this.getClass().getSimpleName(), "Loading user stats info.");
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		String info = settings.getString(SETTINGS_STATS, null);
+		if (info != null) {
+			UserStatsDTO fromJson = new Gson().fromJson(info, UserStatsDTO.class);
+			return fromJson;
+		} else {
+			return null;
+		}
+	}
+
+	public void storePersonalRecords(DeviceRecordsDTO dto) {
+		if (dto != null) {
+			Log.i(this.getClass().getSimpleName(), "Storing device personal records stats.");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(SETTINGS_RECORDS_PERSONAL, new Gson().toJson(dto));
+
+			// Commit the edits!
+			editor.commit();
+		}
+	}
+
+	public void storeRecords(DeviceRecordsDTO dto) {
+		if (dto != null) {
+			Log.i(this.getClass().getSimpleName(), "Storing device records stats.");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(SETTINGS_RECORDS, new Gson().toJson(dto));
+
+			// Commit the edits!
+			editor.commit();
+		}
+	}
+
+	public DeviceRecordsDTO loadPersonalRecords() {
+		Log.i(this.getClass().getSimpleName(), "Loading personal records info.");
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		String info = settings.getString(SETTINGS_RECORDS_PERSONAL, null);
+		if (info != null) {
+			DeviceRecordsDTO fromJson = new Gson().fromJson(info, DeviceRecordsDTO.class);
+			return fromJson;
+		} else {
+			return null;
+		}
+	}
+
+	public DeviceRecordsDTO loadRecords() {
+		Log.i(this.getClass().getSimpleName(), "Loading records info.");
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		String info = settings.getString(SETTINGS_RECORDS, null);
+		if (info != null) {
+			DeviceRecordsDTO fromJson = new Gson().fromJson(info, DeviceRecordsDTO.class);
+			return fromJson;
+		} else {
+			return null;
+		}
 	}
 }

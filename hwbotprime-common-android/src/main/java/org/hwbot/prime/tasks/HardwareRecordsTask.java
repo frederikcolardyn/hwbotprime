@@ -33,8 +33,8 @@ public class HardwareRecordsTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     public Void doInBackground(Void... param) {
-        if (deviceId == null) {
-            Log.w(this.getClass().getSimpleName(), "No device loaded, can not load records.");
+        if (deviceId == null || observer == null) {
+            Log.w(this.getClass().getSimpleName(), "No device or observer loaded, can not load records.");
             return null;
         }
         Reader reader = null;

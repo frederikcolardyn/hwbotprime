@@ -152,6 +152,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			// updateOfflineMode();
 			updateDeviceInfo();
 			updateShowPersonalRecords();
+			loadRecordsFromStore();
 
 			// cpu load bars
 			AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
@@ -179,6 +180,18 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			restartMonitorCpuFrequency();
 		}
 		return rootView;
+	}
+
+	public void loadRecordsFromStore() {
+		DeviceRecordsDTO personalDeviceRecords = MainActivity.getActivity().loadPersonalRecords();
+		if (personalDeviceRecords != null) {
+			updatePersonalScores(personalDeviceRecords.getRecords());
+		}
+
+		DeviceRecordsDTO deviceRecords = MainActivity.getActivity().loadRecords();
+		if (deviceRecords != null) {
+			updateScores(deviceRecords.getRecords());
+		}
 	}
 
 	public void updateShowPersonalRecords() {
@@ -268,8 +281,8 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 										toast("Personal record! Log in to compete on leaderboard.");
 									}
 									try {
-										new SubmitResultTask(MainActivity.activity, submissionStatusAware, BenchService.getInstance().getDataFile())
-												.execute((Void) null);
+										new SubmitResultTask(MainActivity.activity, submissionStatusAware, BenchService.getInstance().getDataFile(
+												MainActivity.getActivity().getApplicationContext())).execute((Void) null);
 									} catch (Exception e) {
 										Log.e(this.getClass().getSimpleName(), "Failed to submit " + e.getMessage());
 										e.printStackTrace();
@@ -434,7 +447,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				Log.i(this.getClass().getSimpleName(), response.toString());
 			} else {
 				if (org.apache.commons.lang.StringUtils.isNotEmpty(response.getMessage())) {
-					toast("Error: " + response.getMessage());
+					toast(response.getMessage());
 				} else {
 					toast("Sorry, can not contact HWBOT. :(");
 				}
@@ -540,8 +553,10 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void notifyDevicePersonalRecords(final DeviceRecordsDTO records) {
-		if (MainActivity.activity != null) {
-			MainActivity.activity.runOnUiThread(new Runnable() {
+
+		if (MainActivity.getActivity() != null) {
+			MainActivity.getActivity().storePersonalRecords(records);
+			MainActivity.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					Map<RecordType, DeviceRecordDTO> hwbotPrimeRecordsPersonal = records.getRecords();
@@ -599,4 +614,5 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	public String getDeviceIdentification() {
 		return Build.MANUFACTURER + " - " + Build.MODEL + " - " + Build.PRODUCT + " -- " + AndroidHardwareService.getInstance().getHardwareFromCpuInfo();
 	}
+
 }

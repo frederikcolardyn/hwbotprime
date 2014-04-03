@@ -6,7 +6,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_bench">BenchActivity</string>
-    <string name="title_activity_main">HWBOT Prime BETA</string>
+    <string name="title_activity_main">HWBOT Prime</string>
     <string name="action_settings">About</string>
     <string name="action_reset">Clear cache</string>
     <string name="action_logout">Logout</string>
@@ -73,7 +73,7 @@
     <string name="compete_signin_button">Sign in</string>
     
     <string name="leaderboard_hardware">HARDWARE</string>
-	<string name="leaderboard_rank">RANK</string>
+	<string name="leaderboard_rank">MY BEST</string>
 	<string name="benchmark">MY RECORDS</string>
 	<string name="benchmark_worldwide">WORLDWIDE RECORDS</string>
 	

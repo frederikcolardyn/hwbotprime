@@ -1,7 +1,10 @@
 package org.hwbot.prime;
 
+import java.util.Locale;
+
 import org.apache.commons.lang.StringUtils;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
+import org.hwbot.api.bench.dto.UserStatsDTO;
 import org.hwbot.prime.api.CommentObserver;
 import org.hwbot.prime.api.VoteObserver;
 import org.hwbot.prime.service.BenchService;
@@ -12,6 +15,7 @@ import org.hwbot.prime.tasks.UserLoginTask;
 import org.hwbot.prime.tasks.UserStatsLoaderTask;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -59,12 +63,16 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	public static View rootView;
 
 	public TextSwitcher leaguePoints, teamPoints, worldWideRank, nationalRank, teamRank;
+	public static TabFragmentAccount fragment;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		Log.i(this.getClass().getSimpleName(), "Creating account tab.");
 		// Set up the login form.
 		rootView = inflater.inflate(R.layout.fragment_main_account, container, false);
+
+		fragment = this;
+
 		mEmail = MainActivity.activity.getIntent().getStringExtra(EXTRA_EMAIL);
 		mEmailView = (EditText) rootView.findViewById(R.id.email);
 		mEmailView.setText(mEmail != null ? mEmail : MainActivity.username);
@@ -220,6 +228,12 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			}
 
 			ViewGroup notificationContainer = (ViewGroup) TabFragmentAccount.rootView.findViewById(R.id.notifications);
+
+			UserStatsDTO userStatsDTO = MainActivity.getActivity().loadUserStats();
+			if (userStatsDTO != null) {
+				updateUserStats(userStatsDTO);
+			}
+
 			notificationContainer.removeAllViews();
 			NotificationLoaderTask notificationLoaderTask = new NotificationLoaderTask(this);
 			notificationLoaderTask.execute((String) null);
@@ -359,6 +373,39 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 				textSwitcher.setText(String.valueOf(++currentVotes));
 			}
 		});
+	}
+
+	public static TabFragmentAccount getInstance() {
+		return fragment;
+	}
+
+	public void updateUserStats(UserStatsDTO dto) {
+		TextSwitcher leaguePoints, teamPoints, worldWideRank, nationalRank, teamRank;
+		leaguePoints = (TextSwitcher) rootView.findViewById(R.id.tableRowLeagePoints);
+		teamPoints = (TextSwitcher) rootView.findViewById(R.id.tableRowTeamPowerPoints);
+		worldWideRank = (TextSwitcher) rootView.findViewById(R.id.tableRowWorlWideRank);
+		nationalRank = (TextSwitcher) rootView.findViewById(R.id.tableRowNationalRank);
+		teamRank = (TextSwitcher) rootView.findViewById(R.id.tableRowTeamRank);
+
+		if (dto != null) {
+			Log.i(this.getClass().getSimpleName(), "Updating user stats: " + dto);
+			teamPoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getTeamPowerPoints() != null ? dto.getTeamPowerPoints() : 0f));
+			leaguePoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getLeaguePoints() != null ? dto.getLeaguePoints() : 0f));
+			worldWideRank.setText((dto.getLeagueRank() != null ? "#" + dto.getLeagueRank() : "not ranked"));
+			nationalRank.setText((dto.getLeagueNationalRank() != null ? "#" + dto.getLeagueNationalRank() : "not ranked"));
+			teamRank.setText((dto.getLeagueTeamRank() != null ? "#" + dto.getLeagueTeamRank() : "not ranked"));
+
+			//			setRowValue(context, R.id.tableRowAchievements, dto.getAchievements() + "/" + dto.getAchievementsTotal() + " achieved");
+			//			setRowValue(context, R.id.tableRowChallenges, dto.getChallengesWon() + "/" + dto.getChallengesTotal() + " won");
+			//setRowValue(context, R.id.tableRowHardwareMasters, (dto.getHardwareMastersRank() != null ? "#" + dto.getHardwareMastersRank() : "not ranked"));
+		} else {
+			Resources resources = rootView.getResources();
+			leaguePoints.setText(resources.getString(R.string.not_available));
+			teamPoints.setText(resources.getString(R.string.not_available));
+			worldWideRank.setText(resources.getString(R.string.not_available));
+			nationalRank.setText(resources.getString(R.string.not_available));
+			teamRank.setText(resources.getString(R.string.not_available));
+		}
 	}
 
 }

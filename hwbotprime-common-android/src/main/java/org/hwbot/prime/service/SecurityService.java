@@ -13,6 +13,7 @@ import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.tasks.LoginTokenTask;
 
+import android.content.Context;
 import android.util.Log;
 
 public class SecurityService {
@@ -74,12 +75,12 @@ public class SecurityService {
         return encryptionModule;
     }
 
-    public byte[] encrypt(String xml) {
+    public byte[] encrypt(String xml, Context ctx) {
         try {
             byte[] bytes;
             if (encryptionModule != null) {
                 Log.i(this.getClass().getSimpleName(), "Encrypting xml:\n" + xml);
-                bytes = encryptionModule.encrypt(xml.getBytes("utf8"));
+                bytes = encryptionModule.encrypt(xml.getBytes("utf8"), ctx);
             } else {
                 Log.e(this.getClass().getSimpleName(), "Encryption disabled!");
                 bytes = xml.getBytes("utf8");
