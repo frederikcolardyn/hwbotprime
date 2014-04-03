@@ -66,7 +66,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.i(this.getClass().getSimpleName(), "creating tab fragment bench.");
+		// Log.i(this.getClass().getSimpleName(), "creating tab fragment bench.");
 		rootView = inflater.inflate(R.layout.fragment_main_bench, container, false);
 		View benchbutton = rootView.findViewById(R.id.benchbutton);
 		benchbutton.requestFocus();
@@ -196,10 +196,10 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	public void updateShowPersonalRecords() {
 		if (SecurityService.getInstance().isLoggedIn()) {
-			Log.i(this.getClass().getSimpleName(), "Show my records.");
+			// Log.i(this.getClass().getSimpleName(), "Show my records.");
 			rootView.findViewById(R.id.myRecords).setVisibility(View.VISIBLE);
 		} else {
-			Log.i(this.getClass().getSimpleName(), "Do not show personal records.");
+			// Log.i(this.getClass().getSimpleName(), "Do not show personal records.");
 			rootView.findViewById(R.id.myRecords).setVisibility(View.GONE);
 		}
 	}
@@ -207,11 +207,11 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	private void updateDeviceInfo() {
 		DeviceInfoDTO deviceInfo = MainActivity.activity.loadDeviceInfo();
 		if (deviceInfo == null || deviceInfo.getId() == null) {
-			Log.i(this.getClass().getName(), "Submitting hardware detection task...");
+			// Log.i(this.getClass().getName(), "Submitting hardware detection task...");
 			HardwareDetectionTask hardwareDetectionTask = new HardwareDetectionTask(MainActivity.activity, this);
 			hardwareDetectionTask.execute(Build.MODEL);
 		} else {
-			Log.i(this.getClass().getName(), "Loaded device info from cache.");
+			// Log.i(this.getClass().getName(), "Loaded device info from cache.");
 			presentDeviceInfo(deviceInfo);
 		}
 	}
@@ -224,16 +224,16 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 		@Override
 		public void onClick(View v) {
 			try {
-				Log.i(this.getClass().getName(), "Starting benchmark");
+				// Log.i(this.getClass().getName(), "Starting benchmark");
 				Button text = (Button) rootView.findViewById(R.id.benchbutton);
 				text.setText("Running benchmark...");
 				// text.refreshDrawableState();
 				ProgressBar progressbar = (ProgressBar) rootView.findViewById(R.id.progressBar1);
 				progressbar.setProgress(0);
-				Log.i(this.getClass().getSimpleName(), "Using benchmark: " + BenchService.getInstance() + " with progress bar: " + progressbar);
+				// Log.i(this.getClass().getSimpleName(), "Using benchmark: " + BenchService.getInstance() + " with progress bar: " + progressbar);
 				BenchService.getInstance().initialize(text, progressbar, benchUI);
 
-				Log.i(this.getClass().getName(), "Submitting worker...");
+				// Log.i(this.getClass().getName(), "Submitting worker...");
 				BenchmarkTask benchmarkTask = new BenchmarkTask(benchUI, BenchService.getInstance().instantiateBenchmark());
 
 				ExecutorService exec = Executors.newFixedThreadPool(2, new ThreadFactory() {
@@ -249,19 +249,19 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				exec.submit(benchmarkTask);
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};
 
 	@Override
 	public void notifyBenchmarkFinished(final Number score) {
-		Log.i(this.getClass().getSimpleName(), "New score: " + score);
+		// Log.i(this.getClass().getSimpleName(), "New score: " + score);
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					Log.i(this.getClass().getSimpleName(), "Displaying score: " + score);
+					// Log.i(this.getClass().getSimpleName(), "Displaying score: " + score);
 					Button text = (Button) rootView.findViewById(R.id.benchbutton);
 					text.setText(String.format(Locale.ENGLISH, "%.0f Primes Per Second", score));
 					BenchService.getInstance().setScore(score.intValue());
@@ -284,7 +284,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 										new SubmitResultTask(MainActivity.activity, submissionStatusAware, BenchService.getInstance().getDataFile(
 												MainActivity.getActivity().getApplicationContext())).execute((Void) null);
 									} catch (Exception e) {
-										Log.e(this.getClass().getSimpleName(), "Failed to submit " + e.getMessage());
+										// Log.e(this.getClass().getSimpleName(), "Failed to submit " + e.getMessage());
 										e.printStackTrace();
 									}
 								} else {
@@ -300,12 +300,12 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 			});
 		} else {
-			Log.e(this.getClass().getSimpleName(), "No main activity!");
+			// Log.e(this.getClass().getSimpleName(), "No main activity!");
 		}
 	}
 
 	public void updateScoreIfBetter(Float score) {
-		Log.i(this.getClass().getSimpleName(), "Updating score if better: " + score);
+		// Log.i(this.getClass().getSimpleName(), "Updating score if better: " + score);
 		setScoreIfBetter(bestPhoneMe, score);
 		setScoreIfBetter(bestCoreMe, score);
 		setScoreIfBetter(bestFamilyMe, score);
@@ -326,7 +326,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 		Float score = (bestScore != null && bestScore.getScore() > 0) ? bestScore.getScore() : null;
 
 		if (hwbotPrimeRecordsPersonal != null && !hwbotPrimeRecordsPersonal.isEmpty()) {
-			Log.i(this.getClass().getSimpleName(), "My records: " + hwbotPrimeRecordsPersonal + " keys: " + hwbotPrimeRecordsPersonal.keySet());
+			// Log.i(this.getClass().getSimpleName(), "My records: " + hwbotPrimeRecordsPersonal + " keys: " + hwbotPrimeRecordsPersonal.keySet());
 			if (hwbotPrimeRecordsPersonal.get(RecordType.best_device) != null) {
 				if (score == null || score < hwbotPrimeRecordsPersonal.get(RecordType.best_device).getScore()) {
 					setScore(bestPhoneMe, hwbotPrimeRecordsPersonal.get(RecordType.best_device));
@@ -351,7 +351,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 			}
 			setScore(switcher, score.getScore());
 		} else {
-			Log.w(this.getClass().getSimpleName(), "Score null.");
+			// Log.w(this.getClass().getSimpleName(), "Score null.");
 		}
 	}
 
@@ -383,7 +383,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void notifyDeviceInfo(final DeviceInfoDTO deviceInfo) {
-		Log.i(this.getClass().getSimpleName(), "Device: " + deviceInfo);
+		// Log.i(this.getClass().getSimpleName(), "Device: " + deviceInfo);
 		AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
 
 		MainActivity.activity.storeDeviceInfo(deviceInfo);
@@ -400,7 +400,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void notifyDeviceInfoFailed(final Status status) {
-		Log.i(this.getClass().getSimpleName(), "Failed to load device info: " + status);
+		// Log.i(this.getClass().getSimpleName(), "Failed to load device info: " + status);
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
@@ -444,14 +444,14 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	public void notifySubmissionDone(SubmitResponse response) {
 		if (response != null) {
 			if (response.isSuccess()) {
-				Log.i(this.getClass().getSimpleName(), response.toString());
+				// Log.i(this.getClass().getSimpleName(), response.toString());
 			} else {
 				if (org.apache.commons.lang.StringUtils.isNotEmpty(response.getMessage())) {
 					toast(response.getMessage());
 				} else {
 					toast("Sorry, can not contact HWBOT. :(");
 				}
-				Log.e(this.getClass().getSimpleName(), "Communication error: " + response.getTechnicalMessage());
+				// Log.e(this.getClass().getSimpleName(), "Communication error: " + response.getTechnicalMessage());
 			}
 		} else {
 			toast("Communication with HWBOT failed. :(");
@@ -460,7 +460,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	// monitor
 	public void startMonitor() {
-		Log.i(this.getClass().getSimpleName(), "Restarting hardware monitor.");
+		// Log.i(this.getClass().getSimpleName(), "Restarting hardware monitor.");
 		monitorThreadHandler = new Handler();
 		monitorTask = new Runnable() {
 			public void run() {
@@ -472,11 +472,11 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 					try {
 						Thread.sleep(500);
 					} catch (InterruptedException e) {
-						Log.i(this.getClass().getSimpleName(), "Stopping monitoring task...");
+						// Log.i(this.getClass().getSimpleName(), "Stopping monitoring task...");
 						Thread.currentThread().interrupt();
 					}
 				}
-				Log.i(this.getClass().getSimpleName(), "Stopped monitoring task.");
+				// Log.i(this.getClass().getSimpleName(), "Stopped monitoring task.");
 			}
 		};
 		monitorThread = new Thread(monitorTask);
@@ -486,13 +486,13 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	public void stopMonitorCpuFrequency() {
 		try {
 			if (monitorTask != null) {
-				Log.i(this.getClass().getSimpleName(), "Stop task: " + monitorTask);
+				// Log.i(this.getClass().getSimpleName(), "Stop task: " + monitorTask);
 				monitorThreadHandler.removeCallbacks(AndroidHardwareService.getInstance());
 				monitorThread.interrupt();
 				monitorTask = null;
 			}
 		} catch (Exception e) {
-			Log.e(this.getClass().getSimpleName(), "Failed to stop monitoring task.");
+			// Log.e(this.getClass().getSimpleName(), "Failed to stop monitoring task.");
 		}
 	}
 
@@ -536,7 +536,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 					(deviceInfo.getRam() != null ? deviceInfo.getRam() + " MB" : getResources().getString(R.string.unknown)));
 		} else {
 			toast("Unkown phone. Leaderboards not available.");
-			Log.w(this.getClass().getSimpleName(), "No device info: " + deviceInfo);
+			// Log.w(this.getClass().getSimpleName(), "No device info: " + deviceInfo);
 		}
 	}
 
@@ -561,7 +561,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				public void run() {
 					Map<RecordType, DeviceRecordDTO> hwbotPrimeRecordsPersonal = records.getRecords();
 					if (hwbotPrimeRecordsPersonal != null && !hwbotPrimeRecordsPersonal.isEmpty()) {
-						Log.i(this.getClass().getSimpleName(), "Updating personal: " + hwbotPrimeRecordsPersonal);
+						// Log.i(this.getClass().getSimpleName(), "Updating personal: " + hwbotPrimeRecordsPersonal);
 						setScore(bestPhoneMe, hwbotPrimeRecordsPersonal.get(RecordType.best_device));
 						setScore(bestCoreMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_core));
 						setScore(bestFamilyMe, hwbotPrimeRecordsPersonal.get(RecordType.best_cpu_family));
@@ -582,7 +582,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 				public void run() {
 					Map<RecordType, DeviceRecordDTO> hwbotPrimeRecords = records.getRecords();
 					if (hwbotPrimeRecords != null) {
-						Log.i(this.getClass().getSimpleName(), "Updating WR: " + hwbotPrimeRecords);
+						// Log.i(this.getClass().getSimpleName(), "Updating WR: " + hwbotPrimeRecords);
 						setScore(bestPhone, hwbotPrimeRecords.get(RecordType.best_device));
 						setScore(bestCore, hwbotPrimeRecords.get(RecordType.best_cpu_core));
 						setScore(bestFamily, hwbotPrimeRecords.get(RecordType.best_cpu_family));
@@ -607,7 +607,7 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 
 	@Override
 	public void onViewStateRestored(Bundle savedInstanceState) {
-		Log.i(this.getClass().getSimpleName(), "View state restored.");
+		// Log.i(this.getClass().getSimpleName(), "View state restored.");
 		super.onViewStateRestored(savedInstanceState);
 	}
 

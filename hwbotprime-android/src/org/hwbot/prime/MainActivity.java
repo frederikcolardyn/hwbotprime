@@ -146,7 +146,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	private void restoreSettings(SharedPreferences settings) {
-		Log.i(this.getClass().getSimpleName(), "Restoring settings.");
+		// Log.i(this.getClass().getSimpleName(), "Restoring settings.");
 		username = settings.getString("username", null);
 		TabFragmentAccount.mEmail = username;
 		String token = settings.getString(SETTINGS_TOKEN, null);
@@ -158,7 +158,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
 				}
 			} catch (Exception e) {
-				Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
+				// Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -167,7 +167,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public DeviceInfoDTO loadDeviceInfo() {
-		Log.i(this.getClass().getSimpleName(), "Loading device info.");
+		// Log.i(this.getClass().getSimpleName(), "Loading device info.");
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String info = settings.getString(SETTINGS_DEVICE, null);
 		if (info != null) {
@@ -180,7 +180,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public void storeDeviceInfo(DeviceInfoDTO deviceInfo) {
 		if (deviceInfo != null) {
-			Log.i(this.getClass().getSimpleName(), "Storing device info with records.");
+			// Log.i(this.getClass().getSimpleName(), "Storing device info with records.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putString(SETTINGS_DEVICE, new Gson().toJson(deviceInfo));
@@ -191,7 +191,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	private void storeSettings(SharedPreferences settings) {
-		Log.i(this.getClass().getSimpleName(), "Storing settings.");
+		// Log.i(this.getClass().getSimpleName(), "Storing settings.");
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putString("username", username);
 		if (SecurityService.getInstance().isLoggedIn()) {
@@ -215,7 +215,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
 		// When the given tab is selected, switch to the corresponding page in
 		// the ViewPager.
-		Log.i(this.getClass().getSimpleName(), "Tab selected: " + tab.getText() + " #" + tab.getPosition());
+		// Log.i(this.getClass().getSimpleName(), "Tab selected: " + tab.getText() + " #" + tab.getPosition());
 		mViewPager.setCurrentItem(tab.getPosition());
 		prepareTab(tab);
 	}
@@ -234,18 +234,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			tabFragmentAccount.prepareView();
 			break;
 		default:
-			Log.e(this.getClass().getSimpleName(), "unkown tab");
+			// Log.e(this.getClass().getSimpleName(), "unkown tab");
 		}
 	}
 
 	@Override
 	public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-		Log.i(this.getClass().getSimpleName(), "Unselected: " + tab.getText() + " #" + tab.getPosition());
+		// Log.i(this.getClass().getSimpleName(), "Unselected: " + tab.getText() + " #" + tab.getPosition());
 	}
 
 	@Override
 	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-		Log.i(this.getClass().getSimpleName(), "Tab reselected: " + tab.getText() + " #" + tab.getPosition());
+		// Log.i(this.getClass().getSimpleName(), "Tab reselected: " + tab.getText() + " #" + tab.getPosition());
 		// prepareTab(tab);
 	}
 
@@ -268,30 +268,30 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			switch (position) {
 			case 0:
 				if (tabFragmentBench == null) {
-					Log.i(this.getClass().getSimpleName(), "creating bench tab");
+					// Log.i(this.getClass().getSimpleName(), "creating bench tab");
 					tabFragmentBench = new TabFragmentBench();
 				} else {
-					Log.i(this.getClass().getSimpleName(), "reusing bench tab");
+					// Log.i(this.getClass().getSimpleName(), "reusing bench tab");
 				}
 				return tabFragmentBench;
 			case 1:
 				if (tabFragmentCompare == null) {
-					Log.i(this.getClass().getSimpleName(), "creating compare tab");
+					// Log.i(this.getClass().getSimpleName(), "creating compare tab");
 					tabFragmentCompare = new TabFragmentCompare();
 				} else {
-					Log.i(this.getClass().getSimpleName(), "reusing compare tab");
+					// Log.i(this.getClass().getSimpleName(), "reusing compare tab");
 				}
 				return tabFragmentCompare;
 			case 2:
 				if (tabFragmentLoggedAccount == null) {
-					Log.i(this.getClass().getSimpleName(), "creating account tab");
+					// Log.i(this.getClass().getSimpleName(), "creating account tab");
 					tabFragmentLoggedAccount = new TabFragmentAccount();
 				} else {
-					Log.i(this.getClass().getSimpleName(), "reusing account tab");
+					// Log.i(this.getClass().getSimpleName(), "reusing account tab");
 				}
 				return tabFragmentLoggedAccount;
 			default:
-				Log.e(this.getClass().getSimpleName(), "creating default tab");
+				// Log.e(this.getClass().getSimpleName(), "creating default tab");
 				return null;
 			}
 		}
@@ -328,7 +328,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void notifyPersistentLoginOk(PersistentLoginDTO credentials) {
-		Log.i(this.getClass().getSimpleName(), "Login OK: " + credentials);
+		// Log.i(this.getClass().getSimpleName(), "Login OK: " + credentials);
 		// notification?
 		SecurityService.getInstance().setCredentials(credentials);
 		// reload hardware stats
@@ -341,7 +341,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void notifyPersistentLoginFailed(String message) {
-		Log.w(this.getClass().getSimpleName(), "Login NOT ok: " + message);
+		// Log.w(this.getClass().getSimpleName(), "Login NOT ok: " + message);
 		// notification?
 		SecurityService.getInstance().setCredentials(null);
 	}
@@ -365,7 +365,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public boolean updateBestScore() throws UnsignedAppException {
 		BenchmarkResult bestScore = getBestScore();
-		Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
+		// Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
 		if (bench.getScore() != null && bestScore == null || bestScore.getScore() < bench.getScore().floatValue()) {
 			try {
 				byte[] dataFile = bench.getDataFile(this.getApplicationContext());
@@ -378,10 +378,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
 				edit.putString(SETTINGS_BEST_SCORE, new Gson().toJson(benchmarkResult));
 				edit.commit();
-				Log.i(this.getClass().getSimpleName(), "Updated best score to " + benchmarkResult);
+				// Log.i(this.getClass().getSimpleName(), "Updated best score to " + benchmarkResult);
 				return true;
 			} catch (Exception e) {
-				Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
+				// Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
 				throw new UnsignedAppException();
 			}
 		} else {
@@ -400,7 +400,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				edit.commit();
 				return true;
 			} else {
-				Log.w(this.getClass().getSimpleName(), "Best score was already submitted!");
+				// Log.w(this.getClass().getSimpleName(), "Best score was already submitted!");
 				return false;
 			}
 
@@ -418,7 +418,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				benchmarkResult = new Gson().fromJson(bestScoreJson, BenchmarkResult.class);
 			}
 		} catch (Exception e) {
-			Log.w(this.getClass().getSimpleName(), "Best score can not be restored: " + e.getMessage());
+			// Log.w(this.getClass().getSimpleName(), "Best score can not be restored: " + e.getMessage());
 			Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
 			edit.remove(SETTINGS_BEST_SCORE);
 			edit.commit();
@@ -431,19 +431,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Editor edit = sharedPreferences.edit();
 		edit.putBoolean("offline_mode", offlineMode);
 		edit.commit();
-		Log.w(this.getClass().getSimpleName(), "Saved offline mode: " + offlineMode);
+		// Log.w(this.getClass().getSimpleName(), "Saved offline mode: " + offlineMode);
 	}
 
 	public boolean isOfflineMode() {
 		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
 		boolean offlineMode = sharedPreferences.getBoolean("offline_mode", false);
-		Log.w(this.getClass().getSimpleName(), "Loaded offline mode: " + offlineMode);
+		// Log.w(this.getClass().getSimpleName(), "Loaded offline mode: " + offlineMode);
 		return offlineMode;
 	}
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		Log.i(this.getClass().getSimpleName(), "Preparing options menu, logged in " + SecurityService.getInstance().isLoggedIn());
+		// Log.i(this.getClass().getSimpleName(), "Preparing options menu, logged in " + SecurityService.getInstance().isLoggedIn());
 		menu.getItem(1).setVisible(SecurityService.getInstance().isLoggedIn());
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -456,11 +456,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			logout();
 			return true;
 		case R.id.action_reset:
-			Log.i(this.getClass().getSimpleName(), "Reset best score.");
+			// Log.i(this.getClass().getSimpleName(), "Reset best score.");
 			resetSettings();
 			return true;
 		case R.id.offlinemode:
-			Log.i(this.getClass().getSimpleName(), "Offline mode " + item.getClass().getSimpleName());
+			// Log.i(this.getClass().getSimpleName(), "Offline mode " + item.getClass().getSimpleName());
 			updateOfflineMode();
 			return true;
 		case R.id.action_settings:
@@ -473,7 +473,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	private void updateOfflineMode() {
 		MenuItem menuItem = (MenuItem) MainActivity.menu.findItem(R.id.offlinemode);
-		Log.i(this.getClass().getSimpleName(), "Offline mode: " + menuItem);
+		// Log.i(this.getClass().getSimpleName(), "Offline mode: " + menuItem);
 		if (menuItem != null) {
 			//		CheckBox checkBox = (CheckBox) rootView.findViewById(R.id.offlineModeButton);
 			menuItem.setChecked(this.isOfflineMode());
@@ -501,7 +501,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
+				// Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
 			}
 			return true;
 		}
@@ -512,13 +512,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	public void setOffline() {
 		MainActivity.this.setOfflineMode(true);
-		Log.i(this.getClass().getSimpleName(), "Offline mode: " + MainActivity.this.findViewById(R.id.offlinemode));
+		// Log.i(this.getClass().getSimpleName(), "Offline mode: " + MainActivity.this.findViewById(R.id.offlinemode));
 		CheckBox checkBox = (CheckBox) MainActivity.this.findViewById(R.id.offlinemode);
 		checkBox.setChecked(true);
 	}
 
 	private void logout() {
-		Log.i(this.getClass().getSimpleName(), "Logging out.");
+		// Log.i(this.getClass().getSimpleName(), "Logging out.");
 		SecurityService.getInstance().setCredentials(null);
 		resetToken();
 		TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(2);
@@ -526,7 +526,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public void loggedIn() {
-		Log.i(this.getClass().getSimpleName(), "Logged in.");
+		// Log.i(this.getClass().getSimpleName(), "Logged in.");
 		TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(2);
 		tabFragmentAccount.prepareView();
 	}
@@ -537,7 +537,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 				@Override
 				public void run() {
-					Log.i(this.getClass().getSimpleName(), "Show network popup.");
+					// Log.i(this.getClass().getSimpleName(), "Show network popup.");
 					boolean noLooper = Looper.myLooper() == null;
 					if (noLooper) {
 						Looper.prepare();
@@ -548,7 +548,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					builder.setTitle(R.string.no_network_title);
 					builder.setPositiveButton(R.string.no_network_btn, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							Log.i(NoNetworkDialog.class.getSimpleName(), "Okay...");
+							// Log.i(NoNetworkDialog.class.getSimpleName(), "Okay...");
 						}
 					});
 					AlertDialog dialog = builder.create();
@@ -559,7 +559,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				};
 			});
 		} else {
-			Log.i(this.getClass().getSimpleName(), "Network popup already shown.");
+			// Log.i(this.getClass().getSimpleName(), "Network popup already shown.");
 		}
 	}
 
@@ -578,7 +578,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 			@Override
 			public void run() {
-				Log.i(this.getClass().getSimpleName(), "A new version is available, update " + (updateRequired ? "REQUIRED." : "NOT required."));
+				// Log.i(this.getClass().getSimpleName(), "A new version is available, update " + (updateRequired ? "REQUIRED." : "NOT required."));
 				boolean noLooper = Looper.myLooper() == null;
 				if (noLooper) {
 					Looper.prepare();
@@ -594,14 +594,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 				builder.setPositiveButton(R.string.new_version_upgrade, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
-						Log.i(NoNetworkDialog.class.getSimpleName(), "Opening " + url + " for update.");
+						// Log.i(NoNetworkDialog.class.getSimpleName(), "Opening " + url + " for update.");
 						Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
 						MainActivity.this.startActivity(intent);
 					}
 				});
 				builder.setNegativeButton(R.string.new_version_cancel, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
-						Log.i(NoNetworkDialog.class.getSimpleName(), "Do not update...");
+						// Log.i(NoNetworkDialog.class.getSimpleName(), "Do not update...");
 					}
 				});
 				AlertDialog dialog = builder.create();
@@ -644,7 +644,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public void storeUserStats(UserStatsDTO dto) {
 		if (dto != null) {
-			Log.i(this.getClass().getSimpleName(), "Storing user stats.");
+			// Log.i(this.getClass().getSimpleName(), "Storing user stats.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putString(SETTINGS_STATS, new Gson().toJson(dto));
@@ -655,7 +655,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public UserStatsDTO loadUserStats() {
-		Log.i(this.getClass().getSimpleName(), "Loading user stats info.");
+		// Log.i(this.getClass().getSimpleName(), "Loading user stats info.");
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String info = settings.getString(SETTINGS_STATS, null);
 		if (info != null) {
@@ -668,7 +668,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public void storePersonalRecords(DeviceRecordsDTO dto) {
 		if (dto != null) {
-			Log.i(this.getClass().getSimpleName(), "Storing device personal records stats.");
+			// Log.i(this.getClass().getSimpleName(), "Storing device personal records stats.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putString(SETTINGS_RECORDS_PERSONAL, new Gson().toJson(dto));
@@ -680,7 +680,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public void storeRecords(DeviceRecordsDTO dto) {
 		if (dto != null) {
-			Log.i(this.getClass().getSimpleName(), "Storing device records stats.");
+			// Log.i(this.getClass().getSimpleName(), "Storing device records stats.");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putString(SETTINGS_RECORDS, new Gson().toJson(dto));
@@ -691,7 +691,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public DeviceRecordsDTO loadPersonalRecords() {
-		Log.i(this.getClass().getSimpleName(), "Loading personal records info.");
+		// Log.i(this.getClass().getSimpleName(), "Loading personal records info.");
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String info = settings.getString(SETTINGS_RECORDS_PERSONAL, null);
 		if (info != null) {
@@ -703,7 +703,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	public DeviceRecordsDTO loadRecords() {
-		Log.i(this.getClass().getSimpleName(), "Loading records info.");
+		// Log.i(this.getClass().getSimpleName(), "Loading records info.");
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String info = settings.getString(SETTINGS_RECORDS, null);
 		if (info != null) {

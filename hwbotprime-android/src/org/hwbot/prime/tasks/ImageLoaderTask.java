@@ -53,10 +53,10 @@ public class ImageLoaderTask extends AsyncTask<ImageView, Void, Void> {
 					}
 				});
 			} catch (UnknownHostException e) {
-				Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+				// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 				MainActivity.activity.showNetworkPopupOnce();
 			} catch (Exception e) {
-				Log.e(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+				// Log.e(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 				e.printStackTrace();
 			}
 		}

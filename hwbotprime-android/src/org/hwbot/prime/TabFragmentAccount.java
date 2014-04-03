@@ -67,7 +67,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.i(this.getClass().getSimpleName(), "Creating account tab.");
+		// Log.i(this.getClass().getSimpleName(), "Creating account tab.");
 		// Set up the login form.
 		rootView = inflater.inflate(R.layout.fragment_main_account, container, false);
 
@@ -162,19 +162,19 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	}
 
 	public void prepareViewAsLoggedOut() {
-		Log.i(this.getClass().getSimpleName(), "prepareViewAsLoggedOut");
+		// Log.i(this.getClass().getSimpleName(), "prepareViewAsLoggedOut");
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
 			loginView.setVisibility(ScrollView.VISIBLE);
 			loggedInView.setVisibility(ScrollView.GONE);
 		} else {
-			Log.e(this.getClass().getSimpleName(), "rootview null");
+			// Log.e(this.getClass().getSimpleName(), "rootview null");
 		}
 	}
 
 	public void prepareViewAsLoggedIn() {
-		Log.i(this.getClass().getSimpleName(), "prepareViewAsLoggedIn");
+		// Log.i(this.getClass().getSimpleName(), "prepareViewAsLoggedIn");
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
@@ -219,7 +219,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 					avatar.setTag(url);
 					new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 				} catch (Exception e) {
-					Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+					// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 					e.printStackTrace();
 					avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 				}
@@ -240,13 +240,13 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			UserStatsLoaderTask userStatsLoaderTask = new UserStatsLoaderTask(this);
 			userStatsLoaderTask.execute((Void) null);
 		} else {
-			Log.e(this.getClass().getSimpleName(), "rootview null");
+			// Log.e(this.getClass().getSimpleName(), "rootview null");
 		}
 	}
 
 	@Override
 	public void onViewStateRestored(Bundle savedInstanceState) {
-		Log.i(this.getClass().getSimpleName(), "View state restored.");
+		// Log.i(this.getClass().getSimpleName(), "View state restored.");
 		super.onViewStateRestored(savedInstanceState);
 	}
 
@@ -255,7 +255,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	 */
 	public void attemptLogin(String providerId) {
 		String url = BenchService.SERVER + "/signin/" + providerId + "/remote?platform=android";
-		Log.i(this.getClass().getSimpleName(), "Logging in using " + url);
+		// Log.i(this.getClass().getSimpleName(), "Logging in using " + url);
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.setData(Uri.parse(url));
 		startActivity(i);
@@ -388,7 +388,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 		teamRank = (TextSwitcher) rootView.findViewById(R.id.tableRowTeamRank);
 
 		if (dto != null) {
-			Log.i(this.getClass().getSimpleName(), "Updating user stats: " + dto);
+			// Log.i(this.getClass().getSimpleName(), "Updating user stats: " + dto);
 			teamPoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getTeamPowerPoints() != null ? dto.getTeamPowerPoints() : 0f));
 			leaguePoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getLeaguePoints() != null ? dto.getLeaguePoints() : 0f));
 			worldWideRank.setText((dto.getLeagueRank() != null ? "#" + dto.getLeagueRank() : "not ranked"));

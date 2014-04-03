@@ -38,22 +38,22 @@ public class UserStatsLoaderTask extends AsyncTask<Void, Void, UserStatsDTO> {
 		BufferedReader reader = null;
 		try {
 			if (SecurityService.getInstance().isLoggedIn()) {
-				Log.i(this.getClass().getSimpleName(), "Credentials: " + SecurityService.getInstance().getCredentials());
+				// Log.i(this.getClass().getSimpleName(), "Credentials: " + SecurityService.getInstance().getCredentials());
 				URL url = new URL(BenchService.SERVER + "/api/user/stats?userId=" + SecurityService.getInstance().getCredentials().getUserId()
 						+ (params.length > 0 && params[0] != null ? "&from=" + params[0] : ""));
-				Log.i(this.getClass().getSimpleName(), "Loading user stats from: " + url);
+				// Log.i(this.getClass().getSimpleName(), "Loading user stats from: " + url);
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 				UserStatsDTO userStatsDTO = new Gson().fromJson(reader, UserStatsDTO.class);
-				Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
+				// Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
 				return userStatsDTO;
 			} else {
-				Log.w(this.getClass().getSimpleName(), "Not logged in.");
+				// Log.w(this.getClass().getSimpleName(), "Not logged in.");
 				return null;
 			}
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
-			Log.e(this.getClass().getSimpleName(), "Failed to load user stats: " + e.getMessage());
+			// Log.e(this.getClass().getSimpleName(), "Failed to load user stats: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			try {

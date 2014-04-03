@@ -14,7 +14,7 @@ public class NoNetworkDialog extends DialogFragment {
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setMessage(R.string.no_network).setPositiveButton(R.string.no_network_btn, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				Log.i(NoNetworkDialog.class.getSimpleName(), "okay");
+				// Log.i(NoNetworkDialog.class.getSimpleName(), "okay");
 			}
 		});
 		// Create the AlertDialog object and return it

@@ -88,7 +88,7 @@ public class CommentDialog extends DialogFragment {
 				public void onClick(DialogInterface dialog, int id) {
 					EditText editText = (EditText) view.findViewById(R.id.commentInput);
 					String text = editText.getText().toString();
-					Log.i(this.getClass().getSimpleName(), "Posting comment: " + text + " for target " + target + " / " + targetId);
+					// Log.i(this.getClass().getSimpleName(), "Posting comment: " + text + " for target " + target + " / " + targetId);
 
 					chatIcon.setAlpha(1.0f);
 

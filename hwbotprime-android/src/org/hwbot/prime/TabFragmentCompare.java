@@ -61,7 +61,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.i("CREATE", "compare tab");
+		// Log.i("CREATE", "compare tab");
 
 		tabFragment = this;
 
@@ -107,11 +107,11 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 	public void showLeaderboardIfDeviceInfoPresent() {
 		// check hardware available or not
 		if (AndroidHardwareService.getInstance().getDeviceInfo() != null) {
-			Log.i(this.getClass().getSimpleName(), "Device info present.");
+			// Log.i(this.getClass().getSimpleName(), "Device info present.");
 			rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.VISIBLE);
 			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.GONE);
 		} else {
-			Log.i(this.getClass().getSimpleName(), "Device info present not present.");
+			// Log.i(this.getClass().getSimpleName(), "Device info present not present.");
 			rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.GONE);
 			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.VISIBLE);
 		}
@@ -143,7 +143,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 			compareView.removeAllViews();
 
-			Log.i(this.getClass().getName(), "Loading ranking...");
+			// Log.i(this.getClass().getName(), "Loading ranking...");
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&hardwareType=processor&target=android&hardwareId="
 					+ deviceInfo.getProcessorId());
@@ -176,7 +176,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 			compareView.removeAllViews();
 
-			Log.i(this.getClass().getName(), "Loading ranking...");
+			// Log.i(this.getClass().getName(), "Loading ranking...");
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
 					+ deviceInfo.getProcessorId() + "&coreId=" + deviceInfo.getProcessorCoreId());
@@ -209,7 +209,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 			compareView.removeAllViews();
 
-			Log.i(this.getClass().getName(), "Loading ranking...");
+			// Log.i(this.getClass().getName(), "Loading ranking...");
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
 					+ deviceInfo.getProcessorId() + "&familyId=" + deviceInfo.getProcessorFamilyId());
@@ -221,7 +221,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		@Override
 		public void onClick(View v) {
 			try {
-				Log.i(this.getClass().getName(), "Compare processor");
+				// Log.i(this.getClass().getName(), "Compare processor");
 				if (!compareProcessorButton.isChecked()) {
 					compareProcessorButton.toggle();
 				}
@@ -235,7 +235,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 
@@ -245,7 +245,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		@Override
 		public void onClick(View v) {
 			try {
-				Log.i(this.getClass().getName(), "Compare core");
+				// Log.i(this.getClass().getName(), "Compare core");
 				if (!compareCoreButton.isChecked()) {
 					compareCoreButton.toggle();
 				}
@@ -259,7 +259,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorCoreRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};
@@ -268,7 +268,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		@Override
 		public void onClick(View v) {
 			try {
-				Log.i(this.getClass().getName(), "Compare family");
+				// Log.i(this.getClass().getName(), "Compare family");
 				if (!compareFamilyButton.isChecked()) {
 					compareFamilyButton.toggle();
 				}
@@ -282,7 +282,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorFamilyRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};
@@ -290,14 +290,14 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 	@SuppressLint("NewApi")
 	@Override
 	public void notifySubmissionRanking(final SubmissionRanking ranking) {
-		// Log.i(this.getClass().getSimpleName(), "Submission ranking: " + ranking);
+		// // Log.i(this.getClass().getSimpleName(), "Submission ranking: " + ranking);
 
 		if (MainActivity.activity != null) {
 			MainActivity.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					final Context context = rootView.getContext();
-					Log.i(this.getClass().getSimpleName(), "List: " + ranking.getList().size());
+					// Log.i(this.getClass().getSimpleName(), "List: " + ranking.getList().size());
 
 					final ViewFactory textSwitcherViewFactory = new ViewFactory() {
 						public View makeView() {
@@ -348,12 +348,12 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 								} else {
 									url = BenchService.SERVER + result.getImage();
 								}
-								Log.i(this.getClass().getSimpleName(), "Result.getImage(): " + url);
+								// Log.i(this.getClass().getSimpleName(), "Result.getImage(): " + url);
 								avatar.setScaleType(ScaleType.FIT_XY);
 								avatar.setTag(url);
 								new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 							} catch (Exception e) {
-								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+								// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 								e.printStackTrace();
 								avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 							}
@@ -386,7 +386,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 							@Override
 							public void onClick(View v) {
-								Log.i(this.getClass().getSimpleName(), "Clicked on " + result);
+								// Log.i(this.getClass().getSimpleName(), "Clicked on " + result);
 
 								if (v.getTag() == null) {
 									RelativeLayout recordDetails = new RelativeLayout(context, null, R.style.leaderboardText);
@@ -474,7 +474,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 									chatIcon.setOnClickListener(new View.OnClickListener() {
 										@Override
 										public void onClick(View v) {
-											Log.i(this.getClass().getSimpleName(), "click me");
+											// Log.i(this.getClass().getSimpleName(), "click me");
 											v.setAlpha(0.4f);
 											CommentDialog commentDialog = new CommentDialog();
 											commentDialog.setTarget("submission");
@@ -506,7 +506,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 									likeIcon.setOnClickListener(new View.OnClickListener() {
 										@Override
 										public void onClick(View icon) {
-											Log.i(this.getClass().getSimpleName(), "like me");
+											// Log.i(this.getClass().getSimpleName(), "like me");
 											icon.setAlpha(0.4f);
 											new SubmitVoteTask(String.valueOf(result.getId()), "submission", icon, likes, TabFragmentCompare.this)
 													.execute((Void) null);
@@ -525,7 +525,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 									infoIcon.setOnClickListener(new View.OnClickListener() {
 										@Override
 										public void onClick(View icon) {
-											Log.i(this.getClass().getSimpleName(), "info me");
+											// Log.i(this.getClass().getSimpleName(), "info me");
 											Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/submission/"
 													+ result.getId()));
 											MainActivity.activity.startActivity(intent);

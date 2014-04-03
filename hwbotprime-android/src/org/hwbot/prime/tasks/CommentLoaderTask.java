@@ -41,7 +41,7 @@ public class CommentLoaderTask extends AsyncTask<Void, Void, Void> {
 		try {
 			URL commentsApiUrl = new URL(BenchService.SERVER + "/external/v3?type=comments&target=android&params=" + tag);
 			in = new BufferedReader(new InputStreamReader(commentsApiUrl.openStream()));
-			Log.i(this.getClass().getSimpleName(), "Loading comments from url: " + commentsApiUrl);
+			// Log.i(this.getClass().getSimpleName(), "Loading comments from url: " + commentsApiUrl);
 			final JsonpApiResponse response = new Gson().fromJson(in, JsonpApiResponse.class);
 
 			if (response != null) {
@@ -51,7 +51,7 @@ public class CommentLoaderTask extends AsyncTask<Void, Void, Void> {
 						Context context = commentBox.getContext();
 						commentBox.removeAllViews();
 						List<Object> list = response.getList();
-						Log.i(this.getClass().getSimpleName(), "Loaded " + list.size() + " comments.");
+						// Log.i(this.getClass().getSimpleName(), "Loaded " + list.size() + " comments.");
 						int row = 1;
 						if (list.size() == 0) {
 							TextView noComments = new TextView(context);
@@ -69,7 +69,7 @@ public class CommentLoaderTask extends AsyncTask<Void, Void, Void> {
 						for (Object object : list) {
 							@SuppressWarnings("unchecked")
 							Map<String, String> comment = (Map<String, String>) object;
-							Log.i(this.getClass().getSimpleName(), comment.toString());
+							// Log.i(this.getClass().getSimpleName(), comment.toString());
 							RelativeLayout linearLayout = new RelativeLayout(context);
 							RelativeLayout.LayoutParams authorLayout = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
 									LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -119,9 +119,9 @@ public class CommentLoaderTask extends AsyncTask<Void, Void, Void> {
 			}
 
 		} catch (UnknownHostException e) {
-			Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
+			// Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
 		} catch (Exception e) {
-			Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
+			// Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			try {

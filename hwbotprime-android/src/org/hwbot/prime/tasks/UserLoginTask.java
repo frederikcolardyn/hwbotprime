@@ -44,7 +44,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 				PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
 				return loginToken;
 			} catch (Exception e) {
-				Log.e(this.getClass().getSimpleName(), "Login not succesful: " + e.getMessage());
+				// Log.e(this.getClass().getSimpleName(), "Login not succesful: " + e.getMessage());
 				e.printStackTrace();
 			} finally {
 				if (reader != null) {
@@ -54,7 +54,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
-			Log.e(this.getClass().getSimpleName(), "Failed to authenticate: " + e.getMessage());
+			// Log.e(this.getClass().getSimpleName(), "Failed to authenticate: " + e.getMessage());
 			e.printStackTrace();
 		}
 		return null;
@@ -66,7 +66,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 		this.tabFragmentAccount.showProgress(false);
 		if (persistentLogin != null && persistentLogin.getToken() != null) {
 			SecurityService.getInstance().setCredentials(persistentLogin);
-			Log.i(this.getClass().getSimpleName(), "Logged in " + SecurityService.getInstance().getCredentials().getToken());
+			// Log.i(this.getClass().getSimpleName(), "Logged in " + SecurityService.getInstance().getCredentials().getToken());
 			MainActivity.activity.loggedIn();
 		} else {
 			this.tabFragmentAccount.mPasswordView.setError(this.tabFragmentAccount.getString(org.hwbot.prime.R.string.error_incorrect_password));

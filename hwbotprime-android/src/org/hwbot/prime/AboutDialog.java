@@ -14,7 +14,7 @@ public class AboutDialog extends DialogFragment {
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setMessage(R.string.about_text).setTitle(R.string.about_title).setPositiveButton(R.string.about_btn, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
-				Log.i(AboutDialog.class.getSimpleName(), "okay");
+				// Log.i(AboutDialog.class.getSimpleName(), "okay");
 			}
 		});
 		// Create the AlertDialog object and return it

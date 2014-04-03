@@ -72,10 +72,10 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 			if (credentials != null && credentials.getUserId() != null) {
 				URL url = new URL(BenchService.SERVER + "/api/notification?userId=" + credentials.getUserId()
 						+ (params.length > 0 && params[0] != null ? "&from=" + params[0] : ""));
-				Log.i(this.getClass().getSimpleName(), "Loading notifications from: " + url);
+				// Log.i(this.getClass().getSimpleName(), "Loading notifications from: " + url);
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 				NotificationsDTO notificationsDto = new Gson().fromJson(reader, NotificationsDTO.class);
-				Log.i(this.getClass().getSimpleName(), "Loaded " + notificationsDto.getList().size() + " notifications.");
+				// Log.i(this.getClass().getSimpleName(), "Loaded " + notificationsDto.getList().size() + " notifications.");
 				return notificationsDto.getList();
 			} else {
 				return Collections.emptyList();
@@ -83,7 +83,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
-			Log.e(this.getClass().getSimpleName(), "Failed to load notifications: " + e.getMessage());
+			// Log.e(this.getClass().getSimpleName(), "Failed to load notifications: " + e.getMessage());
 		} finally {
 			try {
 				reader.close();
@@ -165,12 +165,12 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 						} else {
 							url = BenchService.SERVER + notificationDTO.getImage();
 						}
-						Log.i(this.getClass().getSimpleName(), "notificationDTO.getImage(): " + url);
+						// Log.i(this.getClass().getSimpleName(), "notificationDTO.getImage(): " + url);
 						avatar.setScaleType(ScaleType.FIT_XY);
 						avatar.setTag(url);
 						new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 					} catch (Exception e) {
-						Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+						// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 						e.printStackTrace();
 						avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 					}
@@ -260,7 +260,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 
 					@Override
 					public void onClick(View v) {
-						Log.i(this.getClass().getSimpleName(), "Clicked on " + notificationDTO);
+						// Log.i(this.getClass().getSimpleName(), "Clicked on " + notificationDTO);
 
 						if (v.getTag() == null) {
 
@@ -317,7 +317,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 							// comments
 							for (NotificationDTO comment : notificationDTO.getComments()) {
 								TextView view = new TextView(context);
-								Log.i(this.getClass().getSimpleName(), comment.toString());
+								// Log.i(this.getClass().getSimpleName(), comment.toString());
 								view.setText(Html.fromHtml("<b>" + comment.getUser() + "</b>: " + comment.getMessage()));
 								// view.setCompoundDrawablesWithIntrinsicBounds(resources.getDrawable(R.drawable.ic_action_person), null, null, null);
 								view.setPadding(dpToPx(20), dpToPx(0), dpToPx(5), dpToPx(5));
@@ -339,7 +339,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 								infoIcon.setOnClickListener(new View.OnClickListener() {
 									@Override
 									public void onClick(View icon) {
-										Log.i(this.getClass().getSimpleName(), "info me");
+										// Log.i(this.getClass().getSimpleName(), "info me");
 										Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BenchService.SERVER_MOBILE + "/" + notificationDTO.getLink()));
 										MainActivity.activity.startActivity(intent);
 									}
@@ -389,7 +389,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 				row++;
 			}
 		} else {
-			Log.e(this.getClass().getSimpleName(), "Can not show notifications: " + tabFragmentAccount.getView());
+			// Log.e(this.getClass().getSimpleName(), "Can not show notifications: " + tabFragmentAccount.getView());
 		}
 	}
 }
