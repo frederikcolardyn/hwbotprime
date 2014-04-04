@@ -19,7 +19,7 @@ public class AndroidUtil {
 			int padding_in_px = (int) (padding_in_dp * scale + 0.5f);
 			return padding_in_px;
 		} else {
-			// Log.w(AndroidUtil.class.getSimpleName(), "can not get display metrics");
+			Log.w(AndroidUtil.class.getSimpleName(), "can not get display metrics");
 			return padding_in_dp;
 		}
 	}

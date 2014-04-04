@@ -44,7 +44,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 				PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
 				return loginToken;
 			} catch (Exception e) {
-				// Log.e(this.getClass().getSimpleName(), "Login not succesful: " + e.getMessage());
+				Log.e(this.getClass().getSimpleName(), "Login not succesful: " + e.getMessage());
 				e.printStackTrace();
 			} finally {
 				if (reader != null) {
@@ -54,7 +54,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
-			// Log.e(this.getClass().getSimpleName(), "Failed to authenticate: " + e.getMessage());
+			Log.e(this.getClass().getSimpleName(), "Failed to authenticate: " + e.getMessage());
 			e.printStackTrace();
 		}
 		return null;

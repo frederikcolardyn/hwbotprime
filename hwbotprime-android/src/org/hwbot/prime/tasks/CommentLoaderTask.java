@@ -119,9 +119,9 @@ public class CommentLoaderTask extends AsyncTask<Void, Void, Void> {
 			}
 
 		} catch (UnknownHostException e) {
-			// Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
+			Log.w(this.getClass().getSimpleName(), "No network access: " + e.getMessage());
 		} catch (Exception e) {
-			// Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
+			Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			try {

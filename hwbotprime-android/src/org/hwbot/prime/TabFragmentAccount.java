@@ -13,6 +13,7 @@ import org.hwbot.prime.tasks.ImageLoaderTask;
 import org.hwbot.prime.tasks.NotificationLoaderTask;
 import org.hwbot.prime.tasks.UserLoginTask;
 import org.hwbot.prime.tasks.UserStatsLoaderTask;
+import org.hwbot.prime.util.AndroidUtil;
 
 import android.content.Intent;
 import android.content.res.Resources;
@@ -150,6 +151,8 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 		worldWideRank.setText(getResources().getString(R.string.not_available));
 		nationalRank.setText(getResources().getString(R.string.not_available));
 		teamRank.setText(getResources().getString(R.string.not_available));
+
+		// prepareView();
 		return rootView;
 	}
 
@@ -169,7 +172,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			loginView.setVisibility(ScrollView.VISIBLE);
 			loggedInView.setVisibility(ScrollView.GONE);
 		} else {
-			// Log.e(this.getClass().getSimpleName(), "rootview null");
+			Log.e(this.getClass().getSimpleName(), "rootview null");
 		}
 	}
 
@@ -207,6 +210,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			personalInfoBox.addView(league);
 
 			ImageView avatar = (ImageView) rootView.findViewById(R.id.avatarIcon);
+			// Log.i(ImageLoaderTask.class.getSimpleName(), "credentials.getAvatar(): " + credentials.getAvatar());
 			if (StringUtils.isNotEmpty(credentials.getAvatar())) {
 				try {
 					String url;
@@ -215,11 +219,12 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 					} else {
 						url = BenchService.SERVER + credentials.getAvatar();
 					}
+					// Log.i(ImageLoaderTask.class.getSimpleName(), "url: " + url);
 					avatar.setScaleType(ScaleType.FIT_XY);
 					avatar.setTag(url);
 					new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 				} catch (Exception e) {
-					// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+					Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 					e.printStackTrace();
 					avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 				}
@@ -235,12 +240,26 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			}
 
 			notificationContainer.removeAllViews();
+			TextView noComments = new TextView(rootView.getContext());
+			noComments.setText(R.string.loading);
+			LinearLayout.LayoutParams authorLayout = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+					LinearLayout.LayoutParams.WRAP_CONTENT);
+			authorLayout.topMargin = AndroidUtil.dpToPx(20);
+			authorLayout.bottomMargin = AndroidUtil.dpToPx(20);
+			authorLayout.gravity = Gravity.CENTER;
+			noComments.setLayoutParams(authorLayout);
+			noComments.setGravity(Gravity.CENTER);
+			notificationContainer.addView(noComments);
+
+			if (userStatsDTO == null) {
+				UserStatsLoaderTask userStatsLoaderTask = new UserStatsLoaderTask(this);
+				userStatsLoaderTask.execute((Void) null);
+			}
+
 			NotificationLoaderTask notificationLoaderTask = new NotificationLoaderTask(this);
 			notificationLoaderTask.execute((String) null);
-			UserStatsLoaderTask userStatsLoaderTask = new UserStatsLoaderTask(this);
-			userStatsLoaderTask.execute((Void) null);
 		} else {
-			// Log.e(this.getClass().getSimpleName(), "rootview null");
+			Log.e(this.getClass().getSimpleName(), "rootview null");
 		}
 	}
 

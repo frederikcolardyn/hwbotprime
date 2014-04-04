@@ -159,7 +159,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					AndroidHardwareService.getInstance().setDeviceInfo(deviceInfo);
 				}
 			} catch (Exception e) {
-				// Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
+				Log.e(this.getClass().getSimpleName(), "Failed to restore device info: " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -228,14 +228,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			break;
 		case 1:
 			TabFragmentCompare tabFragmentCompare = (TabFragmentCompare) mSectionsPagerAdapter.getItem(tab.getPosition());
-			tabFragmentCompare.prepareView();
+			if (tabFragmentCompare.isVisible()){
+				tabFragmentCompare.prepareView();
+			}
 			break;
 		case 2:
 			TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(tab.getPosition());
-			tabFragmentAccount.prepareView();
+			if (tabFragmentAccount.isVisible()){
+				tabFragmentAccount.prepareView();
+			}
 			break;
 		default:
-			// Log.e(this.getClass().getSimpleName(), "unkown tab");
+			Log.e(this.getClass().getSimpleName(), "unkown tab");
 		}
 	}
 
@@ -292,7 +296,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 				return tabFragmentLoggedAccount;
 			default:
-				// Log.e(this.getClass().getSimpleName(), "creating default tab");
+				Log.e(this.getClass().getSimpleName(), "creating default tab");
 				return null;
 			}
 		}
@@ -334,7 +338,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SecurityService.getInstance().setCredentials(credentials);
 		// reload hardware stats
 		DeviceInfoDTO deviceInfo = loadDeviceInfo();
-		if (deviceInfo != null && deviceInfo.getId() != null) {
+		if (deviceInfo != null && deviceInfo.getId() != null && loadPersonalRecords() == null) {
 			new HardwareRecordsTask(this, TabFragmentBench.getInstance(), deviceInfo.getId(), credentials.getUserId()).execute((Void) null);
 		}
 		TabFragmentBench.getInstance().updateShowPersonalRecords();
@@ -342,7 +346,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void notifyPersistentLoginFailed(String message) {
-		// Log.w(this.getClass().getSimpleName(), "Login NOT ok: " + message);
+		Log.w(this.getClass().getSimpleName(), "Login NOT ok: " + message);
 		// notification?
 		SecurityService.getInstance().setCredentials(null);
 	}
@@ -401,7 +405,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				edit.commit();
 				return true;
 			} else {
-				// Log.w(this.getClass().getSimpleName(), "Best score was already submitted!");
+				Log.w(this.getClass().getSimpleName(), "Best score was already submitted!");
 				return false;
 			}
 
@@ -419,7 +423,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				benchmarkResult = new Gson().fromJson(bestScoreJson, BenchmarkResult.class);
 			}
 		} catch (Exception e) {
-			// Log.w(this.getClass().getSimpleName(), "Best score can not be restored: " + e.getMessage());
+			Log.w(this.getClass().getSimpleName(), "Best score can not be restored: " + e.getMessage());
 			Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
 			edit.remove(SETTINGS_BEST_SCORE);
 			edit.commit();
@@ -432,13 +436,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Editor edit = sharedPreferences.edit();
 		edit.putBoolean("offline_mode", offlineMode);
 		edit.commit();
-		// Log.w(this.getClass().getSimpleName(), "Saved offline mode: " + offlineMode);
+		Log.w(this.getClass().getSimpleName(), "Saved offline mode: " + offlineMode);
 	}
 
 	public boolean isOfflineMode() {
 		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
 		boolean offlineMode = sharedPreferences.getBoolean("offline_mode", false);
-		// Log.w(this.getClass().getSimpleName(), "Loaded offline mode: " + offlineMode);
+		Log.w(this.getClass().getSimpleName(), "Loaded offline mode: " + offlineMode);
 		return offlineMode;
 	}
 
@@ -507,7 +511,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				// Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
+				Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
 			}
 			return true;
 		}

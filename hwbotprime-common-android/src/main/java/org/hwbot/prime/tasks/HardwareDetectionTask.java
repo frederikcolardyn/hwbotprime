@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 public class HardwareDetectionTask extends AsyncTask<String, Void, DeviceInfoDTO> {
 
     public static String deviceName;
-    public static int maxAttempts = 3;
+    public static int maxAttempts = 10;
     private HardwareStatusAware observer;
     private final NetworkStatusAware networkStatusAware;
 

@@ -28,7 +28,7 @@ import android.widget.TextView;
 
 public class BenchService implements Runnable {
 
-    public String version = "1.0.0";
+    public String version = "1.0.1";
     public static String HWBOT_APP_CLIENT_DEV_VERSION = "dev";
     protected int availableProcessors;
 

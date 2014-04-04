@@ -21,6 +21,7 @@ import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.tasks.ImageLoaderTask;
 import org.hwbot.prime.tasks.RankingLoaderTask;
 import org.hwbot.prime.tasks.SubmitVoteTask;
+import org.hwbot.prime.util.AndroidUtil;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -108,7 +109,9 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 		// check hardware available or not
 		if (AndroidHardwareService.getInstance().getDeviceInfo() != null) {
 			// Log.i(this.getClass().getSimpleName(), "Device info present.");
-			rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.VISIBLE);
+			if (!SecurityService.getInstance().isLoggedIn()) {
+				rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.VISIBLE);
+			}
 			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.GONE);
 		} else {
 			// Log.i(this.getClass().getSimpleName(), "Device info present not present.");
@@ -147,8 +150,23 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&hardwareType=processor&target=android&hardwareId="
 					+ deviceInfo.getProcessorId());
+			rankingLoading();
+
 			rankingLoaderTask.execute((Void) null);
 		}
+	}
+
+	public void rankingLoading() {
+		compareView.removeAllViews();
+		TextView noComments = new TextView(rootView.getContext());
+		noComments.setText(R.string.loading);
+		LinearLayout.LayoutParams authorLayout = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+		authorLayout.topMargin = AndroidUtil.dpToPx(20);
+		authorLayout.bottomMargin = AndroidUtil.dpToPx(20);
+		authorLayout.gravity = Gravity.CENTER;
+		noComments.setLayoutParams(authorLayout);
+		noComments.setGravity(Gravity.CENTER);
+		compareView.addView(noComments);
 	}
 
 	public void loadProcessorCoreRanking() {
@@ -180,6 +198,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
 					+ deviceInfo.getProcessorId() + "&coreId=" + deviceInfo.getProcessorCoreId());
+			rankingLoading();
 			rankingLoaderTask.execute((Void) null);
 		}
 	}
@@ -213,6 +232,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
 					+ deviceInfo.getProcessorId() + "&familyId=" + deviceInfo.getProcessorFamilyId());
+			rankingLoading();
 			rankingLoaderTask.execute((Void) null);
 		}
 	}
@@ -235,7 +255,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 
@@ -259,7 +279,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorCoreRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};
@@ -282,7 +302,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorFamilyRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				// Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};
@@ -297,7 +317,9 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				@Override
 				public void run() {
 					final Context context = rootView.getContext();
-					// Log.i(this.getClass().getSimpleName(), "List: " + ranking.getList().size());
+					// Log.i(this.getClass().getSimpleName(), "Ranking list: " + ranking.getList().size());
+
+					compareView.removeAllViews();
 
 					final ViewFactory textSwitcherViewFactory = new ViewFactory() {
 						public View makeView() {
@@ -353,7 +375,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 								avatar.setTag(url);
 								new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 							} catch (Exception e) {
-								// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+								Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 								e.printStackTrace();
 								avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 							}

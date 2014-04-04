@@ -23,6 +23,8 @@ public class VersionCheckTask extends AsyncTask<Void, Void, Void> {
 
     private final NetworkStatusAware networkStatusAware;
     private final VersionStatusAware versionStatusAware;
+    
+    private static boolean checked = false;
 
     public VersionCheckTask(NetworkStatusAware networkStatusAware, VersionStatusAware versionStatusAware) {
         this.networkStatusAware = networkStatusAware;
@@ -31,6 +33,10 @@ public class VersionCheckTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     public Void doInBackground(Void... params) {
+        if (checked){
+            Log.i(this.getClass().getSimpleName(), "Version check skipped.");
+            return null;
+        }
         JsonReader reader = null;
         try {
             URL url = new URL(BenchService.SERVER + "/version/api?client=" + URLEncoder.encode(BenchService.HWBOT_PRIME_APP_NAME, "utf8") + "&os=android");
@@ -38,6 +44,7 @@ public class VersionCheckTask extends AsyncTask<Void, Void, Void> {
 
             VersionApiResponse apiResponse = new Gson().fromJson(in, VersionApiResponse.class);
             Log.i(this.getClass().getSimpleName(), "Version check: " + apiResponse);
+            checked = true;
 
             if (StringUtils.isNotEmpty(apiResponse.getError())) {
                 Log.w(this.getClass().getSimpleName(), apiResponse.getError());

@@ -92,6 +92,10 @@ public class SecurityService {
     }
 
     public void loadToken(NetworkStatusAware networkStatusAware, PersistentLoginAware persistentLoginAware, String token) {
+        if (isLoggedIn()){
+            org.hwbot.bench.prime.Log.info(this.getClass().getSimpleName(), "Not loading credentials, already logged in.");
+            return;
+        }
         if (StringUtils.isNotEmpty(token)) {
             org.hwbot.bench.prime.Log.info(this.getClass().getSimpleName(), "Loading credentials for token " + token);
             new LoginTokenTask(networkStatusAware, persistentLoginAware, token).execute((Void) null);

@@ -83,7 +83,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
-			// Log.e(this.getClass().getSimpleName(), "Failed to load notifications: " + e.getMessage());
+			Log.e(this.getClass().getSimpleName(), "Failed to load notifications: " + e.getMessage());
 		} finally {
 			try {
 				reader.close();
@@ -98,7 +98,6 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 	@Override
 	protected void onPostExecute(final List<NotificationDTO> notifications) {
 		if (notifications != null && TabFragmentAccount.rootView != null) {
-
 			final ViewFactory textSwitcherViewFactory = new ViewFactory() {
 				public View makeView() {
 					TextView myText = new TextView(MainActivity.activity, null, R.style.leaderboardTextAction);
@@ -111,6 +110,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 			final Context context = TabFragmentAccount.rootView.getContext();
 			final Resources resources = TabFragmentAccount.rootView.getResources();
 			// int notificationTextColor = context.getResources().getColor(R.color.notification_text);
+			notificationContainer.removeAllViews();
 
 			int row = 1;
 
@@ -165,12 +165,11 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 						} else {
 							url = BenchService.SERVER + notificationDTO.getImage();
 						}
-						// Log.i(this.getClass().getSimpleName(), "notificationDTO.getImage(): " + url);
 						avatar.setScaleType(ScaleType.FIT_XY);
 						avatar.setTag(url);
 						new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 					} catch (Exception e) {
-						// Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+						Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
 						e.printStackTrace();
 						avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 					}
@@ -389,7 +388,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 				row++;
 			}
 		} else {
-			// Log.e(this.getClass().getSimpleName(), "Can not show notifications: " + tabFragmentAccount.getView());
+			Log.e(this.getClass().getSimpleName(), "Can not show notifications: " + tabFragmentAccount.getView());
 		}
 	}
 }

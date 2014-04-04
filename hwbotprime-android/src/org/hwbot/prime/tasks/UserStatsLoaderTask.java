@@ -5,19 +5,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.Locale;
 
 import org.hwbot.api.bench.dto.UserStatsDTO;
 import org.hwbot.prime.MainActivity;
-import org.hwbot.prime.R;
 import org.hwbot.prime.TabFragmentAccount;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.TextSwitcher;
 
 import com.google.gson.Gson;
 
@@ -47,13 +43,13 @@ public class UserStatsLoaderTask extends AsyncTask<Void, Void, UserStatsDTO> {
 				// Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
 				return userStatsDTO;
 			} else {
-				// Log.w(this.getClass().getSimpleName(), "Not logged in.");
+				Log.w(this.getClass().getSimpleName(), "Not logged in.");
 				return null;
 			}
 		} catch (UnknownHostException e) {
 			MainActivity.activity.showNetworkPopupOnce();
 		} catch (Exception e) {
-			// Log.e(this.getClass().getSimpleName(), "Failed to load user stats: " + e.getMessage());
+			Log.e(this.getClass().getSimpleName(), "Failed to load user stats: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			try {
