@@ -224,7 +224,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private void prepareTab(ActionBar.Tab tab) {
 		switch (tab.getPosition()) {
 		case 0:
-			// nothing to prepare
+			TabFragmentBench tabFragmentBench = (TabFragmentBench) mSectionsPagerAdapter.getItem(tab.getPosition()); if (tabFragmentBench.isVisible()){tabFragmentBench.prepareView();}
 			break;
 		case 1:
 			TabFragmentCompare tabFragmentCompare = (TabFragmentCompare) mSectionsPagerAdapter.getItem(tab.getPosition());
@@ -234,9 +234,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			break;
 		case 2:
 			TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(tab.getPosition());
-			if (tabFragmentAccount.isVisible()){
+//			if (tabFragmentAccount.isVisible()){
 				tabFragmentAccount.prepareView();
-			}
+//			}
 			break;
 		default:
 			Log.e(this.getClass().getSimpleName(), "unkown tab");

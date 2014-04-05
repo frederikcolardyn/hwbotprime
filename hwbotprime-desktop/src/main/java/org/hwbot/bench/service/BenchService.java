@@ -290,7 +290,7 @@ public class BenchService implements Runnable {
         String xml = DataServiceXml.createXml(benchmark.getClient(), version, hardware, this.formatScore(benchmark.getScore()), !headless,
                 BenchService.encryptionModule);
         if (encryptionModule != null) {
-            bytes = BenchService.encryptionModule.encrypt(xml.getBytes("utf8"));
+            bytes = BenchService.encryptionModule.encrypt(xml.getBytes("utf8"), null);
         } else {
             bytes = xml.getBytes("utf8");
         }

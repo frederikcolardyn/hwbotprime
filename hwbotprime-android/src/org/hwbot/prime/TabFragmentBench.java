@@ -618,5 +618,9 @@ public class TabFragmentBench extends Fragment implements BenchmarkStatusAware, 
 	public String getDeviceIdentification() {
 		return Build.MANUFACTURER + " - " + Build.MODEL + " - " + Build.PRODUCT + " -- " + AndroidHardwareService.getInstance().getHardwareFromCpuInfo();
 	}
+	
+	public void prepareView(){
+		updateDeviceInfo();
+	}
 
 }

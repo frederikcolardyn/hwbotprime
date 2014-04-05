@@ -370,7 +370,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 								} else {
 									url = BenchService.SERVER + result.getImage();
 								}
-								// Log.i(this.getClass().getSimpleName(), "Result.getImage(): " + url);
+								Log.d(this.getClass().getSimpleName(), "Result.getImage(): " + url);
 								avatar.setScaleType(ScaleType.FIT_XY);
 								avatar.setTag(url);
 								new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
@@ -421,10 +421,22 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 									//									processor.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
 									processor.setTextAppearance(context, R.style.leaderboardTextSmall);
 									processor.setEllipsize(TruncateAt.END);
-									processor.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_LEFT, 35, 0, 5, 5));
+									processor.setLayoutParams(relativeTo(RelativeLayout.ALIGN_PARENT_LEFT, 35, 0, 5, 0));
 									processor.setId(23 * row);
 
 									recordDetails.addView(processor);
+									
+									TextView device = null;
+									if (result.getDevice() != null) {
+										device = new TextView(context);
+										device.setText(Html.fromHtml("<strong>Device:</strong> " + result.getDevice()));
+										//										osBuild.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
+										device.setTextAppearance(context, R.style.leaderboardTextSmall);
+										device.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 0));
+										device.setId(90000 + 29 * row);
+										recordDetails.addView(device);
+									}
 
 									TextView osBuild = null;
 									if (result.getOsBuild() != null) {
@@ -433,7 +445,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 										//										osBuild.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
 										osBuild.setTextAppearance(context, R.style.leaderboardTextSmall);
 										osBuild.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
-												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 5));
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 0));
 										osBuild.setId(29 * row);
 										recordDetails.addView(osBuild);
 									}
@@ -444,10 +456,10 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 										kernel.setText(Html.fromHtml("<strong>Kernel:</strong> " + result.getKernel()));
 										//										kernel.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
 										kernel.setTextAppearance(context, R.style.leaderboardTextSmall);
-										kernel.setMaxLines(2);
+										kernel.setMaxLines(1);
 										kernel.setEllipsize(TruncateAt.END);
 										kernel.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
-												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 5));
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 0));
 										kernel.setId(31 * row);
 										recordDetails.addView(kernel);
 									}
@@ -458,10 +470,10 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 										description.setText("\"" + result.getDescription() + "\"");
 										// description.setPadding(dpToPx(2), dpToPx(0), dpToPx(2), dpToPx(2));
 										description.setTextAppearance(context, R.style.leaderboardTextSmall);
-										description.setMaxLines(2);
+										description.setMaxLines(1);
 										description.setEllipsize(TruncateAt.END);
 										description.setLayoutParams(relativeToParent(RelativeLayout.BELOW,
-												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 5));
+												recordDetails.getChildAt(recordDetails.getChildCount() - 1).getId(), 35, 0, 5, 0));
 										description.setId(37 * row);
 										recordDetails.addView(description);
 									}
