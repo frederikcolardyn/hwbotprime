@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JOptionPane;
 
 import org.hwbot.bench.Benchmark;
@@ -290,10 +291,21 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
     }// GEN-LAST:event_jButton1ActionPerformed
 
     private void saveButtonActionPerformed(ActionEvent evt) {
+        //set filechooser defaults
+        FileNameExtensionFilter extensions = new FileNameExtensionFilter("HWBOT Scorefiles", "hwbot");
+        fc.setFileFilter(extensions);
+        fc.setSelectedFile(new File(score.getText()));
+        //
         int returnVal = fc.showSaveDialog(saveButton);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
 
+            // sleep so that filechooser is not screencaped
+            try {
+                Thread.sleep(100); //find an appropiate value
+            } catch(InterruptedException ex) {
+                //System.out.println("Exception caught");
+            }
             // write xml to this file
             try {
                 this.benchService.saveToFile(file);
