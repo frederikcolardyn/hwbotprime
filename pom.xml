@@ -41,7 +41,7 @@
 		<profile>
 			<id>android</id>
 			<modules>
-			    <module>hwbotprime-android</module>
+			    <module>hwbotbench-common-android</module>
 			</modules>
 		</profile>
 		<profile>
