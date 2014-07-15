@@ -5,8 +5,8 @@
 	<packaging>jar</packaging>
 	<name>HWBOT iOS</name>
 	<parent>
-	    <groupId>org.hwbot.bench.prime</groupId>
-        <artifactId>hwbotprime</artifactId>
+	    <groupId>org.hwbot.bench.bench</groupId>
+        <artifactId>hwbotbench</artifactId>
 	    <version>1.0.0-SNAPSHOT</version>
 	</parent>
 

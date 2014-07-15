@@ -85,10 +85,12 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 		} catch (Exception e) {
 			Log.e(this.getClass().getSimpleName(), "Failed to load notifications: " + e.getMessage());
 		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return null;

@@ -3,10 +3,10 @@ package org.hwbot.prime;
 import java.util.Locale;
 
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
+import org.hwbot.api.bench.dto.DeviceRecordDTO.RecordType;
 import org.hwbot.api.bench.dto.DeviceRecordsDTO;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.api.bench.dto.UserStatsDTO;
-import org.hwbot.api.bench.dto.DeviceRecordDTO.RecordType;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
 import org.hwbot.prime.api.VersionStatusAware;
@@ -17,8 +17,6 @@ import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.tasks.HardwareDetectionTask;
 import org.hwbot.prime.tasks.HardwareRecordsTask;
-import org.hwbot.prime.tasks.SubmitResultTask;
-import org.hwbot.prime.tasks.VersionCheckTask;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -40,10 +38,12 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -74,6 +74,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// store
 	public static final String PREFS_NAME = "HWBOTPrimePreferences";
 	public static final String SETTINGS_TOKEN = "token";
+	public static final String SETTINGS_CREDENTIALS = "credentials";
 	public static final String SETTINGS_DEVICE = "device";
 	public static final String SETTINGS_STATS = "stats";
 	public static final String SETTINGS_RECORDS = "deviceRecords";
@@ -84,7 +85,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	// needed for bench functionality
 	public static MainActivity activity;
-	public static BenchService bench = BenchService.getInstance();
+	public static BenchService bench = PrimeBenchService.getInstance();
 	private static boolean showNetworkPopup = true;
 
 	public MainActivity() {
@@ -98,10 +99,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		// Restore preferences
-		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-		restoreSettings(settings);
 
 		Intent intent = getIntent();
 		if (intent != null && intent.getData() != null) {
@@ -144,6 +141,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 		// version check
 		new VersionCheckTask(this, this).execute((Void) null);
+
+		// Restore preferences
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		restoreSettings(settings);
 	}
 
 	private void restoreSettings(SharedPreferences settings) {
@@ -164,7 +165,28 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			}
 		}
 
-		SecurityService.getInstance().loadToken(this, (PersistentLoginAware) this, token);
+		boolean loadToken = token != null;
+		String credentials = settings.getString(SETTINGS_CREDENTIALS, null);
+		if (credentials != null) {
+			PersistentLoginDTO persistentLoginDTO = new Gson().fromJson(credentials, PersistentLoginDTO.class);
+			if (persistentLoginDTO != null && persistentLoginDTO.getDateUntil() != null && persistentLoginDTO.getDateUntil() > System.currentTimeMillis()) {
+				// Log.i(this.getClass().getSimpleName(), "Restoring credentials.");
+				notifyPersistentLoginOk(persistentLoginDTO);
+				loadToken = false;
+			}
+		}
+
+		if (loadToken) {
+			SecurityService.getInstance().loadToken(this, (PersistentLoginAware) this, token);
+		}
+
+		BenchmarkResult bestScore = getBestScore();
+		if (bestScore != null && !bestScore.isSubmitted()) {
+			// Log.i(this.getClass().getSimpleName(), "Best score is not yet submitted. Offline mode: " + this.isOfflineMode());
+			if (!this.isOfflineMode()) {
+				new SubmitResultTask(MainActivity.this, TabFragmentBench.getInstance(), bestScore.getEncryptedXml()).execute((Void) null);
+			}
+		}
 	}
 
 	public DeviceInfoDTO loadDeviceInfo() {
@@ -224,19 +246,22 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private void prepareTab(ActionBar.Tab tab) {
 		switch (tab.getPosition()) {
 		case 0:
-			TabFragmentBench tabFragmentBench = (TabFragmentBench) mSectionsPagerAdapter.getItem(tab.getPosition()); if (tabFragmentBench.isVisible()){tabFragmentBench.prepareView();}
+			TabFragmentBench tabFragmentBench = (TabFragmentBench) mSectionsPagerAdapter.getItem(tab.getPosition());
+			if (tabFragmentBench.isVisible()) {
+				tabFragmentBench.prepareView();
+			}
 			break;
 		case 1:
 			TabFragmentCompare tabFragmentCompare = (TabFragmentCompare) mSectionsPagerAdapter.getItem(tab.getPosition());
-			if (tabFragmentCompare.isVisible()){
+			if (tabFragmentCompare.isVisible()) {
 				tabFragmentCompare.prepareView();
 			}
 			break;
 		case 2:
 			TabFragmentAccount tabFragmentAccount = (TabFragmentAccount) mSectionsPagerAdapter.getItem(tab.getPosition());
-//			if (tabFragmentAccount.isVisible()){
-				tabFragmentAccount.prepareView();
-//			}
+			//			if (tabFragmentAccount.isVisible()){
+			tabFragmentAccount.prepareView();
+			//			}
 			break;
 		default:
 			Log.e(this.getClass().getSimpleName(), "unkown tab");
@@ -335,6 +360,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public void notifyPersistentLoginOk(PersistentLoginDTO credentials) {
 		// Log.i(this.getClass().getSimpleName(), "Login OK: " + credentials);
 		// notification?
+		Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
+		edit.putString(SETTINGS_CREDENTIALS, new Gson().toJson(credentials));
+		edit.commit();
 		SecurityService.getInstance().setCredentials(credentials);
 		// reload hardware stats
 		DeviceInfoDTO deviceInfo = loadDeviceInfo();
@@ -365,6 +393,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public void resetToken() {
 		Editor edit = getSharedPreferences(PREFS_NAME, 0).edit();
 		edit.remove(SETTINGS_TOKEN);
+		edit.remove(SETTINGS_CREDENTIALS);
 		edit.commit();
 	}
 
@@ -503,8 +532,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					if (bestScore2 != null && !bestScore2.isSubmitted()) {
 						TabFragmentBench fragment = TabFragmentBench.getInstance();
 						if (fragment != null) {
-							fragment.toast("Uploading best score...");
-							MainActivity.this.markBestScoreSubmitted();
+							toast("Uploading best score...");
 							new SubmitResultTask(MainActivity.this, fragment, bestScore2.getEncryptedXml()).execute((Void) null);
 						}
 					}
@@ -544,7 +572,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public void showNetworkPopupOnce() {
 		if (isShowNetworkPopup()) {
 			this.runOnUiThread(new Runnable() {
-
 				@Override
 				public void run() {
 					// Log.i(this.getClass().getSimpleName(), "Show network popup.");
@@ -570,6 +597,21 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			});
 		} else {
 			// Log.i(this.getClass().getSimpleName(), "Network popup already shown.");
+			this.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					// Log.i(this.getClass().getSimpleName(), "Show network popup.");
+					boolean noLooper = Looper.myLooper() == null;
+					if (noLooper) {
+						Looper.prepare();
+						Looper.loop();
+					}
+					toast("No network connection.");
+					if (noLooper) {
+						Looper.myLooper().quit();
+					}
+				};
+			});
 		}
 	}
 
@@ -598,9 +640,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				builder.setTitle(R.string.new_version_title);
 				Context baseContext = MainActivity.this.getBaseContext();
 				if (updateRequired) {
-					builder.setMessage(baseContext.getString(R.string.new_version_required_text, BenchService.getInstance().version, version));
+					builder.setMessage(baseContext.getString(R.string.new_version_required_text, PrimeBenchService.getInstance().version, version));
 				} else {
-					builder.setMessage(baseContext.getString(R.string.new_version_recommended_text, BenchService.getInstance().version, version));
+					builder.setMessage(baseContext.getString(R.string.new_version_recommended_text, PrimeBenchService.getInstance().version, version));
 				}
 				builder.setPositiveButton(R.string.new_version_upgrade, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
@@ -722,5 +764,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		} else {
 			return null;
 		}
+	}
+
+	public static void toast(String message) {
+		Toast toast = Toast.makeText(MainActivity.getActivity(), message, Toast.LENGTH_LONG);
+		toast.setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 30);
+		toast.show();
 	}
 }

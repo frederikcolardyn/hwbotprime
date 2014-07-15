@@ -52,19 +52,20 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 public class TabFragmentCompare extends Fragment implements SubmissionRankingAware, VoteObserver, CommentObserver {
 
+	public static final int POSITION = 1;
 	protected ToggleButton compareProcessorButton;
 	protected ToggleButton compareCoreButton;
 	protected ToggleButton compareFamilyButton;
 	protected LinearLayout compareView;
 	protected View rootView;
-	protected static TabFragmentCompare tabFragment;
+	protected static TabFragmentCompare fragment;
 	protected TextSwitcher rankLabel, hardwareLabel;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		// Log.i("CREATE", "compare tab");
 
-		tabFragment = this;
+		fragment = this;
 
 		rootView = inflater.inflate(R.layout.fragment_main_compare, container, false);
 
@@ -107,16 +108,18 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 
 	public void showLeaderboardIfDeviceInfoPresent() {
 		// check hardware available or not
-		if (AndroidHardwareService.getInstance().getDeviceInfo() != null) {
-			// Log.i(this.getClass().getSimpleName(), "Device info present.");
-			if (!SecurityService.getInstance().isLoggedIn()) {
-				rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.VISIBLE);
+		if (rootView != null) {
+			if (AndroidHardwareService.getInstance().getDeviceInfo() != null) {
+				// Log.i(this.getClass().getSimpleName(), "Device info present.");
+				if (!SecurityService.getInstance().isLoggedIn()) {
+					rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.VISIBLE);
+				}
+				rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.GONE);
+			} else {
+				// Log.i(this.getClass().getSimpleName(), "Device info present not present.");
+				rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.GONE);
+				rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.VISIBLE);
 			}
-			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.GONE);
-		} else {
-			// Log.i(this.getClass().getSimpleName(), "Device info present not present.");
-			rootView.findViewById(R.id.leaderboardAvailableBox).setVisibility(View.GONE);
-			rootView.findViewById(R.id.leaderboardNotAvailableBox).setVisibility(View.VISIBLE);
 		}
 	}
 
@@ -147,7 +150,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			compareView.removeAllViews();
 
 			// Log.i(this.getClass().getName(), "Loading ranking...");
-			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
+			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, fragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&hardwareType=processor&target=android&hardwareId="
 					+ deviceInfo.getProcessorId());
 			rankingLoading();
@@ -195,7 +198,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			compareView.removeAllViews();
 
 			// Log.i(this.getClass().getName(), "Loading ranking...");
-			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
+			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, fragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
 					+ deviceInfo.getProcessorId() + "&coreId=" + deviceInfo.getProcessorCoreId());
 			rankingLoading();
@@ -229,7 +232,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 			compareView.removeAllViews();
 
 			// Log.i(this.getClass().getName(), "Loading ranking...");
-			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, tabFragment, BenchService.SERVER
+			RankingLoaderTask rankingLoaderTask = new RankingLoaderTask(MainActivity.activity, fragment, BenchService.SERVER
 					+ "/external/v3?type=submissionranking&orderBy=rank&limit=100&params=app=hwbot_prime&target=android&hardwareId="
 					+ deviceInfo.getProcessorId() + "&familyId=" + deviceInfo.getProcessorFamilyId());
 			rankingLoading();
@@ -425,7 +428,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 									processor.setId(23 * row);
 
 									recordDetails.addView(processor);
-									
+
 									TextView device = null;
 									if (result.getDevice() != null) {
 										device = new TextView(context);
@@ -698,7 +701,10 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 	}
 
 	public static TabFragmentCompare getInstance() {
-		return tabFragment;
+		if (fragment == null) {
+			fragment = (TabFragmentCompare) MainActivity.getActivity().mSectionsPagerAdapter.getItem(TabFragmentCompare.POSITION);
+		}
+		return fragment;
 	}
 
 	public void prepareView() {

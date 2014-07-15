@@ -41,6 +41,8 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 public class TabFragmentAccount extends Fragment implements VoteObserver, CommentObserver {
 
+	public static final int POSITION = 2;
+
 	/**
 	 * The default email to populate the email field with.
 	 */
@@ -157,6 +159,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	}
 
 	public void prepareView() {
+		// Log.i(this.getClass().getSimpleName(), "Security credentials:" + SecurityService.getInstance().getCredentials());
 		if (SecurityService.getInstance().isLoggedIn()) {
 			prepareViewAsLoggedIn();
 		} else {
@@ -395,6 +398,9 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	}
 
 	public static TabFragmentAccount getInstance() {
+		if (fragment == null) {
+			fragment = (TabFragmentAccount) MainActivity.getActivity().mSectionsPagerAdapter.getItem(TabFragmentAccount.POSITION);
+		}
 		return fragment;
 	}
 

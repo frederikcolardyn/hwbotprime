@@ -3,8 +3,10 @@ package org.hwbot.prime.tasks;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.prime.MainActivity;
 import org.hwbot.prime.TabFragmentAccount;
@@ -38,7 +40,7 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 		URL login;
 		BufferedReader reader = null;
 		try {
-			login = new URL(BenchService.SERVER + "/api/login?username=" + this.tabFragmentAccount.mEmail + "&password=" + this.tabFragmentAccount.mPassword);
+			login = new URL(BenchService.SERVER + "/api/login?username=" + URLEncoder.encode(this.tabFragmentAccount.mEmail, "UTF8") + "&password=" + URLEncoder.encode(this.tabFragmentAccount.mPassword, "UTF8"));
 			reader = new BufferedReader(new InputStreamReader(login.openStream()));
 			try {
 				PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);

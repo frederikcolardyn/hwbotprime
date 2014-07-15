@@ -40,7 +40,7 @@ public class UserStatsLoaderTask extends AsyncTask<Void, Void, UserStatsDTO> {
 				// Log.i(this.getClass().getSimpleName(), "Loading user stats from: " + url);
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 				UserStatsDTO userStatsDTO = new Gson().fromJson(reader, UserStatsDTO.class);
-				// Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
+//				 Log.i(this.getClass().getSimpleName(), "Loaded " + userStatsDTO + " user stats.");
 				return userStatsDTO;
 			} else {
 				Log.w(this.getClass().getSimpleName(), "Not logged in.");

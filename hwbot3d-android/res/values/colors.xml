@@ -1,0 +1,45 @@
+<resources>
+
+    <color name="notification_text">#555555</color>
+<!--     <color name="container_background">#eae8e8</color> -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black_overlay">#66000000</color>
+    <color name="red">#B80000</color>
+    <color name="score_text">#333333</color>
+    <color name="user_text">#333333</color>
+    <color name="header_text">#F1F2F2</color>
+    <color name="hr">#555555</color>
+    <color name="score_hr">#22FFFFFF</color>
+    <color name="text">#BBBBBB</color>
+    <color name="text_changing">#DDDDDD</color>
+    <color name="text_dull">#CCDDDDDD</color>
+    <color name="score_box_header">#F1F2F2</color>
+    <color name="score_box_border">#027CA6</color>
+    <color name="score_box_border_focused">#FFFFFF</color>
+    <color name="score_box_background">#1B5065</color>
+    <color name="score_box_background_end">#33212223</color>
+    <color name="score_box_background_focused">#1B5065</color>
+    <color name="score_box_background_end_focused">#33212223</color>
+    <color name="button_pressed">#44aaaaaa</color>
+    
+    <color name="text_infobox">#DDDDDD</color>
+    <color name="info_box_border">#6633B5E5</color>
+    <color name="info_box_background">#EE111111</color>
+    <color name="info_box_background_end">#66111111</color>
+    
+    <color name="leaderboard_text">#ACACAC</color>
+    <color name="leaderboard_small">#606060</color>
+    <color name="leaderboard_large">#FFFFFF</color>
+    <color name="leaderboard_gray">#333333</color>
+    <color name="leaderboard_light_gray">#393939</color>
+    <color name="leaderboard_pressed">#666666</color>
+    
+    <color name="icon_pressed_middle">#DD999999</color>
+    <color name="icon_pressed_edge">#33393939</color>
+    
+    <color name="comment_text">#ACACAC</color>
+    <color name="comment_background">#393939</color>
+    <color name="comment_background_pressed">#666666</color>
+    <color name="comment_border">#666666</color>
+
+</resources>

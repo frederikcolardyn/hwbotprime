@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.hwbot.bench.prime</groupId>
-	<artifactId>hwbotprime</artifactId>
+	<groupId>org.hwbot.bench</groupId>
+	<artifactId>hwbotbench</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>HWBOT Prime Parent</name>
+	<name>HWBOT Benchmarks Parent</name>
 
 	<properties>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
@@ -51,12 +51,33 @@
 			</modules>
 		</profile>
 	</profiles>
+	
+	<!-- 
+	hwbotprime-algorithm
+	hwbotprime-security
+	hwbotprime-service
+	
+	hwbotbench-data
+	hwbotbench-common
+	hwbotbench-common-android
+	
+	hwbot3d-algorithm
+	hwbot3d-security
+	hwbot3d-service
+	 -->
 
 	<modules>
 	    <module>cpuid</module>
+	    
+	    <module>hwbotbench-data</module>
+	    <module>hwbotbench-common</module>
+	    <module>hwbotbench-common-android</module>
+	    
 		<module>hwbotprime-algorithm</module>
-		<module>hwbotprime-data</module>
-		<module>hwbotprime-common</module>
+		<module>hwbotprime-service</module>
+		
+<!-- 		<module>hwbot3d-algorithm</module> -->
+		<module>hwbot3d-service</module>
 <!-- 		<module>hwbotprime-security</module> -->
 	</modules>
 

@@ -3,7 +3,6 @@ package org.hwbot.prime;
 import java.util.List;
 
 import org.hwbot.api.bench.dto.NotificationDTO;
-import org.hwbot.api.generic.dto.SubmissionDTO;
 import org.hwbot.prime.api.CommentObserver;
 import org.hwbot.prime.service.SecurityService;
 import org.hwbot.prime.tasks.CommentLoaderTask;

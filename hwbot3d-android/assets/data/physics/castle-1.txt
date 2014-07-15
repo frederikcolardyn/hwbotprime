@@ -1,0 +1,39 @@
+x  x    x  x
+====    ====
+ xx  xx  xx
+ xx  xx  xx
+ xx  xx  xx
+ xx======xx
+ xxxx  xxxx
+ xxxx  xxxx
+ xxxx  xxxx
+- 
+x x      x x
+===      ===
+ x        x
+ x        x
+ x        x
+ x        x
+ x        x
+ x        x
+ x        x 
+-
+x x      x x
+===      ===
+ x        x
+ x        x
+ x        x
+ x        x
+ x        x
+ x        x
+ x        x 
+-
+x  x    x  x
+====    ====
+ xx  xx  xx
+ xx  xx  xx
+ xx  xx  xx
+ xx======xx
+ xxxx  xxxx
+ xxxx  xxxx
+ xxxx  xxxx
