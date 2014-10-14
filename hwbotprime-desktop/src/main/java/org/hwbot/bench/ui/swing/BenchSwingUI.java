@@ -130,7 +130,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
         jLabel4.setText("Frequency");
 
-        processor.setText("unkown");
+        processor.setText("unknown");
         processor.setToolTipText("processor identification");
         processor.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
         processor.setPreferredSize(new java.awt.Dimension(100, 20));
