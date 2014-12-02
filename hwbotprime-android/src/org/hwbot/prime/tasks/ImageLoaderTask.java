@@ -24,9 +24,10 @@ public class ImageLoaderTask extends AsyncTask<ImageView, Void, Void> {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		protected boolean removeEldestEntry(Entry<String, Drawable> entry) {
+		protected boolean removeEldestEntry(Map.Entry<String, Drawable> eldest) {
 			return size() > 20;
 		}
+
 	};
 
 	public ImageLoaderTask(Drawable defaultDrawable) {

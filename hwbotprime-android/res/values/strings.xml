@@ -91,5 +91,10 @@
     <string name="avatar">avatar</string>
     <string name="no_team">no team</string>
     <string name="no_league">not part of any league</string>
-    
+	<string name="register_btn">No account? Register</string>
+	<string name="register_flow_btn">No account yet? Register</string>
+	<string name="action_register">Create my account</string>
+	<string name="error_invalid_login">Name already taken or too short.</string>
+	<string name="error_registration_failed">Registration failed. Please try again later.</string>
+
 </resources>

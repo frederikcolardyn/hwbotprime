@@ -1,37 +1,34 @@
 package org.hwbot.prime.tasks;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
-
-import org.apache.http.client.utils.URLEncodedUtils;
+import android.os.AsyncTask;
+import android.util.Log;
+import com.google.gson.Gson;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.prime.MainActivity;
 import org.hwbot.prime.TabFragmentAccount;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
 
-import android.os.AsyncTask;
-import android.util.Log;
-
-import com.google.gson.Gson;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
 
 /**
  * Represents an asynchronous login/registration task used to authenticate
  * the user.
  */
-public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
+public class UserRegisterTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 	/**
-	 * 
+	 *
 	 */
 	private final TabFragmentAccount tabFragmentAccount;
 
 	/**
 	 * @param tabFragmentAccount
 	 */
-	public UserLoginTask(TabFragmentAccount tabFragmentAccount) {
+	public UserRegisterTask(TabFragmentAccount tabFragmentAccount) {
 		this.tabFragmentAccount = tabFragmentAccount;
 	}
 
@@ -40,9 +37,10 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 		URL login;
 		BufferedReader reader = null;
 		try {
-			login = new URL(BenchService.SERVER + "/api/login?username=" + URLEncoder.encode(this.tabFragmentAccount.mEmail, "UTF8") + "&password=" + URLEncoder.encode(this.tabFragmentAccount.mPassword, "UTF8"));
+			login = new URL(BenchService.SERVER + "/api/register?userName=" + URLEncoder.encode(this.tabFragmentAccount.mRegisterUserName, "UTF8") +"&email="+URLEncoder.encode(this.tabFragmentAccount.mRegisterEmail, "UTF8")+ "&password=" + URLEncoder.encode(this.tabFragmentAccount.mRegisterPassword, "UTF8"));
 			reader = new BufferedReader(new InputStreamReader(login.openStream()));
 			try {
+				Log.i("register", "Register: " + login);
 				PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
 				return loginToken;
 			} catch (Exception e) {
@@ -64,21 +62,21 @@ public class UserLoginTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
 
 	@Override
 	protected void onPostExecute(final PersistentLoginDTO persistentLogin) {
-		this.tabFragmentAccount.mAuthTask = null;
-		this.tabFragmentAccount.showProgress(false, true);
+		this.tabFragmentAccount.mRegisterTask = null;
+		this.tabFragmentAccount.showProgress(false, false);
 		if (persistentLogin != null && persistentLogin.getToken() != null) {
 			SecurityService.getInstance().setCredentials(persistentLogin);
 			// Log.i(this.getClass().getSimpleName(), "Logged in " + SecurityService.getInstance().getCredentials().getToken());
-			this.tabFragmentAccount.prepareViewAsLoggedIn();
+			MainActivity.activity.loggedIn();
 		} else {
-			this.tabFragmentAccount.mPasswordView.setError(this.tabFragmentAccount.getString(org.hwbot.prime.R.string.error_incorrect_password));
-			this.tabFragmentAccount.mPasswordView.requestFocus();
+			this.tabFragmentAccount.mRegisterEmailView.setError(this.tabFragmentAccount.getString(org.hwbot.prime.R.string.error_registration_failed));
+			this.tabFragmentAccount.mRegisterEmailView.requestFocus();
 		}
 	}
 
 	@Override
 	protected void onCancelled() {
 		this.tabFragmentAccount.mAuthTask = null;
-		this.tabFragmentAccount.showProgress(false, true);
+		this.tabFragmentAccount.showProgress(false, false);
 	}
 }

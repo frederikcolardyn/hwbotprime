@@ -76,9 +76,11 @@
 		<module>hwbotprime-algorithm</module>
 		<module>hwbotprime-service</module>
 		
-<!-- 		<module>hwbot3d-algorithm</module> -->
+<!-- 	<module>hwbot3d-algorithm</module>
 		<module>hwbot3d-service</module>
-<!-- 		<module>hwbotprime-security</module> -->
+		 -->
+ 		<module>../hwbotprime-security/hwbotprime-security</module>
+		<module>hwbotprime-android</module>
 	</modules>
 
 	

@@ -1,7 +1,12 @@
 package org.hwbot.prime;
 
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import android.graphics.Color;
+import android.os.AsyncTask;
 import org.apache.commons.lang.StringUtils;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.api.bench.dto.UserStatsDTO;
@@ -9,10 +14,7 @@ import org.hwbot.prime.api.CommentObserver;
 import org.hwbot.prime.api.VoteObserver;
 import org.hwbot.prime.service.BenchService;
 import org.hwbot.prime.service.SecurityService;
-import org.hwbot.prime.tasks.ImageLoaderTask;
-import org.hwbot.prime.tasks.NotificationLoaderTask;
-import org.hwbot.prime.tasks.UserLoginTask;
-import org.hwbot.prime.tasks.UserStatsLoaderTask;
+import org.hwbot.prime.tasks.*;
 import org.hwbot.prime.util.AndroidUtil;
 
 import android.content.Intent;
@@ -52,16 +54,31 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	 * Keep track of the login task to ensure we can cancel it if requested.
 	 */
 	public UserLoginTask mAuthTask = null;
+	public UserRegisterTask mRegisterTask = null;
+	public UserUserNameAvailableTask mRegisterPreCheckTask = null;
 
 	// Values for email and password at the time of the login attempt.
+	public static String mUserName;
 	public static String mEmail;
 	public String mPassword;
 
-	// UI references.
-	public EditText mEmailView;
+	public static String mRegisterUserName;
+	public static String mRegisterEmail;
+	public String mRegisterPassword;
+	public Boolean mRegisterUserNameAvailable;
+
+	// login
+	public EditText mUserNameView;
 	public EditText mPasswordView;
+
+	// register
+	public EditText mRegisterEmailView;
+	public EditText mRegisterUserNameView;
+	public EditText mRegisterPasswordView;
+
 	public View mLoginFormView;
 	public View mLoginStatusView;
+	public View mRegisterView;
 	public TextView mLoginStatusMessageView;
 	public static View rootView;
 
@@ -76,10 +93,10 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 
 		fragment = this;
 
-		mEmail = MainActivity.activity.getIntent().getStringExtra(EXTRA_EMAIL);
-		mEmailView = (EditText) rootView.findViewById(R.id.email);
-		mEmailView.setText(mEmail != null ? mEmail : MainActivity.username);
-
+		// login stuff
+		mUserName = MainActivity.activity.getIntent().getStringExtra(EXTRA_EMAIL);
+		mUserNameView = (EditText) rootView.findViewById(R.id.email);
+		mUserNameView.setText(mUserName != null ? mUserName : MainActivity.username);
 		mPasswordView = (EditText) rootView.findViewById(R.id.password);
 		if (MainActivity.password != null) {
 			mPasswordView.setText(MainActivity.password);
@@ -94,15 +111,35 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 				return false;
 			}
 		});
-
 		mLoginFormView = rootView.findViewById(R.id.login_form);
 		mLoginStatusView = rootView.findViewById(R.id.login_status);
+		mRegisterView = rootView.findViewById(R.id.register);
 		mLoginStatusMessageView = (TextView) rootView.findViewById(R.id.login_status_message);
 
+		// register stuff
+		mRegisterEmailView = (EditText) rootView.findViewById(R.id.register_email);
+		mRegisterPasswordView = (EditText) rootView.findViewById(R.id.register_password);
+		mRegisterUserNameView = (EditText) rootView.findViewById(R.id.register_login);
+
+		// action listeners
 		rootView.findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				attemptLogin();
+			}
+		});
+
+		rootView.findViewById(R.id.register_flow_button).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				prepareViewAsRegister();
+			}
+		});
+
+		rootView.findViewById(R.id.register_button).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				attemptRegister();
 			}
 		});
 
@@ -111,6 +148,18 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			public void onClick(View view) {
 				attemptLogin("twitter");
 			}
+		});
+
+		rootView.findViewById(R.id.register_login).setOnFocusChangeListener(new View.OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				String text = ((EditText) v).getText().toString();
+				Log.i("register", "focus: " + hasFocus + " text: " + text);
+				if (!hasFocus){
+					attemptRegisterPreCheck(text);
+				}
+			}
+
 		});
 
 		rootView.findViewById(R.id.facebook_sign_in_button).setOnClickListener(new View.OnClickListener() {
@@ -172,8 +221,24 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
+			View registerView = rootView.findViewById(R.id.register);
 			loginView.setVisibility(ScrollView.VISIBLE);
 			loggedInView.setVisibility(ScrollView.GONE);
+			registerView.setVisibility(ScrollView.GONE);
+		} else {
+			Log.e(this.getClass().getSimpleName(), "rootview null");
+		}
+	}
+
+	public void prepareViewAsRegister() {
+		Log.i(this.getClass().getSimpleName(), "prepareViewAsRegister");
+		if (rootView != null) {
+			View loginView = rootView.findViewById(R.id.login_form);
+			View loggedInView = rootView.findViewById(R.id.logged_in);
+			View registerView = rootView.findViewById(R.id.register);
+			loginView.setVisibility(ScrollView.GONE);
+			loggedInView.setVisibility(ScrollView.GONE);
+			registerView.setVisibility(ScrollView.VISIBLE);
 		} else {
 			Log.e(this.getClass().getSimpleName(), "rootview null");
 		}
@@ -184,9 +249,11 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
+			View registerView = rootView.findViewById(R.id.register);
 			loggedInView.setVisibility(ScrollView.VISIBLE);
 			loginView.setVisibility(ScrollView.INVISIBLE);
 			loginView.setVisibility(ScrollView.GONE);
+			registerView.setVisibility(ScrollView.GONE);
 
 			PersistentLoginDTO credentials = SecurityService.getInstance().getCredentials();
 
@@ -240,6 +307,8 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			UserStatsDTO userStatsDTO = MainActivity.getActivity().loadUserStats();
 			if (userStatsDTO != null) {
 				updateUserStats(userStatsDTO);
+			} else {
+				updateUserStats(new UserStatsDTO());
 			}
 
 			notificationContainer.removeAllViews();
@@ -294,11 +363,11 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 		}
 
 		// Reset errors.
-		mEmailView.setError(null);
+		mUserNameView.setError(null);
 		mPasswordView.setError(null);
 
 		// Store values at the time of the login attempt.
-		mEmail = mEmailView.getText().toString();
+		mEmail = mUserNameView.getText().toString();
 		mPassword = mPasswordView.getText().toString();
 
 		boolean cancel = false;
@@ -317,8 +386,8 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 
 		// Check for a valid email address.
 		if (TextUtils.isEmpty(mEmail)) {
-			mEmailView.setError(getString(R.string.error_field_required));
-			focusView = mEmailView;
+			mUserNameView.setError(getString(R.string.error_field_required));
+			focusView = mUserNameView;
 			cancel = true;
 		}
 		//		else if (!mEmail.contains("@")) {
@@ -335,18 +404,113 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			// Show a progress spinner, and kick off a background task to
 			// perform the user login attempt.
 			mLoginStatusMessageView.setText(R.string.login_progress_signing_in);
-			showProgress(true);
+			showProgress(true, true);
 			mAuthTask = new UserLoginTask(this);
 			mAuthTask.execute((Void) null);
+		}
+	}
+
+	public boolean attemptRegisterPreCheck(String partialLogin) {
+		mRegisterPreCheckTask = new UserUserNameAvailableTask(this);
+		AsyncTask<String, Void, Boolean> available = mRegisterPreCheckTask.execute(partialLogin);
+		try {
+			Boolean nameAvailable = available.get(10l, TimeUnit.SECONDS);
+			if (Boolean.FALSE.equals(nameAvailable)){
+				if (nameAvailable){
+					mRegisterUserNameView.setError(null);
+				} else {
+					mRegisterUserNameView.setError(this.getString(R.string.error_username_taken));
+				}
+			}
+			return nameAvailable;
+		} catch (Exception e) {
+			Log.e("register", "error: " + e);
+			e.printStackTrace();
+		}
+		return true;
+	}
+
+	/**
+	 * Attempts to sign in or register the account specified by the login form.
+	 * If there are form errors (invalid email, missing fields, etc.), the
+	 * errors are presented and no actual login attempt is made.
+	 */
+	public void attemptRegister() {
+		if (mRegisterTask != null) {
+			return;
+		}
+
+		if (!attemptRegisterPreCheck(mRegisterUserNameView.getText().toString())){
+			return;
+		}
+
+		// Reset errors.
+
+		mRegisterUserNameView.setError(null);
+		mRegisterEmailView.setError(null);
+		mRegisterPasswordView.setError(null);
+
+		// Store values at the time of the login attempt.
+		mRegisterEmail = mRegisterEmailView.getText().toString();
+		mRegisterUserName = mRegisterUserNameView.getText().toString();
+		mRegisterPassword = mRegisterPasswordView.getText().toString();
+
+		boolean cancel = false;
+		View focusView = null;
+
+		// Check for a valid password.
+		if (TextUtils.isEmpty(mRegisterPassword)) {
+			mRegisterPasswordView.setError(getString(R.string.error_field_required));
+			focusView = mRegisterPasswordView;
+			cancel = true;
+		} else if (mRegisterPassword.length() < 4) {
+			mRegisterPasswordView.setError(getString(R.string.error_invalid_password));
+			focusView = mRegisterPasswordView;
+			cancel = true;
+		}
+
+		// Check for a valid email address.
+		if (TextUtils.isEmpty(mRegisterEmail)) {
+			mRegisterEmailView.setError(getString(R.string.error_field_required));
+			focusView = mRegisterEmailView;
+			cancel = true;
+		}
+
+		if (!mRegisterEmail.contains("@")) {
+			mRegisterEmailView.setError(getString(R.string.error_invalid_email));
+			focusView = mRegisterEmailView;
+			cancel = true;
+		} else if (mRegisterEmail != null && mRegisterUserName == null || mRegisterUserName.length() > 0){
+			mRegisterUserName = StringUtils.substringBefore(mRegisterEmail, "@");
+		}
+
+		if (mRegisterUserName == null || mRegisterUserName.length() < 3){
+			mRegisterUserNameView.setError(getString(R.string.error_invalid_login));
+			focusView = mRegisterUserNameView;
+			cancel = true;
+		}
+
+		if (cancel) {
+			// There was an error; don't attempt login and focus the first
+			// form field with an error.
+			focusView.requestFocus();
+		} else {
+			// Show a progress spinner, and kick off a background task to
+			// perform the user login attempt.
+			mLoginStatusMessageView.setText(R.string.register_progress_signing_in);
+			showProgress(true, false);
+			mRegisterTask = new UserRegisterTask(this);
+			mRegisterTask.execute((Void) null);
 		}
 	}
 
 	/**
 	 * Shows the progress UI and hides the login form.
 	 */
-	public void showProgress(final boolean show) {
+	public void showProgress(final boolean show, final boolean login) {
 		mLoginStatusView.setVisibility(show ? View.VISIBLE : View.GONE);
-		mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+		mLoginFormView.setVisibility(show || !login ? View.GONE : View.VISIBLE);
+		mRegisterView.setVisibility(show || login ? View.GONE : View.VISIBLE);
 	}
 
 	@Override

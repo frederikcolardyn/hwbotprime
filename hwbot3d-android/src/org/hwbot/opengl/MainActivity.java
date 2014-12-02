@@ -7,7 +7,6 @@ import org.hwbot.api.bench.dto.DeviceRecordDTO.RecordType;
 import org.hwbot.api.bench.dto.DeviceRecordsDTO;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.api.bench.dto.UserStatsDTO;
-import org.hwbot.bench.opengl.core.BenchStateListener;
 import org.hwbot.opengl.exception.UnsignedAppException;
 import org.hwbot.prime.api.NetworkStatusAware;
 import org.hwbot.prime.api.PersistentLoginAware;
@@ -474,7 +473,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			updateOfflineMode();
 			return true;
 		case R.id.action_settings:
-			new AboutDialog().show(getSupportFragmentManager(), "about");
+			new AboutDialog().show(getFragmentManager(), "about");
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);

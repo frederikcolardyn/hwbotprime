@@ -399,8 +399,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public boolean updateBestScore() throws UnsignedAppException {
 		BenchmarkResult bestScore = getBestScore();
-		// Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
-		if (bench.getScore() != null && bestScore == null || bestScore.getScore() < bench.getScore().floatValue()) {
+		Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
+		// ALWAYS SUBMIT || bestScore.getScore() < bench.getScore().floatValue()
+		if (bench.getScore() != null) {
 			try {
 				byte[] dataFile = bench.getDataFile(this.getApplicationContext());
 				BenchmarkResult benchmarkResult = new BenchmarkResult();

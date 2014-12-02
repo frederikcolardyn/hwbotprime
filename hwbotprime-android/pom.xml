@@ -3,14 +3,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>hwbot3d</artifactId>
-	<groupId>org.hwbot.opengl</groupId>
+	<artifactId>hwbotprime</artifactId>
+	<groupId>org.hwbot.prime</groupId>
 	<packaging>apk</packaging>
-	<name>HWBOT 3D Android</name>
-	<version>1.0.0-SNAPSHOT</version>
+	<name>HWBOT Prime for android</name>
+	<version>0.9.1-SNAPSHOT</version>
 
 	<properties>
-		<gdx.version>1.3.1</gdx.version>
 		<android.version>4.1.1.4</android.version>
 		<android.maven.version>3.8.0</android.maven.version>
 		<gwt.version>2.5.0</gwt.version>
@@ -26,28 +25,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.hwbot</groupId>
-			<artifactId>hwbot3d-service</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.badlogicgames.gdx</groupId>
-			<artifactId>gdx-backend-android</artifactId>
-			<version>${gdx.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.badlogicgames.gdx</groupId>
-			<artifactId>gdx-platform</artifactId>
-			<version>${gdx.version}</version>
-			<classifier>natives-armeabi</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.badlogicgames.gdx</groupId>
-			<artifactId>gdx-platform</artifactId>
-			<version>${gdx.version}</version>
-			<classifier>natives-armeabi-v7a</classifier>
-			<scope>provided</scope>
+			<artifactId>hwbotprime-service</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.android</groupId>
@@ -95,7 +74,7 @@
 				<version>${android.maven.version}</version>
 				<configuration>
 					<androidManifestFile>${project.basedir}/AndroidManifest.xml</androidManifestFile>
-					<assetsDirectory>/Users/frederik/dev/workspace/colardynit/hwbotopengl/hwbotopengl/assets</assetsDirectory>
+					<assetsDirectory>${project.basedir}/assets</assetsDirectory>
 					<resourceDirectory>${project.basedir}/res</resourceDirectory>
 					<sdk>
 						<platform>14</platform>

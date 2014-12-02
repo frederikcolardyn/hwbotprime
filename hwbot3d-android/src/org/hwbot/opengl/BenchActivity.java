@@ -27,7 +27,6 @@ public class BenchActivity extends AndroidApplication implements BenchStateListe
         // config.depth = 16;
         // config.stencil = 4;
         // config.numSamples = 0;
-        config.useGL20 = true;
         // config.resolutionStrategy = new FillResolutionStrategy();
         config.resolutionStrategy = new FixedResolutionStrategy(800, 480);
         HWBOTOpenGL.listeners.add(this);
