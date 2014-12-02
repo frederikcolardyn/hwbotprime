@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import com.google.gson.Gson;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
+import org.hwbot.api.bench.dto.UserStatsDTO;
 import org.hwbot.prime.MainActivity;
 import org.hwbot.prime.TabFragmentAccount;
 import org.hwbot.prime.service.BenchService;
@@ -40,8 +41,8 @@ public class UserRegisterTask extends AsyncTask<Void, Void, PersistentLoginDTO> 
 			login = new URL(BenchService.SERVER + "/api/register?userName=" + URLEncoder.encode(this.tabFragmentAccount.mRegisterUserName, "UTF8") +"&email="+URLEncoder.encode(this.tabFragmentAccount.mRegisterEmail, "UTF8")+ "&password=" + URLEncoder.encode(this.tabFragmentAccount.mRegisterPassword, "UTF8"));
 			reader = new BufferedReader(new InputStreamReader(login.openStream()));
 			try {
-				Log.i("register", "Register: " + login);
 				PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
+				MainActivity.getActivity().storeUserStats(new UserStatsDTO());
 				return loginToken;
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Login not succesful: " + e.getMessage());

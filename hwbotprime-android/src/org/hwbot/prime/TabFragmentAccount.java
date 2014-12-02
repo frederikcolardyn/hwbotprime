@@ -305,6 +305,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			ViewGroup notificationContainer = (ViewGroup) TabFragmentAccount.rootView.findViewById(R.id.notifications);
 
 			UserStatsDTO userStatsDTO = MainActivity.getActivity().loadUserStats();
+			Log.i("account tab", "user stats: " + userStatsDTO);
 			if (userStatsDTO != null) {
 				updateUserStats(userStatsDTO);
 			} else {
