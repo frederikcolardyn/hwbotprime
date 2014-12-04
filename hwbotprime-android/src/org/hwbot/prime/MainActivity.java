@@ -366,11 +366,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SecurityService.getInstance().setCredentials(credentials);
 		// reload hardware stats
 		DeviceInfoDTO deviceInfo = loadDeviceInfo();
-		if (deviceInfo != null && deviceInfo.getId() != null && loadPersonalRecords() == null) {
+		if (deviceInfo != null && deviceInfo.getId() != null) {
 			new HardwareRecordsTask(this, TabFragmentBench.getInstance(), deviceInfo.getId(), credentials.getUserId()).execute((Void) null);
 		}
-		// FIXME fails when not in correct thread.
-		// TabFragmentBench.getInstance().updateShowPersonalRecords();
+		// fails when not in correct thread.
+		this.runOnUiThread(new Runnable() { @Override public void run() {TabFragmentBench.getInstance().updateShowPersonalRecords(); } });
 	}
 
 	@Override
@@ -402,7 +402,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		BenchmarkResult bestScore = getBestScore();
 		Log.i(MainActivity.class.getName(), "Current: " + bench.getScore() + " - best: " + bestScore);
 		// ALWAYS SUBMIT || bestScore.getScore() < bench.getScore().floatValue()
-		if (bench.getScore() == null || bestScore.getScore() < bench.getScore().floatValue()) {
+		if (bench.getScore() != null && bestScore == null || bestScore.getScore() < bench.getScore().floatValue()) {
 			try {
 				byte[] dataFile = bench.getDataFile(this.getApplicationContext());
 				BenchmarkResult benchmarkResult = new BenchmarkResult();
