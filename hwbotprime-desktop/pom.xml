@@ -13,7 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.hwbot</groupId>
-			<artifactId>hwbotbench-data</artifactId>
+			<artifactId>hwbotbench-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

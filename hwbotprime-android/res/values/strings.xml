@@ -86,6 +86,8 @@
 	<string name="warning">Warning</string>
 	<string name="hardware_warning_title">Unknown phone</string>
     <string name="hardware_warning_info">This phone is not yet supported. A request to add the phone has been made. Check back soon!</string>
+
+	<string name="competition_info">Awesome! There are currently competitions at HWBOT for your phone. Want to join?</string>
     
     <string name="leaderboard_warning_info">The leaderboards are not yet available for this phone. Check back later!</string>
     <string name="avatar">avatar</string>
@@ -96,5 +98,14 @@
 	<string name="action_register">Create my account</string>
 	<string name="error_invalid_login">Name already taken or too short.</string>
 	<string name="error_registration_failed">Registration failed. Please try again later.</string>
+	<string name="participate_checkbox">Submit for %s.</string>
+	<string name="participate_login_checkbox">Please log in to participate in %s</string>
+	<string name="hardware_unkown_info">Your phone is not yet in our database. You can help us a lot by just telling us
+		the name of your phone, and we\'ll add it as soon as possible!
+	</string>
+	<string name="hardware_unkown_button">Add this phone</string>
+	<string name="hardware_unkown_add_description">Eg. Moto G, Sony Experia Z3, ...</string>
+	<string name="hardware_unkown_add_button">Send info</string>
+	<string name="hardware_unkown_thanks">Thank you! We will add your phone as soon as possible.</string>
 
 </resources>

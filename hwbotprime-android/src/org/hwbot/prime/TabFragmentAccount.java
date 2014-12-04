@@ -87,7 +87,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		// Log.i(this.getClass().getSimpleName(), "Creating account tab.");
+		// Log.i(TabFragmentAccount.getSimpleName(), "Creating account tab.");
 		// Set up the login form.
 		rootView = inflater.inflate(R.layout.fragment_main_account, container, false);
 
@@ -154,7 +154,6 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				String text = ((EditText) v).getText().toString();
-				Log.i("register", "focus: " + hasFocus + " text: " + text);
 				if (!hasFocus){
 					attemptRegisterPreCheck(text);
 				}
@@ -208,7 +207,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	}
 
 	public void prepareView() {
-		// Log.i(this.getClass().getSimpleName(), "Security credentials:" + SecurityService.getInstance().getCredentials());
+		// Log.i(TabFragmentAccount.getSimpleName(), "Security credentials:" + SecurityService.getInstance().getCredentials());
 		if (SecurityService.getInstance().isLoggedIn()) {
 			prepareViewAsLoggedIn();
 		} else {
@@ -217,7 +216,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	}
 
 	public void prepareViewAsLoggedOut() {
-		// Log.i(this.getClass().getSimpleName(), "prepareViewAsLoggedOut");
+		// Log.i(TabFragmentAccount.getSimpleName(), "prepareViewAsLoggedOut");
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
@@ -226,12 +225,12 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			loggedInView.setVisibility(ScrollView.GONE);
 			registerView.setVisibility(ScrollView.GONE);
 		} else {
-			Log.e(this.getClass().getSimpleName(), "rootview null");
+			Log.e(TabFragmentAccount.class.getSimpleName(), "rootview null");
 		}
 	}
 
 	public void prepareViewAsRegister() {
-		Log.i(this.getClass().getSimpleName(), "prepareViewAsRegister");
+		Log.i(TabFragmentAccount.class.getSimpleName(), "prepareViewAsRegister");
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
@@ -240,12 +239,12 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			loggedInView.setVisibility(ScrollView.GONE);
 			registerView.setVisibility(ScrollView.VISIBLE);
 		} else {
-			Log.e(this.getClass().getSimpleName(), "rootview null");
+			Log.e(TabFragmentAccount.class.getSimpleName(), "rootview null");
 		}
 	}
 
 	public void prepareViewAsLoggedIn() {
-		// Log.i(this.getClass().getSimpleName(), "prepareViewAsLoggedIn");
+		// Log.i(TabFragmentAccount.getSimpleName(), "prepareViewAsLoggedIn");
 		if (rootView != null) {
 			View loginView = rootView.findViewById(R.id.login_form);
 			View loggedInView = rootView.findViewById(R.id.logged_in);
@@ -294,7 +293,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 					avatar.setTag(url);
 					new ImageLoaderTask(MainActivity.getActivity().getAnonymousIcon()).execute(avatar);
 				} catch (Exception e) {
-					Log.w(this.getClass().getSimpleName(), "Failed to load image: " + e.getMessage());
+					Log.w(TabFragmentAccount.class.getSimpleName(), "Failed to load image: " + e.getMessage());
 					e.printStackTrace();
 					avatar.setImageDrawable(MainActivity.getActivity().getAnonymousIcon());
 				}
@@ -305,7 +304,6 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			ViewGroup notificationContainer = (ViewGroup) TabFragmentAccount.rootView.findViewById(R.id.notifications);
 
 			UserStatsDTO userStatsDTO = MainActivity.getActivity().loadUserStats();
-			Log.i("account tab", "user stats: " + userStatsDTO);
 			if (userStatsDTO != null) {
 				updateUserStats(userStatsDTO);
 			} else {
@@ -332,13 +330,25 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 			NotificationLoaderTask notificationLoaderTask = new NotificationLoaderTask(this);
 			notificationLoaderTask.execute((String) null);
 		} else {
-			Log.e(this.getClass().getSimpleName(), "rootview null");
+			Log.e(TabFragmentAccount.class.getSimpleName(), "rootview null");
+		}
+	}
+
+	@Override
+	public void setMenuVisibility(final boolean visible) {
+		super.setMenuVisibility(visible);
+		if (visible) {
+			Log.i(TabFragmentAccount.class.getName(), "visibility changed " + visible);
+			NotificationLoaderTask notificationLoaderTask = new NotificationLoaderTask(this);
+			notificationLoaderTask.execute((String) null);
 		}
 	}
 
 	@Override
 	public void onViewStateRestored(Bundle savedInstanceState) {
-		// Log.i(this.getClass().getSimpleName(), "View state restored.");
+		Log.i(TabFragmentAccount.class.getName(), "View state restored.");
+		NotificationLoaderTask notificationLoaderTask = new NotificationLoaderTask(this);
+		notificationLoaderTask.execute((String) null);
 		super.onViewStateRestored(savedInstanceState);
 	}
 
@@ -347,7 +357,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 	 */
 	public void attemptLogin(String providerId) {
 		String url = BenchService.SERVER + "/signin/" + providerId + "/remote?platform=android";
-		// Log.i(this.getClass().getSimpleName(), "Logging in using " + url);
+		// Log.i(TabFragmentAccount.getSimpleName(), "Logging in using " + url);
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.setData(Uri.parse(url));
 		startActivity(i);
@@ -578,7 +588,7 @@ public class TabFragmentAccount extends Fragment implements VoteObserver, Commen
 		teamRank = (TextSwitcher) rootView.findViewById(R.id.tableRowTeamRank);
 
 		if (dto != null) {
-			// Log.i(this.getClass().getSimpleName(), "Updating user stats: " + dto);
+			// Log.i(TabFragmentAccount.getSimpleName(), "Updating user stats: " + dto);
 			teamPoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getTeamPowerPoints() != null ? dto.getTeamPowerPoints() : 0f));
 			leaguePoints.setText(String.format(Locale.ENGLISH, "%.2f points", dto.getLeaguePoints() != null ? dto.getLeaguePoints() : 0f));
 			worldWideRank.setText((dto.getLeagueRank() != null ? "#" + dto.getLeagueRank() : "not ranked"));

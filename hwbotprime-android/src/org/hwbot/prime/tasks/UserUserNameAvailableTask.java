@@ -40,7 +40,6 @@ public class UserUserNameAvailableTask extends AsyncTask<String, Void, Boolean> 
 		BufferedReader reader = null;
 		try {
 			login = new URL(BenchService.SERVER + "/api/register/available?username=" + URLEncoder.encode(param[0], "UTF8"));
-			Log.i("register", "Checking availability: " + login);
 			reader = new BufferedReader(new InputStreamReader(login.openStream()));
 			try {
 				this.tabFragmentAccount.mRegisterUserNameAvailable = Boolean.parseBoolean(reader.readLine());

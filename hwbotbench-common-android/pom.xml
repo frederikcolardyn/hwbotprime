@@ -4,7 +4,7 @@
 	<groupId>org.hwbot</groupId>
 	<artifactId>hwbotbench-common-android</artifactId>
 	<packaging>jar</packaging>
-	<name>HWBOT Common for android</name>
+	<name>HWBOT Bench Common for android</name>
 	<parent>
 		<groupId>org.hwbot.bench</groupId>
 		<artifactId>hwbotbench</artifactId>
@@ -32,13 +32,6 @@
 			<artifactId>httpmime</artifactId>
 			<version>4.1</version>
 		</dependency>
-		<!--
-		<dependency>
-			<groupId>org.hwbot</groupId>
-			<artifactId>hwbotbench-data</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		-->
 		<dependency>
 			<groupId>org.hwbot</groupId>
 			<artifactId>hwbotbench-common</artifactId>

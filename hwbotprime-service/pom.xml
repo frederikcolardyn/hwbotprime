@@ -4,7 +4,7 @@
 	<groupId>org.hwbot</groupId>
 	<artifactId>hwbotprime-service</artifactId>
 	<packaging>jar</packaging>
-	<name>HWBOT Prime service for android</name>
+	<name>HWBOT Prime Service</name>
 	<parent>
 		<groupId>org.hwbot.bench</groupId>
 		<artifactId>hwbotbench</artifactId>

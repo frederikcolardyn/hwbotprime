@@ -62,7 +62,7 @@ public class HardwareRecordsTask extends AsyncTask<Void, Void, Void> {
             networkStatusAware.showNetworkPopupOnce();
             observer.notifyRecordsFailed(org.hwbot.prime.api.HardwareStatusAware.Status.no_network);
         } catch (Exception e) {
-            Log.i(this.getClass().getSimpleName(), "Error: " + e.getMessage());
+            Log.e(this.getClass().getSimpleName(), "Error: " + e.getMessage());
             e.printStackTrace();
             observer.notifyRecordsFailed(org.hwbot.prime.api.HardwareStatusAware.Status.service_down);
         } finally {

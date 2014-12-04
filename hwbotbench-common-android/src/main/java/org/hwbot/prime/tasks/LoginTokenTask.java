@@ -35,7 +35,7 @@ public class LoginTokenTask extends AsyncTask<Void, Void, PersistentLoginDTO> {
             URL hwbotRanking = new URL(BenchService.SERVER + "/api/authenticate?token=" + token);
             reader = new BufferedReader(new InputStreamReader(hwbotRanking.openStream()));
             PersistentLoginDTO loginToken = new Gson().fromJson(reader, PersistentLoginDTO.class);
-            Log.i(this.getClass().getSimpleName(), "Token: " + loginToken);
+            // Log.i(this.getClass().getSimpleName(), "Token: " + loginToken);
             observer.notifyPersistentLoginOk(loginToken);
             return loginToken;
         } catch (UnknownHostException e) {

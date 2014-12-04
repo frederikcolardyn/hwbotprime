@@ -5,6 +5,7 @@
 	<version>1.2.0</version>
 	<packaging>jar</packaging>
 	<url>http://hwbot.org</url>
+	<name>HWBOT Bench CPUID native libraries</name>
 	<organization>
 		<name>COLARDYN IT GCV</name>
 		<url>http://colardyn-it.be/</url>

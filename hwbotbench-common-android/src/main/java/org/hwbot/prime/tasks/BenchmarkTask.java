@@ -21,7 +21,7 @@ public class BenchmarkTask implements Callable<Number> {
     public Number call() {
         Number score;
         try {
-            Log.i(this.getClass().getSimpleName(), "Running benchmark " + benchmark.getClass().getName());
+            // Log.i(this.getClass().getSimpleName(), "Running benchmark " + benchmark.getClass().getName());
             score = benchmark.call();
             // round to int for android
             score = (float) score.intValue();

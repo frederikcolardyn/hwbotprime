@@ -68,7 +68,7 @@ public class SecurityService {
 
     public void setCredentials(PersistentLoginDTO credentials) {
         if (credentials != null && credentials.getUserId() == null) {
-            Log.e(this.getClass().getSimpleName(), "Empty credentials, user id is required.");
+            // Log.e(this.getClass().getSimpleName(), "Empty credentials, user id is required.");
         }
         this.credentials = credentials;
     }
@@ -81,10 +81,10 @@ public class SecurityService {
         try {
             byte[] bytes;
             if (encryptionModule != null) {
-                Log.i(this.getClass().getSimpleName(), "Encrypting xml:\n" + xml);
+                // Log.i(this.getClass().getSimpleName(), "Encrypting xml:\n" + xml + "\n==== end xml =====");
                 bytes = encryptionModule.encrypt(xml.getBytes("utf8"), ctx);
             } else {
-                Log.e(this.getClass().getSimpleName(), "Encryption disabled!");
+                // Log.e(this.getClass().getSimpleName(), "Encryption disabled!");
                 bytes = xml.getBytes("utf8");
             }
             return bytes;

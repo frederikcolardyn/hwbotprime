@@ -6,7 +6,7 @@
 	<artifactId>hwbotbench</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>HWBOT Benchmarks Parent</name>
+	<name>HWBOT Bench Parent</name>
 
 	<properties>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
@@ -51,35 +51,16 @@
 			</modules>
 		</profile>
 	</profiles>
-	
-	<!-- 
-	hwbotprime-algorithm
-	hwbotprime-security
-	hwbotprime-service
-	
-	hwbotbench-data
-	hwbotbench-common
-	hwbotbench-common-android
-	
-	hwbot3d-algorithm
-	hwbot3d-security
-	hwbot3d-service
-	 -->
 
 	<modules>
 	    <module>cpuid</module>
-	    
-	    <module>hwbotbench-data</module>
+
 	    <module>hwbotbench-common</module>
 	    <module>hwbotbench-common-android</module>
 	    
 		<module>hwbotprime-algorithm</module>
+		<module>../hwbotprime-security</module>
 		<module>hwbotprime-service</module>
-		
-<!-- 	<module>hwbot3d-algorithm</module>
-		<module>hwbot3d-service</module>
-		 -->
- 		<module>../hwbotprime-security/hwbotprime-security</module>
 		<module>hwbotprime-android</module>
 	</modules>
 

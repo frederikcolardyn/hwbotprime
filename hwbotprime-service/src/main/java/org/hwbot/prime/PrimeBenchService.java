@@ -15,7 +15,7 @@ import android.util.Log;
 public class PrimeBenchService extends BenchService {
 
     protected static PrimeBenchService benchService;
-    public String version = "1.0.2";
+    public String version = "1.1.0";
     public static String HWBOT_PRIME_APP_NAME = "HWBOT Prime";
 
     private PrimeBenchService() {

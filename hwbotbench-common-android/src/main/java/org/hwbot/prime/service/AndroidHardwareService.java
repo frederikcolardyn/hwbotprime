@@ -300,6 +300,10 @@ public class AndroidHardwareService implements HardwareService, SensorEventListe
     }
 
     public DeviceInfoDTO getDeviceInfo() {
+        if (deviceInfo == null){
+            // build basic info
+            deviceInfo = new DeviceInfoDTO(null, Build.MODEL, null, null, null, null, null, null, null);
+        }
         return deviceInfo;
     }
 

@@ -42,7 +42,6 @@ public class PrimeBenchService extends BenchService {
     }
 
     public String getVersion() {
-        Log.i("version", version);
         return version;
     }
 

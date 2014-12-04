@@ -258,7 +258,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				Log.e(TabFragmentCompare.class.getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 
@@ -282,7 +282,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorCoreRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				Log.e(TabFragmentCompare.class.getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};
@@ -305,7 +305,7 @@ public class TabFragmentCompare extends Fragment implements SubmissionRankingAwa
 				loadProcessorFamilyRanking();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error launching bench: " + e.getMessage());
+				Log.e(TabFragmentCompare.class.getName(), "error launching bench: " + e.getMessage());
 			}
 		}
 	};

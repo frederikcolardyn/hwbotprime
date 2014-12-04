@@ -75,7 +75,7 @@ public class NotificationLoaderTask extends AsyncTask<String, Void, List<Notific
 				// Log.i(this.getClass().getSimpleName(), "Loading notifications from: " + url);
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 				NotificationsDTO notificationsDto = new Gson().fromJson(reader, NotificationsDTO.class);
-				// Log.i(this.getClass().getSimpleName(), "Loaded " + notificationsDto.getList().size() + " notifications.");
+				Log.i(this.getClass().getSimpleName(), "Loaded " + notificationsDto.getList().size() + " notifications.");
 				return notificationsDto.getList();
 			} else {
 				return Collections.emptyList();

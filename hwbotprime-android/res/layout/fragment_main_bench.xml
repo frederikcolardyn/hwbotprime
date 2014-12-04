@@ -52,6 +52,17 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:orientation="vertical" >
+
+            <LinearLayout
+                    android:id="@+id/competitionBox"
+                    android:layout_below="@+id/benchBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentRight="true"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+            </LinearLayout>
             
             <RelativeLayout
 		        android:id="@+id/unkownHardwareBox"
@@ -59,6 +70,7 @@
 		        android:layout_height="wrap_content"
 		        android:background="@drawable/container_info"
 		        android:padding="10dp"
+                android:layout_below="@+id/competitionBox"
 		        android:visibility="gone" >
 		        
 		        <TextView
@@ -386,11 +398,55 @@
                 android:orientation="vertical" >
 
                 <TextView
+                    android:id="@+id/hardwareTitle"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:paddingBottom="3dp"
                     android:text="@string/hardware"
                     android:textAppearance="@style/Header" />
+
+                <TextView
+                        android:id="@+id/hardwareUnknown"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="3dp"
+                        android:text="@string/hardware_unkown_info"
+                        android:drawableLeft="@drawable/ic_action_error"
+                        android:visibility="gone"
+                        />
+
+                <TextView
+                        android:id="@+id/hardwareUnknownThanks"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="3dp"
+                        android:text="@string/hardware_unkown_thanks"
+                        android:drawableLeft="@drawable/ic_action_favorite"
+                        android:visibility="gone"
+                        />
+
+                <Button
+                        android:id="@+id/hardwareUnknownButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:text="@string/hardware_unkown_button"
+                        android:visibility="gone"/>
+
+                <EditText
+                        android:id="@+id/hardwareUnknownAddDescription"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:hint="@string/hardware_unkown_add_description"
+                        android:visibility="gone"/>
+
+                <Button
+                        android:id="@+id/hardwareUnknownAddButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:text="@string/hardware_unkown_add_button"
+                        android:visibility="gone"/>
 
                 <TableLayout
                     android:id="@+id/tableHardware"

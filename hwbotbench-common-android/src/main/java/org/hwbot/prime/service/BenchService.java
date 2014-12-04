@@ -38,13 +38,14 @@ public abstract class BenchService implements Runnable {
     protected byte[] iv;
     protected Float processorSpeed;
 
+    protected Integer stageId;
     protected Number score;
     protected static AndroidHardwareService hardwareService;
     protected static SecurityService securityService;
     protected static DataServiceXml dataServiceXml;
 
     // public static String SERVER = "http://192.168.0.249:9090";
-    public static String SERVER = "http://uat.hwbot.org";
+    public static String SERVER = "http://hwbot.org";
     public static String SERVER_MOBILE = "http://m.hwbot.org";
 
     public void initialize(TextView console, android.widget.ProgressBar progressbar, BenchmarkStatusAware benchUI) throws IOException {
@@ -123,7 +124,7 @@ public abstract class BenchService implements Runnable {
             score = submit.get();
             securityService.updateChecksum(score);
             this.currentPhase = BenchPhase.finished;
-            Log.i(this.getClass().getSimpleName(), "Notifying benchmark has finished: " + benchUI);
+            // Log.i(this.getClass().getSimpleName(), "Notifying benchmark has finished: " + benchUI);
             benchUI.notifyBenchmarkFinished(score);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -133,7 +134,7 @@ public abstract class BenchService implements Runnable {
     }
 
     public void benchmarkold() {
-        Log.i(this.getClass().getName(), "Benchmarking...");
+        // Log.i(this.getClass().getName(), "Benchmarking...");
         ExecutorService exec = Executors.newFixedThreadPool(1, new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable);
@@ -171,7 +172,7 @@ public abstract class BenchService implements Runnable {
         // verifyMemoryUnaltered();
         // String xml = createXml(version, processor, processorSpeed, score, deviceName, socName, deviceVendor);
         EncryptionModule encryptionModule = securityService.getEncryptionModule();
-        String xml = DataServiceXml.createXml(getVersion(), score, hardwareService.getDeviceInfo(), securityService.getCredentials(), encryptionModule);
+        String xml = DataServiceXml.createXml(getVersion(), score, stageId, hardwareService.getDeviceInfo(), securityService.getCredentials(), encryptionModule);
         bytes = securityService.encrypt(xml, ctx);
         return bytes;
     }
@@ -214,4 +215,11 @@ public abstract class BenchService implements Runnable {
 
     public abstract String getVersion();
 
+    public Integer getStageId() {
+        return stageId;
+    }
+
+    public void setStageId(Integer stageId) {
+        this.stageId = stageId;
+    }
 }

@@ -62,7 +62,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * The {@link ViewPager} that will host the section contents.
 	 */
-	ViewPager mViewPager;
+	public ViewPager mViewPager;
 
 	// menu reference
 	public static Menu menu;
@@ -369,7 +369,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		if (deviceInfo != null && deviceInfo.getId() != null && loadPersonalRecords() == null) {
 			new HardwareRecordsTask(this, TabFragmentBench.getInstance(), deviceInfo.getId(), credentials.getUserId()).execute((Void) null);
 		}
-		TabFragmentBench.getInstance().updateShowPersonalRecords();
+		// FIXME fails when not in correct thread.
+		// TabFragmentBench.getInstance().updateShowPersonalRecords();
 	}
 
 	@Override
@@ -399,9 +400,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	public boolean updateBestScore() throws UnsignedAppException {
 		BenchmarkResult bestScore = getBestScore();
-		Log.i("scores", "Current: " + bench.getScore() + " - best: " + bestScore);
+		Log.i(MainActivity.class.getName(), "Current: " + bench.getScore() + " - best: " + bestScore);
 		// ALWAYS SUBMIT || bestScore.getScore() < bench.getScore().floatValue()
-		if (bench.getScore() != null) {
+		if (bench.getScore() == null || bestScore.getScore() < bench.getScore().floatValue()) {
 			try {
 				byte[] dataFile = bench.getDataFile(this.getApplicationContext());
 				BenchmarkResult benchmarkResult = new BenchmarkResult();
@@ -416,7 +417,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				// Log.i(this.getClass().getSimpleName(), "Updated best score to " + benchmarkResult);
 				return true;
 			} catch (Exception e) {
-				Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage());
+				Log.e(this.getClass().getSimpleName(), "Can not submit: " + e.getMessage(), e);
 				throw new UnsignedAppException();
 			}
 		} else {
@@ -469,11 +470,24 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.w(this.getClass().getSimpleName(), "Saved offline mode: " + offlineMode);
 	}
 
+	public void setDeviceSubmitted() {
+		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+		Editor edit = sharedPreferences.edit();
+		edit.putBoolean("device_submitted", true);
+		edit.commit();
+		Log.w(this.getClass().getSimpleName(), "Saved device submitted.");
+	}
+
 	public boolean isOfflineMode() {
 		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
 		boolean offlineMode = sharedPreferences.getBoolean("offline_mode", false);
 		Log.w(this.getClass().getSimpleName(), "Loaded offline mode: " + offlineMode);
 		return offlineMode;
+	}
+
+	public boolean isDeviceSubmitted() {
+		SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+		return sharedPreferences.getBoolean("device_submitted", false);
 	}
 
 	@Override
@@ -540,7 +554,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
+				// Log.e(this.getClass().getName(), "error offline check: " + e.getMessage());
 			}
 			return true;
 		}

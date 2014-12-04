@@ -24,6 +24,7 @@ public class HardwareDetectionTask extends AsyncTask<String, Void, DeviceInfoDTO
     public static int maxAttempts = 10;
     private HardwareStatusAware observer;
     private final NetworkStatusAware networkStatusAware;
+    private final boolean strict = true;
 
     public HardwareDetectionTask(NetworkStatusAware networkStatusAware, HardwareStatusAware observer) {
         this.networkStatusAware = networkStatusAware;
@@ -32,20 +33,24 @@ public class HardwareDetectionTask extends AsyncTask<String, Void, DeviceInfoDTO
 
     @Override
     public DeviceInfoDTO doInBackground(String... param) {
-        if (param[0].equals(deviceName)) {
+        if (param[0].equals(deviceName) && param.length == 1) {
             Log.e(this.getClass().getSimpleName(), "Aborting, already loaded device info for " + param[0]);
             return null;
         } else if (maxAttempts-- <= 0) {
             Log.w(this.getClass().getSimpleName(), "Aborting, max attempts to load device info for " + param[0]);
         }
+        String description = null;
         deviceName = param[0];
+        if (param.length > 1){
+            description = param[1];
+        }
         Reader reader = null;
         try {
-            URL url = new URL(BenchService.SERVER + "/api/hardware/device/info?name=" + URLEncoder.encode(deviceName, "utf8"));
-            Log.i(this.getClass().getSimpleName(), "Loading device info from: " + url);
+            URL url = new URL(BenchService.SERVER + "/api/hardware/device/info?name=" + URLEncoder.encode(deviceName, "utf8") +"&strict="+strict+ (description != null ? "&description="+URLEncoder.encode(description, "utf8") : ""));
+            // Log.i(this.getClass().getSimpleName(), "Loading device info from: " + url);
             reader = new BufferedReader(new InputStreamReader(url.openStream()));
             DeviceInfoDTO deviceInfoWithRecordsDTO = new Gson().fromJson(reader, DeviceInfoDTO.class);
-            Log.i(this.getClass().getSimpleName(), "Got device: " + deviceInfoWithRecordsDTO);
+            // Log.i(this.getClass().getSimpleName(), "Got device: " + deviceInfoWithRecordsDTO);
             if (deviceInfoWithRecordsDTO == null || deviceInfoWithRecordsDTO.getId() == null) {
                 observer.notifyDeviceInfoFailed(org.hwbot.prime.api.HardwareStatusAware.Status.unknown_device);
             } else {

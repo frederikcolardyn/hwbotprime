@@ -6,6 +6,7 @@ import java.util.Map;
 import org.hwbot.api.bench.dto.DeviceInfoDTO;
 import org.hwbot.api.bench.dto.PersistentLoginDTO;
 import org.hwbot.bench.model.Request;
+import org.hwbot.bench.prime.Log;
 import org.hwbot.bench.security.EncryptionModule;
 
 import android.os.Build;
@@ -32,7 +33,7 @@ public class DataServiceXml {
         return service;
     }
 
-    public static String createXml(String version, Number score, DeviceInfoDTO deviceInfo, PersistentLoginDTO credentials, EncryptionModule encryptionModule) {
+    public static String createXml(String version, Number score, Integer stageId, DeviceInfoDTO deviceInfo, PersistentLoginDTO credentials, EncryptionModule encryptionModule) {
 
         AndroidHardwareService hardwareService = AndroidHardwareService.getInstance();
 
@@ -50,6 +51,10 @@ public class DataServiceXml {
         }
         xml.append("<score><points>" + score + "</points></score>");
 
+        if(stageId != null){
+            xml.append("<competitionStageId>" + stageId + "</competitionStageId>");
+        }
+
         if (encryptionModule != null) {
             Request request = new Request("HWBOT Prime", version, String.format(Locale.ENGLISH, "%.2f", score.floatValue()), null);
             encryptionModule.addChecksum(request);
@@ -59,11 +64,13 @@ public class DataServiceXml {
 
         xml.append("<hardware>");
         xml.append("<device>");
-        if (deviceInfo.getName() != null) {
+        if (deviceInfo != null) {
             if (deviceInfo.getId() != null) {
                 xml.append("<id>" + deviceInfo.getId() + "</id>");
             }
-            xml.append("<name><![CDATA[" + deviceInfo.getName() + "]]></name>");
+            if (deviceInfo.getName() != null) {
+                xml.append("<name><![CDATA[" + deviceInfo.getName() + "]]></name>");
+            }
         }
         xml.append("</device>");
         if (deviceInfo.getProcessor() != null) {
@@ -123,7 +130,7 @@ public class DataServiceXml {
 
         xml.append("</submission>");
 
-        // Log.i(DataServiceXml.class.getSimpleName(), xml.toString());
+        // Log.info(DataServiceXml.class.getSimpleName(), xml.toString());
         return xml.toString();
     }
 
