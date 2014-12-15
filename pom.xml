@@ -59,8 +59,8 @@
 	    <module>hwbotbench-common-android</module>
 	    
 		<module>hwbotprime-algorithm</module>
-		<module>../hwbotprime-security</module>
-		<module>hwbotprime-service</module>
+<!--		<module>../hwbotprime-security</module>
+-->		<module>hwbotprime-service</module>
 		<module>hwbotprime-android</module>
 	</modules>
 
