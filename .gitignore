@@ -5,5 +5,7 @@ target/
 .settings/
 hwbotprime-security/
 nohup.log
+.idea/*
+*.iml
 *.log
 .DS_Store
