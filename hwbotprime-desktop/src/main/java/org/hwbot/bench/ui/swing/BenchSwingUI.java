@@ -307,9 +307,9 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         FileNameExtensionFilter extensions = new FileNameExtensionFilter("HWBOT Scorefiles", "hwbot");
         fc.setFileFilter(extensions);
         if (isStability){
-            fc.setSelectedFile(new File("stability benchmark: " + score.getText()));
+            fc.setSelectedFile(new File("stability -" + score.getText() + ".hwbot"));
         }else{
-            fc.setSelectedFile(new File("quick benchmark: " + score.getText()));
+            fc.setSelectedFile(new File("quick -" + score.getText() + ".hwbot"));
         }
 
 
