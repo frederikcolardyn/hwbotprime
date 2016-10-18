@@ -192,7 +192,7 @@ public class BenchService implements Runnable {
     private ExecutorService exec;
     private BenchPhase currentPhase = BenchPhase.ready;
 
-    public void benchmark() {
+    public void benchmark(Integer seconds) {
         exec = Executors.newFixedThreadPool(2, new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable);
@@ -206,7 +206,12 @@ public class BenchService implements Runnable {
             scheduledThreadPoolExecutor.shutdownNow();
             processorFrequencyMonitorScheduler.cancel(true);
         }
-        benchmark = instantiateBenchmark();
+        if (seconds == null){
+            benchmark =instantiateBenchmark(10);
+        }else{
+            benchmark = instantiateBenchmark(seconds);
+        }
+
         new Thread(this).start();
     }
 
@@ -230,9 +235,9 @@ public class BenchService implements Runnable {
         }
     }
 
-    public Benchmark instantiateBenchmark() {
+    public Benchmark instantiateBenchmark(int seconds) {
         BenchmarkConfiguration configuration = new BenchmarkConfiguration();
-        configuration.setValue(PrimeBenchmark.TIME_SPAN, TimeUnit.SECONDS.toMillis(10));
+        configuration.setValue(PrimeBenchmark.TIME_SPAN, TimeUnit.SECONDS.toMillis(seconds));
         configuration.setValue(PrimeBenchmark.SILENT, false);
         return new PrimeBenchmark(configuration, Runtime.getRuntime().availableProcessors(), this.progressBar);
     }

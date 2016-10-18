@@ -66,7 +66,7 @@ public class BenchConsole implements BenchUI {
 
     public void waitForCommands() {
         System.out.println("Running benchmark using " + HardwareServiceFactory.getInstance().getAvailableProcessors() + " threads.");
-        benchService.benchmark();
+        benchService.benchmark(null);
     }
 
     @Override

@@ -71,8 +71,8 @@ public class PrimeBenchmark extends Benchmark {
         int iteration = 0;
         int brokenWorkers = 0;
         int blocksize = threads * batchsize;
-        int seconds = (int) (timespanInMillis / 1000);
-        int progressFactor = 100 / seconds;
+        double seconds =  (timespanInMillis / 1000);
+        double progressFactor = 100 / seconds;
 
         List<Number> list = Collections.synchronizedList(new ArrayList<Number>());
         ThreadFactory tf = new ThreadFactory() {
@@ -100,7 +100,7 @@ public class PrimeBenchmark extends Benchmark {
                 for (Future<Void> future : runningWorkers) {
                     try {
                         future.get(1, TimeUnit.SECONDS);
-                        long tl = (getTime() - time) / (1000 / progressFactor);
+                        double tl = (getTime() - time) / (1000 / progressFactor);
                         if (tl > iteration) {
                             iteration++;
                             if (!silent) {
