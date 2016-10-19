@@ -23,6 +23,8 @@ import org.hwbot.bench.ui.BenchUI;
 public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
     private static final long serialVersionUID = 1L;
+    private static final int STABILITY_APPLICATION_ID = 157;
+    private static final int QUICK_APPLICATION_ID = 57;
     private final BenchService benchService;
     private JFileChooser fc;
 
@@ -290,7 +292,12 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
     }// GEN-LAST:event_startButtonStabilityActionPerformed
 
     private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_compareButtonActionPerformed
-        benchService.submit();
+        if(isStability){
+            benchService.submit(STABILITY_APPLICATION_ID);
+        }else {
+            benchService.submit(QUICK_APPLICATION_ID);
+        }
+
     }// GEN-LAST:event_compareButtonActionPerformed
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
@@ -326,7 +333,12 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
             }
             // write xml to this file
             try {
-                this.benchService.saveToFile(file);
+                if(isStability){
+                    this.benchService.saveToFile(file,STABILITY_APPLICATION_ID);
+                }else{
+                    this.benchService.saveToFile(file,QUICK_APPLICATION_ID);
+                }
+
                 JOptionPane.showMessageDialog(this, "Date file saved to: " + file.getAbsolutePath());
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Failed to save the file. Sorry! Error: " + e.getMessage());

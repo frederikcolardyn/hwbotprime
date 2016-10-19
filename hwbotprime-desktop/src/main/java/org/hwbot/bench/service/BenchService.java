@@ -60,6 +60,9 @@ import org.hwbot.bench.util.DataServiceXml;
 public class BenchService implements Runnable {
 
     public Number score;
+    protected int applicationId;
+    private static final int STABILITY_APPLICATION_ID = 157;
+    private static final int QUICK_APPLICATION_ID = 57;
     protected static String version;
     static {
         version = BenchService.class.getPackage().getImplementationVersion() != null ? BenchService.class.getClass().getPackage().getImplementationVersion()
@@ -207,9 +210,11 @@ public class BenchService implements Runnable {
             processorFrequencyMonitorScheduler.cancel(true);
         }
         if (seconds == null){
-            benchmark =instantiateBenchmark(10);
+            benchmark = instantiateBenchmark(10);
+            applicationId = QUICK_APPLICATION_ID;
         }else{
             benchmark = instantiateBenchmark(seconds);
+            applicationId = STABILITY_APPLICATION_ID;
         }
 
         new Thread(this).start();
@@ -219,12 +224,13 @@ public class BenchService implements Runnable {
     public void run() {
         Future<Number> submit = exec.submit(benchmark);
         this.currentPhase = BenchPhase.inprogress;
-        // wait for outout
+        // wait for output
         try {
             score = submit.get();
             checksum = toSHA1((checksumbase + score).getBytes("UTF8"));
             checksumChars = checksum.toCharArray();
             this.currentPhase = BenchPhase.finished;
+            benchmark.setApplicationId(applicationId);
             benchUI.notifyBenchmarkFinished(benchmark);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -242,7 +248,7 @@ public class BenchService implements Runnable {
         return new PrimeBenchmark(configuration, Runtime.getRuntime().availableProcessors(), this.progressBar);
     }
 
-    public void submit() {
+    public void submit(Integer applicationId) {
         HttpParams httpParameters = new BasicHttpParams();
         int timeoutConnection = 20;
         HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection * 1000);
@@ -250,7 +256,7 @@ public class BenchService implements Runnable {
         HttpClient httpclient = new DefaultHttpClient(httpParameters);
         try {
             // Create a response handler
-            byte[] bytes = getDataFile();
+            byte[] bytes = getDataFile(applicationId);
 
             BasicResponseStatusHandler responseHandler = new BasicResponseStatusHandler();
             String uri = server + "/submit/api?client=" + URLEncoder.encode(benchmark.getClient(), "ISO-8859-1") + "&clientVersion=" + getClientVersion();
@@ -288,12 +294,12 @@ public class BenchService implements Runnable {
         }
     }
 
-    public byte[] getDataFile() throws UnsupportedEncodingException {
+    public byte[] getDataFile(Integer applicationId) throws UnsupportedEncodingException {
         byte[] bytes = null;
         // processor speed ignored, not reliable enough...
         verifyMemoryUnaltered();
         String xml = DataServiceXml.createXml(benchmark.getClient(), version, hardware, this.formatScore(benchmark.getScore()), !headless,
-                BenchService.encryptionModule);
+                BenchService.encryptionModule,applicationId);
         if (encryptionModule != null) {
             bytes = BenchService.encryptionModule.encrypt(xml.getBytes("utf8"), null);
         } else {
@@ -333,13 +339,13 @@ public class BenchService implements Runnable {
         return String.format(Locale.ENGLISH, "%.2f", score);
     }
 
-    public void saveToFile(File file) {
+    public void saveToFile(File file,Integer applicationId) {
         if (file.isDirectory()) {
             file = new File(file, "HWBOT Prime - " + new SimpleDateFormat("dd-MM-yyyy HH'h'mm'm'") + ".hwbot");
         }
         byte[] dataFile;
         try {
-            dataFile = getDataFile();
+            dataFile = getDataFile(applicationId);
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             fileOutputStream.write(dataFile);
             fileOutputStream.close();

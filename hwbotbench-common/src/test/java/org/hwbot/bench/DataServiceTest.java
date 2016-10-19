@@ -25,7 +25,7 @@ public class DataServiceTest {
         hardware.setProcessor(processor);
         hardware.setMemory(memory);
 
-        String xml = DataServiceXml.createXml("primebench", "1.0.0", hardware, "1234", false, null);
+        String xml = DataServiceXml.createXml("primebench", "1.0.0", hardware, "1234", false, null,57);
 
         Assert.assertTrue("xml not as expected: " + xml, xml.startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + "<submission>\n"
                 + "    <application>\n" + "        <name>primebench</name>\n" + "        <version>1.0.0</version>\n" + "    </application>\n" + "    <score>\n"
