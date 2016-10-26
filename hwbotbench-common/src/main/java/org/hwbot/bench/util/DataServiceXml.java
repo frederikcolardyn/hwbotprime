@@ -33,8 +33,9 @@ public class DataServiceXml {
     }
 
     public static String createXml(String client, String version, Hardware hardware, String scorePoints, boolean addScreenshot,
-            EncryptionModule encryptionModule) {
+            EncryptionModule encryptionModule,Integer applicationId) {
         Request request = new Request(client, version, scorePoints, hardware);
+        request.setApplicationId(applicationId);
 
         if (addScreenshot) {
             request.addScreenshot(createScreenshot());

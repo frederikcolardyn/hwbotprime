@@ -10,6 +10,7 @@ public abstract class Benchmark implements Callable<Number> {
     protected final ProgressBar progressBar;
     protected BenchmarkConfiguration config;
     protected Number score;
+    protected Integer applicationId;
 
     public Benchmark(int threads, ProgressBar progressBar) {
         this.threads = threads;
@@ -56,4 +57,11 @@ public abstract class Benchmark implements Callable<Number> {
         this.score = score;
     }
 
+    public Integer getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(Integer applicationId) {
+        this.applicationId = applicationId;
+    }
 }

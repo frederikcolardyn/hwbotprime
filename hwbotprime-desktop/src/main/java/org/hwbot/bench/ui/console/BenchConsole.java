@@ -34,7 +34,8 @@ public class BenchConsole implements BenchUI {
                 outputFile += ".hwbot";
             }
             File file = new File(outputFile);
-            this.benchService.saveToFile(file);
+
+            this.benchService.saveToFile(file, benchmark.getApplicationId());
             System.out.println("Score: " + benchService.formatScore(benchmark.getScore()) + " saved to file " + file.getName() + ".");
             System.exit(0);
         } else {
@@ -51,11 +52,11 @@ public class BenchConsole implements BenchUI {
                             line += ".hwbot";
                         }
                         File file = new File(line);
-                        this.benchService.saveToFile(file);
+                        this.benchService.saveToFile(file,benchmark.getApplicationId());
                         System.out.println("Saved file: " + file);
                     } else {
                         System.out.println("Submitting to HWBOT...");
-                        benchService.submit();
+                        benchService.submit(benchmark.getApplicationId());
                     }
                 } catch (IOException e) {
                 }
@@ -66,7 +67,7 @@ public class BenchConsole implements BenchUI {
 
     public void waitForCommands() {
         System.out.println("Running benchmark using " + HardwareServiceFactory.getInstance().getAvailableProcessors() + " threads.");
-        benchService.benchmark();
+        benchService.benchmark(null);
     }
 
     @Override

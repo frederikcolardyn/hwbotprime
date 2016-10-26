@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "submission")
-@XmlType(propOrder = { "application", "score", "screenshot", "applicationChecksum", "hardware", "javaMetaData" })
+@XmlType(propOrder = { "application", "score", "screenshot", "applicationChecksum", "hardware", "javaMetaData","applicationId"})
 public class Request {
 
     private Application application;
@@ -14,6 +14,7 @@ public class Request {
     private Hardware hardware;
     private String applicationChecksum;
     private MetaData javaMetaData;
+
 
     public Request() {
     }
@@ -24,11 +25,21 @@ public class Request {
         this.application.setName(client);
         this.application.setVersion(version);
 
+
+
         this.score = new Score();
         this.score.setPoints(scorePoints);
 
         this.hardware = hardware;
         this.javaMetaData = new MetaData();
+    }
+
+    public Integer getApplicationId() {
+        return this.application.getId();
+    }
+
+    public void setApplicationId(Integer applicationId) {
+        this.application.setId(applicationId);
     }
 
     @XmlElement

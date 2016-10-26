@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlElement;
 public class Application {
     String name;
     String version;
+    Integer id;
 
     @XmlElement
     public String getName() {
@@ -22,5 +23,14 @@ public class Application {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    @XmlElement
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 }

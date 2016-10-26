@@ -23,11 +23,15 @@ import org.hwbot.bench.ui.BenchUI;
 public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
     private static final long serialVersionUID = 1L;
+    private static final int STABILITY_APPLICATION_ID = 157;
+    private static final int QUICK_APPLICATION_ID = 57;
     private final BenchService benchService;
     private JFileChooser fc;
 
     private String title = "HWBOT Benchmark";
     private String subtitle = "Multithreaded Prime Bench - ARM/x86 - Win/Mac/Linux";
+
+    private boolean isStability;
 
     /**
      * Creates new form BenchUI
@@ -164,7 +168,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         startButtonStability.setForeground(new java.awt.Color(240, 240, 240));
         startButtonStability.setText("Stability Benchmark");
         startButtonStability.setToolTipText("");
-        startButtonStability.setEnabled(false);
+        startButtonStability.setEnabled(true);
         startButtonStability.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startButtonStabilityActionPerformed(evt);
@@ -275,26 +279,47 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonStabilityActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_startButtonStabilityActionPerformed
-        // TODO add your handling code here:
+        isStability = true;
+        System.out.println("started stability benchmark this may take a while");
+        this.startButton.setEnabled(false);
+        this.startButtonStability.setEnabled(false);
+        this.saveButton.setEnabled(false);
+        this.compareButton.setEnabled(false);
+
+        int stabilityBenchmarkTimeSec = 3600;
+        this.benchService.benchmark(stabilityBenchmarkTimeSec);
+
     }// GEN-LAST:event_startButtonStabilityActionPerformed
 
     private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_compareButtonActionPerformed
-        benchService.submit();
+        if(isStability){
+            benchService.submit(STABILITY_APPLICATION_ID);
+        }else {
+            benchService.submit(QUICK_APPLICATION_ID);
+        }
+
     }// GEN-LAST:event_compareButtonActionPerformed
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
+        isStability = false;
         this.startButton.setEnabled(false);
         this.compareButton.setEnabled(false);
         this.saveButton.setEnabled(false);
         this.startButtonStability.setEnabled(false);
-        this.benchService.benchmark();
+        this.benchService.benchmark(null);
     }// GEN-LAST:event_jButton1ActionPerformed
 
     private void saveButtonActionPerformed(ActionEvent evt) {
         //set filechooser defaults
         FileNameExtensionFilter extensions = new FileNameExtensionFilter("HWBOT Scorefiles", "hwbot");
         fc.setFileFilter(extensions);
-        fc.setSelectedFile(new File(score.getText()));
+        if (isStability){
+            fc.setSelectedFile(new File("stability -" + score.getText() + ".hwbot"));
+        }else{
+            fc.setSelectedFile(new File("quick -" + score.getText() + ".hwbot"));
+        }
+
+
         //
         int returnVal = fc.showSaveDialog(saveButton);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -308,7 +333,12 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
             }
             // write xml to this file
             try {
-                this.benchService.saveToFile(file);
+                if(isStability){
+                    this.benchService.saveToFile(file,STABILITY_APPLICATION_ID);
+                }else{
+                    this.benchService.saveToFile(file,QUICK_APPLICATION_ID);
+                }
+
                 JOptionPane.showMessageDialog(this, "Date file saved to: " + file.getAbsolutePath());
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Failed to save the file. Sorry! Error: " + e.getMessage());
@@ -444,6 +474,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         this.compareButton.setEnabled(true);
         this.saveButton.setEnabled(true);
         this.startButton.setEnabled(true);
+        this.startButtonStability.setEnabled(true);
     }
 
     public void waitForCommands() {
