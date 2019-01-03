@@ -8,3 +8,6 @@ http://static.hwbot.org/api/Generic_API_1.1.pdf
 
 Latest binary of hwbotprime:
 http://downloads.hwbot.org/downloads/hwbotprime.zip
+
+Build a release:
+```mvn versions:set -DnewVersion=1.0.0 clean install -DskipTests=true```

@@ -54,21 +54,16 @@ import static org.hwbot.bench.PrimeBenchmark.*;
 
 public class BenchService implements Runnable {
 
+    protected static final String version = "1.0.0";
     public static boolean headless;
-    protected static String version;
     protected static EncryptionModule encryptionModule;
-
-    static {
-        version = BenchService.class.getPackage().getImplementationVersion() != null ? BenchService.class.getClass().getPackage().getImplementationVersion()
-                : "dev";
-    }
 
     public Number score;
     protected BenchUI benchUI;
     protected ProgressBar progressBar;
     protected Output output;
-        private String server = System.getProperty("server", "https://hwbot.org");
-//    private String server = System.getProperty("server", "https://uat.hwbot.org");
+    private String server = System.getProperty("server", "https://hwbot.org");
+    //    private String server = System.getProperty("server", "https://uat.hwbot.org");
     private Benchmark benchmark;
     private ScheduledFuture<?> processorFrequencyMonitorScheduler;
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;

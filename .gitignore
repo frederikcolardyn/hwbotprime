@@ -9,3 +9,4 @@ nohup.log
 *.iml
 *.log
 .DS_Store
+pom.xml.versionsBackup
