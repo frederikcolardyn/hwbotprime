@@ -67,8 +67,8 @@ public class BenchService implements Runnable {
     protected BenchUI benchUI;
     protected ProgressBar progressBar;
     protected Output output;
-    //    private String server = System.getProperty("server", "http://hwbot.org");
-    private String server = System.getProperty("server", "https://uat.hwbot.org");
+        private String server = System.getProperty("server", "https://hwbot.org");
+//    private String server = System.getProperty("server", "https://uat.hwbot.org");
     private Benchmark benchmark;
     private ScheduledFuture<?> processorFrequencyMonitorScheduler;
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;

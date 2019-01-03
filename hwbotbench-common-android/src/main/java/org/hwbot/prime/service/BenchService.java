@@ -43,8 +43,8 @@ public abstract class BenchService implements Runnable {
     protected static DataServiceXml dataServiceXml;
 
 //     public static String SERVER = "http://127.0.0.1:9090";
-    public static String SERVER = "https://uat.hwbot.org";
-    public static String SERVER_MOBILE = "https://hwbot.org";
+//    public static String SERVER = "https://uat.hwbot.org";
+    public static String SERVER = "https://hwbot.org";
 
     public void initialize(TextView console, android.widget.ProgressBar progressbar, BenchmarkStatusAware benchUI) throws IOException {
         // Hardware gatherHardwareInfo = hardwareService.gatherHardwareInfo();

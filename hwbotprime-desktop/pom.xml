@@ -4,6 +4,7 @@
 	<artifactId>hwbotprime-desktop</artifactId>
 	<packaging>jar</packaging>
 	<name>HWBOT Prime desktop</name>
+
 	<parent>
 	    <groupId>org.hwbot.bench</groupId>
         <artifactId>hwbotbench</artifactId>
