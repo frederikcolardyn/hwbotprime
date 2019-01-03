@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.hwbot.bench</groupId>
 	<artifactId>hwbotbench</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
 	<name>HWBOT Bench Parent</name>
 
@@ -57,7 +57,7 @@
 	    <module>cpuid</module>
 
 	    <module>hwbotbench-common</module>
-	    <!--<module>hwbotbench-common-android</module>-->
+	    <module>hwbotbench-common-android</module>
 	    
 		<module>hwbotprime-algorithm</module>
 		<module>../hwbotprime-security</module>

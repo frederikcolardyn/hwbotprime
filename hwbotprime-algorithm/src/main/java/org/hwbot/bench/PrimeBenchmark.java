@@ -115,7 +115,7 @@ public class PrimeBenchmark extends Benchmark {
                 for (Future<Void> future : runningWorkers) {
                     try {
                         future.get(1, TimeUnit.SECONDS);
-                        long tl = (getTime() - time) / (1000 / progressFactor);
+                        long tl = (getTime() - time) / (1000 / Math.max(progressFactor, 0));
                         if (tl > iteration) {
                             iteration++;
                             if (!silent) {

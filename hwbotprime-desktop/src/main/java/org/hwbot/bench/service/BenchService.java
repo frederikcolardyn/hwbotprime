@@ -153,8 +153,12 @@ public class BenchService implements Runnable {
 
             // output = new JTextAreaConsole(benchUI.getConsole());
 
-            benchUI.getProcessor().setText(hardware.getProcessor().getName());
-            benchUI.getFrequency().setText(getProcessorFrequency(hardware.getProcessor().getCoreClock()));
+            if (hardware.getProcessor() != null) {
+                benchUI.getProcessor().setText(hardware.getProcessor().getName());
+                benchUI.getFrequency().setText(getProcessorFrequency(hardware.getProcessor().getCoreClock()));
+            } else {
+                benchUI.getProcessor().setText("unknown");
+            }
             benchUI.getThreads().setText(String.valueOf(availableProcessors));
             benchUI.getMemory().setText(hardware.getMemory().getTotalSizeMB() + "MB");
 
