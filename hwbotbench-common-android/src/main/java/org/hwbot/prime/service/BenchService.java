@@ -1,5 +1,16 @@
 package org.hwbot.prime.service;
 
+import android.content.Context;
+import android.widget.Button;
+import android.widget.TextView;
+import org.hwbot.bench.Benchmark;
+import org.hwbot.bench.prime.ProgressBar;
+import org.hwbot.bench.security.EncryptionModule;
+import org.hwbot.prime.ui.Output;
+import org.hwbot.prime.ui.android.AndroidProgressBar;
+import org.hwbot.prime.ui.android.BenchConsole;
+import org.hwbot.prime.ui.android.ViewConsole;
+
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -10,19 +21,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-
-import org.hwbot.bench.Benchmark;
-import org.hwbot.bench.prime.ProgressBar;
-import org.hwbot.bench.security.EncryptionModule;
-import org.hwbot.prime.ui.Output;
-import org.hwbot.prime.ui.android.AndroidProgressBar;
-import org.hwbot.prime.ui.android.BenchConsole;
-import org.hwbot.prime.ui.android.ViewConsole;
-
-import android.content.Context;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.TextView;
 
 public abstract class BenchService implements Runnable {
 
@@ -44,9 +42,9 @@ public abstract class BenchService implements Runnable {
     protected static SecurityService securityService;
     protected static DataServiceXml dataServiceXml;
 
-    // public static String SERVER = "http://192.168.0.249:9090";
-    public static String SERVER = "http://hwbot.org";
-    public static String SERVER_MOBILE = "http://m.hwbot.org";
+//     public static String SERVER = "http://127.0.0.1:9090";
+    public static String SERVER = "https://uat.hwbot.org";
+    public static String SERVER_MOBILE = "https://hwbot.org";
 
     public void initialize(TextView console, android.widget.ProgressBar progressbar, BenchmarkStatusAware benchUI) throws IOException {
         // Hardware gatherHardwareInfo = hardwareService.gatherHardwareInfo();

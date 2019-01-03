@@ -32,8 +32,4 @@ public class PrimeRunnable implements Callable<Void> {
         return null;
     }
 
-    public List<Number> getResults() {
-        return results;
-    }
-
 }

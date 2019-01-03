@@ -1,15 +1,15 @@
 package org.hwbot.bench.ui.console;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import org.apache.commons.lang.StringUtils;
 import org.hwbot.bench.Benchmark;
 import org.hwbot.bench.service.BenchService;
 import org.hwbot.bench.service.HardwareServiceFactory;
 import org.hwbot.bench.ui.BenchUI;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class BenchConsole implements BenchUI {
 
@@ -66,7 +66,7 @@ public class BenchConsole implements BenchUI {
 
     public void waitForCommands() {
         System.out.println("Running benchmark using " + HardwareServiceFactory.getInstance().getAvailableProcessors() + " threads.");
-        benchService.benchmark();
+        benchService.benchmark(true);
     }
 
     @Override

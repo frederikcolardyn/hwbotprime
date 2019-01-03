@@ -1,34 +1,7 @@
 package org.hwbot.bench.service;
 
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-import java.util.ServiceLoader;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.JFrame;
-import javax.swing.JProgressBar;
-import javax.swing.UIManager;
-
 import org.apache.commons.codec.binary.Hex;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpHostConnectException;
@@ -57,34 +30,61 @@ import org.hwbot.bench.ui.swing.BenchSwingUI;
 import org.hwbot.bench.ui.swing.JProgressBarProgressBar;
 import org.hwbot.bench.util.DataServiceXml;
 
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.ServiceLoader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+
+import static org.hwbot.bench.PrimeBenchmark.*;
+
 public class BenchService implements Runnable {
 
-    public Number score;
+    public static boolean headless;
     protected static String version;
+    protected static EncryptionModule encryptionModule;
+
     static {
         version = BenchService.class.getPackage().getImplementationVersion() != null ? BenchService.class.getClass().getPackage().getImplementationVersion()
                 : "dev";
     }
 
+    public Number score;
     protected BenchUI benchUI;
     protected ProgressBar progressBar;
     protected Output output;
-
-    private String server = System.getProperty("server", "http://192.168.0.248:9090/");
-    public static boolean headless;
-    protected static EncryptionModule encryptionModule;
+    //    private String server = System.getProperty("server", "http://hwbot.org");
+    private String server = System.getProperty("server", "https://uat.hwbot.org");
     private Benchmark benchmark;
     private ScheduledFuture<?> processorFrequencyMonitorScheduler;
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
     private String checksum, checksumbase;
     private char[] checksumChars;
     private Hardware hardware;
+    private ExecutorService exec;
+    private BenchPhase currentPhase = BenchPhase.ready;
 
     public BenchService() {
         try {
             ServiceLoader<EncryptionModule> encryptionLoader = ServiceLoader.load(EncryptionModule.class);
+            System.out.println("EncryptionLoader: " + encryptionLoader);
             for (EncryptionModule encryptionModule : encryptionLoader) {
-                // BenchService.encryptionModule = encryptionModule;
+                BenchService.encryptionModule = encryptionModule;
+                System.out.println("Using encryption " + BenchService.encryptionModule);
             }
         } catch (Exception e) {
             // no encryption
@@ -93,7 +93,29 @@ public class BenchService implements Runnable {
         }
     }
 
-    public void initialize(boolean ui, String outputFile) throws IOException {
+    public static String getProcessorFrequency(Float processorSpeed) {
+        String freq;
+        if (processorSpeed == null) {
+            freq = "n/a";
+        } else {
+            NumberFormat instance = NumberFormat.getInstance(Locale.ENGLISH);
+            instance.setMaximumFractionDigits(2);
+            freq = instance.format(processorSpeed);
+        }
+        return freq;
+    }
+
+    public static String toSHA1(byte[] string) {
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException();
+        }
+        return Hex.encodeHexString(md.digest(string));
+    }
+
+    public void initialize(boolean ui, String outputFile) throws Exception {
         // Class.forName(className)
         HardwareService hardwareService = HardwareServiceFactory.getInstance();
         hardware = hardwareService.gatherHardwareInfo();
@@ -105,15 +127,18 @@ public class BenchService implements Runnable {
             Log.info("Using UI mode.");
             try {
                 UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-            } catch (Exception e) {
+            } catch (Exception noPreJdk9Laf) {
                 try {
+                    UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                } catch (Exception noPostJdk9Laf) {
                     UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-                } catch (Exception e1) {
                 }
             }
 
             JFrame frame = new JFrame("HWBOT Prime " + version);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/robot-small.png")).getImage());
+
             BenchSwingUI benchUI = new BenchSwingUI(this, getTitle(), getSubtitle());
             // Get the size of the screen
             Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -152,7 +177,7 @@ public class BenchService implements Runnable {
             this.benchUI = benchUI;
             Float processorTemperature = hardwareService.getProcessorTemperature();
 
-            output.write("--------- HWBOT Prime " + version + " ----------\n");
+            output.write("--------- HWBOT Prime " + version + " - 10sec 'quick mode' ----------\n");
             output.write("Processor detected:\n" + hardware.getProcessor().getName());
             output.write("Estimating speed... ", false);
             output.write(((availableProcessors > 1) ? availableProcessors + "x " : "") + getProcessorFrequency(hardware.getProcessor().getCoreClock()) + "MHz"
@@ -173,26 +198,7 @@ public class BenchService implements Runnable {
         return "HWBOT Prime Benchmark";
     }
 
-    public static String getProcessorFrequency(Float processorSpeed) {
-        String freq;
-        if (processorSpeed == null) {
-            freq = "n/a";
-        } else {
-            NumberFormat instance = NumberFormat.getInstance(Locale.ENGLISH);
-            instance.setMaximumFractionDigits(2);
-            freq = instance.format(processorSpeed);
-        }
-        return freq;
-    }
-
-    public enum BenchPhase {
-        ready, warmup, inprogress, finished
-    }
-
-    private ExecutorService exec;
-    private BenchPhase currentPhase = BenchPhase.ready;
-
-    public void benchmark() {
+    public void benchmark(boolean quick) {
         exec = Executors.newFixedThreadPool(2, new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable);
@@ -206,7 +212,7 @@ public class BenchService implements Runnable {
             scheduledThreadPoolExecutor.shutdownNow();
             processorFrequencyMonitorScheduler.cancel(true);
         }
-        benchmark = instantiateBenchmark();
+        benchmark = instantiateBenchmark(quick);
         new Thread(this).start();
     }
 
@@ -214,25 +220,20 @@ public class BenchService implements Runnable {
     public void run() {
         Future<Number> submit = exec.submit(benchmark);
         this.currentPhase = BenchPhase.inprogress;
-        // wait for outout
         try {
             score = submit.get();
             checksum = toSHA1((checksumbase + score).getBytes("UTF8"));
             checksumChars = checksum.toCharArray();
             this.currentPhase = BenchPhase.finished;
             benchUI.notifyBenchmarkFinished(benchmark);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            benchUI.notifyError(e.getMessage());
         }
     }
 
-    public Benchmark instantiateBenchmark() {
+    public Benchmark instantiateBenchmark(boolean quick) {
         BenchmarkConfiguration configuration = new BenchmarkConfiguration();
-        configuration.setValue(PrimeBenchmark.TIME_SPAN, TimeUnit.SECONDS.toMillis(10));
+        configuration.setValue(TIME_SPAN, quick ? QUICK_TEST_MS : STABILITY_TEST_MS);
         configuration.setValue(PrimeBenchmark.SILENT, false);
         return new PrimeBenchmark(configuration, Runtime.getRuntime().availableProcessors(), this.progressBar);
     }
@@ -256,7 +257,11 @@ public class BenchService implements Runnable {
             mpEntity.addPart("data", new ByteArrayBody(bytes, "data"));
             req.setEntity(mpEntity);
 
-            Response response = DataServiceXml.parseResponse(httpclient.execute(req, responseHandler));
+            HttpResponse execute = httpclient.execute(req);
+            System.out.println("status: " + execute.getStatusLine());
+            String raw = responseHandler.handleResponse(execute);
+            System.out.println(raw);
+            Response response = DataServiceXml.parseResponse(raw);
 
             if ("success".equals(response.getStatus())) {
                 String url = response.getUrl();
@@ -284,9 +289,7 @@ public class BenchService implements Runnable {
     }
 
     public byte[] getDataFile() throws UnsupportedEncodingException {
-        byte[] bytes = null;
-        // processor speed ignored, not reliable enough...
-        verifyMemoryUnaltered();
+        byte[] bytes;
         String xml = DataServiceXml.createXml(benchmark.getClient(), version, hardware, this.formatScore(benchmark.getScore()), !headless,
                 BenchService.encryptionModule);
         if (encryptionModule != null) {
@@ -297,35 +300,19 @@ public class BenchService implements Runnable {
         return bytes;
     }
 
-    private void verifyMemoryUnaltered() {
-        return;
-        // try {
-        // checksum = processor + availableProcessors + score;
-        // checksum = toSHA1(checksum.getBytes("UTF8"));
-        // if (!ArrayUtils.isEquals(checksumChars, checksum.toCharArray())) {
-        // throw new SecurityException("Memory has been altered. Bad hacker! Shoo!");
-        // }
-        // } catch (UnsupportedEncodingException e) {
-        // throw new RuntimeException();
-        // }
-    }
-
-    public static String toSHA1(byte[] string) {
-        MessageDigest md = null;
-        try {
-            md = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException();
-        }
-        return Hex.encodeHexString(md.digest(string));
-    }
-
     protected String getClientVersion() {
         return version;
     }
 
     public String formatScore(Number score) {
-        return String.format(Locale.ENGLISH, "%.2f", score);
+        if (QUICK_TEST_MS.equals(benchmark.getConfig().getValue(TIME_SPAN))) {
+            return String.format(Locale.ENGLISH, "%.2f", score);
+        } else if (STABILITY_TEST_MS.equals(benchmark.getConfig().getValue(TIME_SPAN))) {
+            return String.valueOf(score);
+        } else {
+            return String.valueOf(score);
+        }
+
     }
 
     public void saveToFile(File file) {
@@ -354,5 +341,9 @@ public class BenchService implements Runnable {
     public BenchPhase getCurrentPhase() {
         return this.currentPhase;
     }
-    
+
+    public enum BenchPhase {
+        ready, warmup, inprogress, finished
+    }
+
 }

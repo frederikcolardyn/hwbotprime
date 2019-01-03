@@ -4,20 +4,17 @@
  */
 package org.hwbot.bench.ui.swing;
 
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.IOException;
-
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.JOptionPane;
-
 import org.hwbot.bench.Benchmark;
 import org.hwbot.bench.service.BenchService;
 import org.hwbot.bench.ui.BenchUI;
 
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
+
 /**
- * 
  * @author frederik
  */
 public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
@@ -28,10 +25,30 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
     private String title = "HWBOT Benchmark";
     private String subtitle = "Multithreaded Prime Bench - ARM/x86 - Win/Mac/Linux";
-
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton compareButton;
+    private javax.swing.JLabel frequency;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel9;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JProgressBar jProgressBar1;
+    private javax.swing.JLabel memory;
+    private javax.swing.JLabel processor;
+    private javax.swing.JButton saveButton;
+    private javax.swing.JLabel score;
+    private javax.swing.JButton startButton;
+    private javax.swing.JButton startButtonStability;
+    private javax.swing.JLabel threads;
     /**
      * Creates new form BenchUI
-     * 
+     *
      * @param benchBot
      */
     public BenchSwingUI(BenchService benchService, String title, String subtitle) {
@@ -155,8 +172,6 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         score.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
         score.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
 
-        jLabel10.setText("Primes per second");
-
         jLabel5.setText("x");
 
         startButtonStability.setBackground(new java.awt.Color(166, 94, 44));
@@ -164,7 +179,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         startButtonStability.setForeground(new java.awt.Color(240, 240, 240));
         startButtonStability.setText("Stability Benchmark");
         startButtonStability.setToolTipText("");
-        startButtonStability.setEnabled(false);
+        startButtonStability.setEnabled(true);
         startButtonStability.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 startButtonStabilityActionPerformed(evt);
@@ -275,7 +290,12 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonStabilityActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_startButtonStabilityActionPerformed
-        // TODO add your handling code here:
+        jLabel10.setText("Largest prime calculated");
+        this.startButton.setEnabled(false);
+        this.compareButton.setEnabled(false);
+        this.saveButton.setEnabled(false);
+        this.startButtonStability.setEnabled(false);
+        this.benchService.benchmark(false);
     }// GEN-LAST:event_startButtonStabilityActionPerformed
 
     private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_compareButtonActionPerformed
@@ -283,18 +303,19 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
     }// GEN-LAST:event_compareButtonActionPerformed
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
+        jLabel10.setText("Primes per second");
         this.startButton.setEnabled(false);
         this.compareButton.setEnabled(false);
         this.saveButton.setEnabled(false);
         this.startButtonStability.setEnabled(false);
-        this.benchService.benchmark();
+        this.benchService.benchmark(true);
     }// GEN-LAST:event_jButton1ActionPerformed
 
     private void saveButtonActionPerformed(ActionEvent evt) {
         //set filechooser defaults
         FileNameExtensionFilter extensions = new FileNameExtensionFilter("HWBOT Scorefiles", "hwbot");
         fc.setFileFilter(extensions);
-        fc.setSelectedFile(new File(score.getText()));
+        fc.setSelectedFile(new File("hwbotprime-" + score.getText()));
         //
         int returnVal = fc.showSaveDialog(saveButton);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -303,7 +324,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
             // sleep so that filechooser is not screencaped
             try {
                 Thread.sleep(100); //find an appropiate value
-            } catch(InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 //System.out.println("Exception caught");
             }
             // write xml to this file
@@ -318,28 +339,6 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
             System.out.println("cancelled save: " + returnVal);
         }
     }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton compareButton;
-    private javax.swing.JLabel frequency;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel12;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JProgressBar jProgressBar1;
-    private javax.swing.JLabel memory;
-    private javax.swing.JLabel processor;
-    private javax.swing.JButton saveButton;
-    private javax.swing.JLabel score;
-    private javax.swing.JButton startButton;
-    private javax.swing.JButton startButtonStability;
-    private javax.swing.JLabel threads;
 
     // End of variables declaration//GEN-END:variables
 
@@ -444,6 +443,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         this.compareButton.setEnabled(true);
         this.saveButton.setEnabled(true);
         this.startButton.setEnabled(true);
+        this.startButtonStability.setEnabled(true);
     }
 
     public void waitForCommands() {

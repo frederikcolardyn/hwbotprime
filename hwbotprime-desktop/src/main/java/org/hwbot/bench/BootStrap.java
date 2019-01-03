@@ -1,15 +1,12 @@
 package org.hwbot.bench;
 
-import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
-import java.io.IOException;
-
-import org.apache.commons.codec.DecoderException;
 import org.hwbot.bench.service.BenchService;
+
+import java.awt.*;
 
 public class BootStrap {
 
-    public static void main(String[] args) throws IOException, DecoderException {
+    public static void main(String[] args) throws Exception {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         BenchService bench = new BenchService();
 

@@ -1,5 +1,7 @@
 package org.hwbot.bench;
 
+import org.hwbot.bench.prime.ProgressBar;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,14 +12,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.hwbot.bench.prime.ProgressBar;
-
 public class PrimeBenchmark extends Benchmark {
 
     public static final String TIME_SPAN = "timespan";
     public static final String SILENT = "silent";
-    // protected static final int workCountQuick = 1000000;
-    // protected static final int workCountStability = 2000000;
+    public static final Long QUICK_TEST_MS = TimeUnit.SECONDS.toMillis(10);
+    public static final Long STABILITY_TEST_MS = TimeUnit.MINUTES.toMillis(30);
     protected static final int iterations = 100;
     protected int batchsize = Integer.valueOf(System.getProperty("batchsize", "16"));
     private boolean silent;
@@ -30,9 +30,19 @@ public class PrimeBenchmark extends Benchmark {
         super(config, Integer.valueOf(System.getProperty("threads", String.valueOf(threads))), progressBar);
     }
 
+    public static int getIterations() {
+        return iterations;
+    }
+
     @Override
     public String getClient() {
-        return "HWBOT Prime";
+        if (QUICK_TEST_MS.equals(getConfig().getValue(TIME_SPAN))) {
+            return "HWBOT Prime";
+        } else if (STABILITY_TEST_MS.equals(getConfig().getValue(TIME_SPAN))) {
+            return "HWBOT Prime 30min";
+        } else {
+            return "HWBOT Prime Custom Run";
+        }
     }
 
     @Override
@@ -58,14 +68,14 @@ public class PrimeBenchmark extends Benchmark {
         if (!silent) {
             System.out.print("Benchmark phase: ");
         }
-        Float benchrun = benchrun(timespan);
+        Number benchrun = benchrun(timespan);
         if (!silent) {
             System.out.println(" done!");
         }
         return benchrun;
     }
 
-    public Float benchrun(long timespanInMillis) {
+    public Number benchrun(long timespanInMillis) {
         long before = System.currentTimeMillis();
         int primeStart = 5;
         int iteration = 0;
@@ -85,10 +95,15 @@ public class PrimeBenchmark extends Benchmark {
         ExecutorService exec = Executors.newFixedThreadPool(threads, tf);
         List<Future<Void>> workers = new ArrayList<Future<Void>>(blocksize * 2);
         long time = getTime();
+        long currTime = time;
         long endTime = time + timespanInMillis;
         int i = 0;
         while (getTime() <= endTime) {
             // submit work to the svc for execution across the thread pool
+            long timelapse = getTime() - currTime;
+            if (timelapse < 0) {
+                throw new RuntimeException("clock adjustment detected! " + timelapse + "ms");
+            }
             i++;
             PrimeRunnable worker = new PrimeRunnable(primeStart + i, list);
             Future<Void> submit = exec.submit(worker);
@@ -110,12 +125,9 @@ public class PrimeBenchmark extends Benchmark {
                     } catch (TimeoutException e) {
                         System.err.print("x");
                         brokenWorkers++;
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         throw new RuntimeException();
-                    } catch (Throwable e) {
-                        e.printStackTrace();
-                        throw new RuntimeException(e);
                     }
                 }
             }
@@ -140,16 +152,18 @@ public class PrimeBenchmark extends Benchmark {
 
         float timeneeded = (getTime() - before) / 1000f;
 
-        int primescalculated = list.size();
-        return (primescalculated / timeneeded);
+        if (QUICK_TEST_MS.equals(getConfig().getValue(TIME_SPAN))) {
+            int primescalculated = list.size();
+            return (primescalculated / timeneeded);
+        } else if (STABILITY_TEST_MS.equals(getConfig().getValue(TIME_SPAN))) {
+            return list.get(list.size()-1);
+        } else {
+            throw new RuntimeException("no score for custom run.");
+        }
     }
 
     private long getTime() {
         return System.currentTimeMillis();
-    }
-
-    public static int getIterations() {
-        return iterations;
     }
 
     @Override
