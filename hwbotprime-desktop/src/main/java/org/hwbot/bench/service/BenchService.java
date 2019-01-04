@@ -54,7 +54,7 @@ import static org.hwbot.bench.PrimeBenchmark.*;
 
 public class BenchService implements Runnable {
 
-    protected static final String version = "1.0.0";
+    protected static final String version = "1.0.1";
     public static boolean headless;
     protected static EncryptionModule encryptionModule;
 
@@ -160,7 +160,7 @@ public class BenchService implements Runnable {
                 benchUI.getProcessor().setText("unknown");
             }
             benchUI.getThreads().setText(String.valueOf(availableProcessors));
-            benchUI.getMemory().setText(hardware.getMemory().getTotalSizeMB() + "MB");
+            benchUI.getMemory().setText(String.valueOf(hardware.getMemory().getTotalSize()));
 
             output = new SystemConsole();
 
@@ -181,8 +181,8 @@ public class BenchService implements Runnable {
             output.write("Estimating speed... ", false);
             output.write(((availableProcessors > 1) ? availableProcessors + "x " : "") + getProcessorFrequency(hardware.getProcessor().getCoreClock()) + "MHz"
                     + (processorTemperature != null ? " @ " + processorTemperature + " C" : ""));
-            if (hardware.getMemory().getTotalSizeMB() > 0) {
-                output.write(hardware.getMemory().getTotalSizeMB() + "MB memory");
+            if (hardware.getMemory().getTotalSize() > 0) {
+                output.write(hardware.getMemory().getTotalSize() + "MB memory");
             }
         }
 

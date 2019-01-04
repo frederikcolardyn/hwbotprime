@@ -291,6 +291,7 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
 
     private void startButtonStabilityActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_startButtonStabilityActionPerformed
         jLabel10.setText("Largest prime calculated");
+        this.score.setText(" ");
         this.startButton.setEnabled(false);
         this.compareButton.setEnabled(false);
         this.saveButton.setEnabled(false);
@@ -298,18 +299,19 @@ public class BenchSwingUI extends javax.swing.JPanel implements BenchUI {
         this.benchService.benchmark(false);
     }// GEN-LAST:event_startButtonStabilityActionPerformed
 
-    private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_compareButtonActionPerformed
-        benchService.submit();
-    }// GEN-LAST:event_compareButtonActionPerformed
-
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
         jLabel10.setText("Primes per second");
+        this.score.setText(" ");
         this.startButton.setEnabled(false);
         this.compareButton.setEnabled(false);
         this.saveButton.setEnabled(false);
         this.startButtonStability.setEnabled(false);
         this.benchService.benchmark(true);
     }// GEN-LAST:event_jButton1ActionPerformed
+
+    private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_compareButtonActionPerformed
+        benchService.submit();
+    }// GEN-LAST:event_compareButtonActionPerformed
 
     private void saveButtonActionPerformed(ActionEvent evt) {
         //set filechooser defaults

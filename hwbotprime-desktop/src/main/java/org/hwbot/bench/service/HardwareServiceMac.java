@@ -1,19 +1,12 @@
 package org.hwbot.bench.service;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
-import org.hwbot.bench.model.Device;
-import org.hwbot.bench.model.Hardware;
-import org.hwbot.bench.model.Memory;
-import org.hwbot.bench.model.Processor;
 import org.hwbot.bench.prime.FileSystemUtil;
 import org.hwbot.bench.prime.Log;
 
-import com.jezhumble.javasysmon.JavaSysMon;
-import com.jezhumble.javasysmon.MemoryStats;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HardwareServiceMac extends HardwareServiceCpuID {
 
@@ -76,47 +69,11 @@ public class HardwareServiceMac extends HardwareServiceCpuID {
         return ".dylib";
     }
 
-    public int getNumberOfProcessorCores() {
-        JavaSysMon sysMon = new JavaSysMon();
-        if (sysMon.supportedPlatform()) {
-            try {
-                if (sysMon.numCpus() > 0) {
-                    return sysMon.numCpus();
-                }
-            } catch (Exception e) {
-                // ignore
-            }
-        }
-        return 1;
-    }
-
-    public long getMemorySizeInBytes() {
-        JavaSysMon sysMon = new JavaSysMon();
-        if (sysMon.supportedPlatform()) {
-            MemoryStats memoryStats = sysMon.physical();
-            return memoryStats.getTotalBytes();
-        }
-        return 0;
-    }
-
     public Float getEstimatedProcessorSpeed() {
 
         Float estimatedProcessorSpeed = super.getEstimatedProcessorSpeed();
         if (estimatedProcessorSpeed != null) {
             return estimatedProcessorSpeed;
-        }
-
-        // utility class, reports stock speed mostly
-        JavaSysMon sysMon = new JavaSysMon();
-        if (sysMon.supportedPlatform()) {
-            try {
-                if (sysMon.cpuFrequencyInHz() > 0) {
-                    Log.info("using java sysmon");
-                    return sysMon.cpuFrequencyInHz() / 1000f / 1000f;
-                }
-            } catch (Exception e) {
-                // ignore
-            }
         }
 
         Float speed = null;
@@ -130,40 +87,6 @@ public class HardwareServiceMac extends HardwareServiceCpuID {
             Log.error("Failed to read processor speed on mac: " + e);
         }
         return null;
-    }
-
-    @Override
-    public Hardware gatherHardwareInfo() {
-
-        Processor processor = gatherProcessorInfo();
-        Memory memory = gatherMemoryInfo();
-        Device device = gatherDeviceInfo();
-
-        Hardware hardware = new Hardware();
-        hardware.setProcessor(processor);
-        hardware.setMemory(memory);
-        hardware.setDevice(device);
-
-        return hardware;
-    }
-
-    private Device gatherDeviceInfo() {
-        return null;
-    }
-
-    private Memory gatherMemoryInfo() {
-        Memory memory = new Memory();
-        memory.setTotalSize(((int) getMemorySizeInBytes() / 1024 / 1024));
-        return memory;
-    }
-
-    private Processor gatherProcessorInfo() {
-        Processor processor = new Processor();
-        processor.setCoreClock(getEstimatedProcessorSpeed());
-        processor.setName(getProcessorInfo());
-        processor.setEffectiveCores(getNumberOfProcessorCores());
-        processor.setIdleTemp(getProcessorTemperature());
-        return processor;
     }
 
 }

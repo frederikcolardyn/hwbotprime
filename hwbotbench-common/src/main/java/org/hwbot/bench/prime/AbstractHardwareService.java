@@ -1,12 +1,14 @@
 package org.hwbot.bench.prime;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.util.Enumeration;
-import java.util.jar.JarEntry;
-
+import org.hwbot.bench.model.Device;
 import org.hwbot.bench.model.Hardware;
+import org.hwbot.bench.model.Memory;
+import org.hwbot.bench.model.Processor;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
 
 public abstract class AbstractHardwareService implements HardwareService {
 
@@ -26,50 +28,6 @@ public abstract class AbstractHardwareService implements HardwareService {
 
     public abstract Float getEstimatedProcessorSpeed();
 
-    public static void extractFile(String fileToExtract, File targetFile, boolean permissions) throws IOException {
-
-        if (targetFile.exists()) {
-            // ok!
-            // Log.info("Using CPU executable: " + getCpuIdExecutable().getAbsolutePath());
-        } else {
-            String path = AbstractHardwareService.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            String decodedPath;
-            decodedPath = URLDecoder.decode(path, "UTF-8");
-            java.util.jar.JarFile jar = new java.util.jar.JarFile(decodedPath);
-            Enumeration<JarEntry> entries = jar.entries();
-            boolean installed = false;
-            while (entries.hasMoreElements()) {
-                java.util.jar.JarEntry file = (java.util.jar.JarEntry) entries.nextElement();
-                java.io.File f = targetFile;
-                if (file.getName().equals(fileToExtract)) {
-                    if (file.isDirectory()) { // if its a directory, create it
-                        f.mkdir();
-                        continue;
-                    }
-                    java.io.InputStream is = jar.getInputStream(file); // get the input stream
-                    java.io.FileOutputStream fos = new java.io.FileOutputStream(f);
-                    while (is.available() > 0) { // write contents of 'is' to 'fos'
-                        fos.write(is.read());
-                    }
-                    fos.close();
-                    is.close();
-                    // Log.info("cpuid executable written to " + f);
-                    // Log.info("Prepared: " + targetFile.getAbsolutePath());
-                    if (permissions) {
-                        Runtime.getRuntime().exec("chmod +x " + f.getAbsolutePath());
-                    }
-                    installed = true;
-                    break;
-                }
-            }
-            if (!installed) {
-                Log.error("Sorry, we can not run the bechmark on this platform. Please inform HWBOT crew this does not work on " + AbstractHardwareService.OS
-                        + " - " + AbstractHardwareService.OS_ARCH);
-                throw new RuntimeException("OS not supported!");
-            }
-        }
-    }
-
     @Override
     public Integer getAvailableProcessors() {
         return Runtime.getRuntime().availableProcessors();
@@ -77,7 +35,94 @@ public abstract class AbstractHardwareService implements HardwareService {
 
     @Override
     public Hardware gatherHardwareInfo() {
+        Processor processor = gatherProcessorInfo();
+        Memory memory = gatherMemoryInfo();
+        Device device = gatherDeviceInfo();
+
+        Hardware hardware = new Hardware();
+        hardware.setProcessor(processor);
+        hardware.setMemory(memory);
+        hardware.setDevice(device);
+
+        return hardware;
+    }
+
+    private Device gatherDeviceInfo() {
         return null;
     }
+
+    private Memory gatherMemoryInfo() {
+        Memory memory = new Memory();
+        memory.setTotalSize((int) (getMemorySize() / 1024 / 1024));
+        return memory;
+    }
+
+    private Processor gatherProcessorInfo() {
+        Processor processor = new Processor();
+        processor.setCoreClock(getEstimatedProcessorSpeed());
+        processor.setName(getProcessorInfo());
+        processor.setEffectiveCores(getNumberOfProcessorCores());
+        processor.setIdleTemp(getProcessorTemperature());
+        return processor;
+    }
+
+    public long getMemorySize() {
+        return ((com.sun.management.OperatingSystemMXBean) ManagementFactory
+                .getOperatingSystemMXBean()).getTotalPhysicalMemorySize();
+    }
+
+    public int getNumberOfProcessorCores() {
+        String command = "";
+        if(OperatingSystemUtil.isMac()){
+            command = "sysctl -n machdep.cpu.core_count";
+        }else if(OperatingSystemUtil.isUnix()){
+            command = "lscpu";
+        }else if(OperatingSystemUtil.isWindows()){
+            command = "cmd /C WMIC CPU Get /Format:List";
+        }
+        Process process = null;
+        int numberOfCores = 0;
+        int sockets = 0;
+        try {
+            if(OperatingSystemUtil.isMac()){
+                String[] cmd = { "/bin/sh", "-c", command};
+                process = Runtime.getRuntime().exec(cmd);
+            }else{
+                process = Runtime.getRuntime().exec(command);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()));
+        String line;
+
+        try {
+            while ((line = reader.readLine()) != null) {
+                if(OperatingSystemUtil.isMac()){
+                    numberOfCores = line.length() > 0 ? Integer.parseInt(line) : 0;
+                }else if (OperatingSystemUtil.isUnix()) {
+                    if (line.contains("Core(s) per socket:")) {
+                        numberOfCores = Integer.parseInt(line.split("\\s+")[line.split("\\s+").length - 1]);
+                    }
+                    if(line.contains("Socket(s):")){
+                        sockets = Integer.parseInt(line.split("\\s+")[line.split("\\s+").length - 1]);
+                    }
+                } else if (OperatingSystemUtil.isWindows()) {
+                    if (line.contains("NumberOfCores")) {
+                        numberOfCores = Integer.parseInt(line.split("=")[1]);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(OperatingSystemUtil.isUnix()){
+            return numberOfCores * sockets;
+        }
+        return numberOfCores;
+    }
+
 
 }
