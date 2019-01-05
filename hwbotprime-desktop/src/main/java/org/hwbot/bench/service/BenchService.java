@@ -54,7 +54,7 @@ import static org.hwbot.bench.PrimeBenchmark.*;
 
 public class BenchService implements Runnable {
 
-    protected static final String version = "1.0.1";
+    protected static final String version = "1.0.2";
     public static boolean headless;
     protected static EncryptionModule encryptionModule;
 
